@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hurungwe Species Watch | GIS Dashboard</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌿</text></svg>">
+    <meta name="description" content="Interactive GIS dashboard for monitoring tree species distribution across the Hurungwe district, Zimbabwe.">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <!-- Leaflet MarkerCluster -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/index.css?v=21">
+</head>
+    <div id="sidebar-overlay" class="sidebar-overlay"></div>
+    
+    <header class="mobile-header">
+        <button id="mobile-menu-trigger" class="btn-menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+        <div class="mobile-logo">
+            <span class="icon">🌿</span>
+            <span class="text">Hurungwe GIS</span>
+        </div>
+    </header>
+
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo-area">
+                <div class="logo-icon">🌿</div>
+                <div class="logo-text">
+                    <h1>Hurungwe</h1>
+                    <span>Species Watch</span>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-section">MAIN</div>
+                <a href="#" class="nav-item active" id="nav-dashboard">
+                    <span class="icon">📊</span> Dashboard
+                </a>
+                <a href="#" class="nav-item" id="nav-gis">
+                    <span class="icon">🗺️</span> GIS Explorer
+                </a>
+                <a href="#" class="nav-item" id="nav-export">
+                    <span class="icon">📁</span> Data Exports
+                </a>
+                
+                <div class="nav-section">ANALYTICS</div>
+                <a href="#" class="nav-item" id="nav-trends">
+                    <span class="icon">📈</span> Growth Trends
+                </a>
+                <a href="#" class="nav-item" id="nav-habitat">
+                    <span class="icon">🧪</span> Habitat Health
+                </a>
+
+                <div class="nav-section">SPATIAL ANALYSIS</div>
+                <a href="#" class="nav-item" id="nav-buffer">
+                    <span class="icon">🎯</span> Identify & Buffer
+                </a>
+                <a href="#" class="nav-item" id="nav-terrain">
+                    <span class="icon">⛰️</span> Terrain Linkage
+                </a>
+
+                <div class="nav-section">RESEARCH & SDM</div>
+                <a href="#" class="nav-item" id="nav-predictive">
+                    <span class="icon">🤖</span> Predictive Engine
+                </a>
+            </nav>
+
+            <!-- Filters Section -->
+            <div class="sidebar-filters">
+                <div class="filter-section-label">FILTERS</div>
+
+                <div class="filter-group">
+                    <label class="filter-label" for="filter-species">Species</label>
+                    <select id="filter-species" class="filter-select">
+                        <option value="all">All Species</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label" for="filter-habitat">Habitat</label>
+                    <select id="filter-habitat" class="filter-select">
+                        <option value="all">All Habitats</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label" for="filter-monitor">Recorder</label>
+                    <select id="filter-monitor" class="filter-select">
+                        <option value="all">All Recorders</option>
+                    </select>
+                </div>
+
+                <button id="reset-filters" class="btn-reset-filters">Reset Filters</button>
+            </div>
+
+            <div class="sidebar-footer">
+                <div class="stat-mini-card">
+                    <span class="label">Total Records</span>
+                    <span class="value" id="stats-total-trees">0</span>
+                </div>
+                <div class="stat-mini-card">
+                    <span class="label">Diversity Index</span>
+                    <span class="value" id="stats-shannon">0.00</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="top-header">
+                <div class="search-bar">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="search-input" placeholder="Search species, habitat, or recorder...">
+                </div>
+            </header>
+
+            <div class="content-grid explorer-mode">
+                <!-- STATIC MAP PANEL (Always Visible) -->
+                <section class="map-panel">
+                    <div class="panel-header">
+                        <h2 id="view-title">Hurungwe Spatial Interface</h2>
+                        <div class="map-controls">
+                            <button id="toggle-heatmap" class="btn-secondary">
+                                <span class="btn-icon">🌡️</span> Heatmap View
+                            </button>
+                            <button id="reset-view" class="btn-secondary">
+                                <span class="btn-icon">🎯</span> Reset View
+                            </button>
+                        </div>
+                    </div>
+                    <div id="map-status-banner" class="map-status-banner hidden">
+                        <span class="banner-icon">🎯</span>
+                        <span id="banner-text">Identify Mode Active: Click map to analyze 5km buffer.</span>
+                        <button id="btn-exit-mode" class="btn-exit-banner">Exit</button>
+                    </div>
+                    <div id="map" class="map-container"></div>
+
+                    <!-- Time Slider -->
+                    <div class="time-slider-panel">
+                        <div class="time-slider-header">
+                            <span class="time-slider-label">📅 Time Filter</span>
+                            <span class="time-slider-date-display" id="slider-date-display">All Dates</span>
+                        </div>
+                        <div class="time-slider-track-wrap">
+                            <span class="time-slider-bound" id="slider-min-label">—</span>
+                            <input type="range" id="time-slider" class="time-slider" min="0" max="0" value="0" step="1">
+                            <span class="time-slider-bound" id="slider-max-label">—</span>
+                        </div>
+                        <div class="time-slider-actions">
+                            <button id="slider-play" class="btn-slider-play" title="Play animation">▶ Play</button>
+                            <button id="slider-reset" class="btn-slider-reset" title="Reset to all">⟳ All Dates</button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- RIGHT SIDEBAR: Toggling Panels -->
+                <aside class="analysis-dock">
+                    
+                    <!-- PANEL: Dashboard Stats -->
+                    <div id="panel-dashboard" class="content-panel active-dock">
+                        <div class="glass-card chart-card">
+                            <div class="card-header">
+                                <h3>Species Composition</h3>
+                                <span class="badge" id="species-count-badge">—</span>
+                            </div>
+                            <div id="species-donut-chart"></div>
+                        </div>
+
+                        <div class="glass-card stat-card">
+                            <div class="card-header">
+                                <h3>Habitat Monitoring</h3>
+                            </div>
+                            <div class="progress-stack" id="habitat-list"></div>
+                        </div>
+
+                        <div class="glass-card log-card" id="spatial-insights-card">
+                            <div class="card-header">
+                                <h3>Spatial Insights</h3>
+                                <span class="badge">Advanced</span>
+                            </div>
+                            <div id="terrain-correlation-chart" style="min-height: 250px; padding: 10px;"></div>
+                        </div>
+                    </div>
+
+                    <!-- PANEL: Predictive Engine -->
+                    <div id="panel-predictive" class="content-panel hidden">
+                        <div class="analytics-card">
+                            <h3>🤖 SDM Forecast Engine</h3>
+                            <p class="card-subtitle">Ensemble Random Forest Synthesis</p>
+                            <div class="simulator-controls">
+                                <div class="slider-group" style="margin-bottom: 12px;">
+                                    <label style="font-size: 11px;">Thermal Sieve (Bio_6)</label>
+                                    <input type="range" min="0" max="100" value="70" class="sim-slider" id="sim-thermal">
+                                </div>
+                                <div class="slider-group" style="margin-bottom: 12px;">
+                                    <label style="font-size: 11px;">Water Proximity</label>
+                                    <input type="range" min="0" max="100" value="85" class="sim-slider" id="sim-water">
+                                </div>
+                            </div>
+                            <button id="btn-run-simulation" class="btn-primary" style="width:100%; font-size: 12px;">Generate Forecast</button>
+                        </div>
+
+                        <div class="analytics-card" style="margin-top: 15px;">
+                            <h3>Model Reliability</h3>
+                            <div id="chart-auc-kappa" style="height: 180px;"></div>
+                        </div>
+
+                        <div class="analytics-card wide" style="margin-top: 15px;">
+                            <h3>Site Suitability Report</h3>
+                            <div id="prediction-report-empty" class="empty-state">
+                                <p style="font-size: 11px;">Click map for prediction.</p>
+                            </div>
+                            <div id="prediction-report-active" class="hidden">
+                                <div id="prediction-results" class="mini-grid"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PANEL: Export Interface -->
+                    <div id="panel-export" class="content-panel hidden">
+                        <div class="analytics-card">
+                            <h3>📥 Research Data Export</h3>
+                            <p class="card-subtitle">Generate CSV for external analysis (R/QGIS)</p>
+                            
+                            <div class="simulator-controls" style="margin-top: 15px;">
+                                <div class="filter-group">
+                                    <label class="filter-label">Target Species Filter</label>
+                                    <select id="export-species-filter" class="filter-select">
+                                        <option value="all">Include All Species</option>
+                                        <!-- Dynamically Populated -->
+                                    </select>
+                                    <p style="font-size: 10px; color: var(--text-secondary); margin-top: 5px;">
+                                        Select a specific subtree or download the full dataset for the current map view.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <button id="btn-final-export" class="btn-primary" style="width:100%; margin-top: 10px;">
+                                <span class="btn-icon">📦</span> Download CSV Dataset
+                            </button>
+                        </div>
+
+                        <div class="glass-card log-card" style="margin-top: 15px;">
+                            <div class="card-header">
+                                <h3>Export Preview</h3>
+                            </div>
+                            <div style="font-size: 11px; font-family: monospace; color: var(--text-secondary); background: #f8f9fa; padding: 12px; border-radius: 8px; border: 1px dashed #ced4da;">
+                                species, habitat, terrain, monitor, date, lat, lon <br>
+                                Acacia Galpinii, Riverine, Lowland, ...
+                            </div>
+                        </div>
+                    </div>
+
+                </aside>
+            </div>
+        </main>
+    </div>
+
+    <!-- Analytics Modal -->
+    <div id="analytic-modal" class="modal-overlay hidden">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 id="modal-title">Temporal Research Insights</h3>
+                <button id="close-modal" class="btn-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="modal-chart-container" style="min-height: 350px;"></div>
+                <div id="modal-description" class="modal-info-text">
+                    Analyzing historical sighting trends across Hurungwe District...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+    <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <script src="js/app.js?v=21"></script>
+</body>
+</html>

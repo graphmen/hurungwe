@@ -1,0 +1,11 @@
+{
+  "name": "hurungwe-species-dashboard",
+  "version": "1.0.0",
+  "description": "Premium GIS Dashboard for Tree Species in Hurungwe District",
+  "scripts": {
+    "start": "npx serve -l 3005 ."
+  },
+  "dependencies": {
+    "serve": "^14.2.1"
+  }
+}

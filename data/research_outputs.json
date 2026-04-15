@@ -1,0 +1,21 @@
+{
+    "species_metrics": {
+        "Acacia Galpinii": { "auc": 0.923, "kappa": 0.773, "main_driver": "dist_rivers", "sensitivity": 0.922 },
+        "Acacia Polycantha": { "auc": 0.944, "kappa": 0.841, "main_driver": "bio_6", "sensitivity": 0.929 },
+        "Acacia Siebriana": { "auc": 0.934, "kappa": 0.781, "main_driver": "bio_6", "sensitivity": 0.892 },
+        "Fidebhia Abida": { "auc": 0.972, "kappa": 0.944, "main_driver": "bio_19", "sensitivity": 0.972 },
+        "Kigelia Africana": { "auc": 0.883, "kappa": 0.701, "main_driver": "bio_13", "sensitivity": 0.893 },
+        "Munyii": { "auc": 0.900, "kappa": 0.763, "main_driver": "dist_rivers", "sensitivity": 0.911 },
+        "Pilostigma": { "auc": 0.952, "kappa": 0.815, "main_driver": "bio_6", "sensitivity": 0.916 },
+        "Red Mahogany": { "auc": 0.943, "kappa": 0.841, "main_driver": "bio_4", "sensitivity": 0.949 },
+        "Trichilia Emetica": { "auc": 0.900, "kappa": 0.743, "main_driver": "dist_rivers", "sensitivity": 0.879 },
+        "Waterberry": { "auc": 0.936, "kappa": 0.792, "main_driver": "dist_rivers", "sensitivity": 0.908 }
+    },
+    "driver_metadata": {
+        "bio_6": "Min Temp of Coldest Month (Hydro-Thermal Sieve)",
+        "dist_rivers": "Distance to Rivers (Water Access)",
+        "bio_13": "Precipitation of Wettest Month",
+        "bio_19": "Precipitation of Coldest Quarter",
+        "bio_4": "Temperature Seasonality"
+    }
+}
