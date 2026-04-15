@@ -271,7 +271,9 @@ function initMap() {
     map.addLayer(markerCluster);
 
     map.on('click', (e) => {
-        if (window.GisAppState.isIdentifyMode) performBufferAnalysis(e.latlng);
+        if (window.GisAppState.isIdentifyMode) {
+            performBufferAnalysis(e.latlng);
+        }
         else if (window.GisAppState.isPredictiveMode) {
             const selectIcon = L.divIcon({ html: '🎯', className: 'select-icon', iconSize: [24, 24], iconAnchor: [12, 12] });
             const selMarker = L.marker(e.latlng, { icon: selectIcon }).addTo(map);
@@ -467,21 +469,115 @@ function renderPredictionResults(results) {
 
 function performBufferAnalysis(latlng) {
     if (analysisBuffer) map.removeLayer(analysisBuffer);
-    analysisBuffer = L.circle(latlng, { radius: 5000, color: '#2D6A4F' }).addTo(map);
+    analysisBuffer = L.circle(latlng, { radius: 5000, color: '#2D6A4F', fillOpacity: 0.1 }).addTo(map);
+    
     const local = allData.filter(p => getHaversineDistance(latlng, { lat: p.lat, lon: p.lon }) <= 5);
-    L.popup().setLatLng(latlng).setContent(`<h4>Impact Zone</h4><p>Found ${local.length} records in 5km.</p>`).openOn(map);
+    
+    // NEW: Stand Isolation Index (Nearest Neighbor)
+    let nnDist = "No siblings nearby";
+    if (local.length > 1) {
+        // Find the closest point that isn't the one identified (if we clicked on one)
+        const distances = local.map(p => getHaversineDistance(latlng, { lat: p.lat, lon: p.lon })).filter(d => d > 0);
+        if (distances.length > 0) {
+            nnDist = Math.min(...distances).toFixed(2) + " km";
+        }
+    }
+
+    const popupContent = `
+        <div class="map-popup">
+            <h4>Impact Zone Analysis</h4>
+            <p><strong>Radius:</strong> 5km</p>
+            <p><strong>Sighting Count:</strong> ${local.length}</p>
+            <hr>
+            <p><strong>Nearest Neighbor:</strong> ${nnDist}</p>
+            <small style="color: var(--accent); font-weight:bold;">Stand Health: ${local.length > 10 ? 'High Density' : 'Opportunistic'}</small>
+        </div>
+    `;
+    
+    L.popup().setLatLng(latlng).setContent(popupContent).openOn(map);
+}
+
+function toggleIdentifyMode() {
+    window.GisAppState.isIdentifyMode = !window.GisAppState.isIdentifyMode;
+    const banner = document.getElementById('map-status-banner');
+    const bannerText = document.getElementById('banner-text');
+    
+    if (window.GisAppState.isIdentifyMode) {
+        window.GisAppState.isPredictiveMode = false;
+        if (banner) {
+            banner.style.display = 'flex';
+            if (bannerText) bannerText.innerText = "Research Mode: Click map to analyze stand density & 5km buffer.";
+        }
+        if (map) map.getContainer().style.cursor = 'crosshair';
+    } else {
+        if (banner) banner.style.display = 'none';
+        if (map) map.getContainer().style.cursor = '';
+    }
+}
+
+function toggleHeatmap() {
+    const banner = document.getElementById('map-status-banner');
+    const bannerText = document.getElementById('banner-text');
+    
+    if (heatLayer) {
+        map.removeLayer(heatLayer);
+        heatLayer = null;
+        if (banner) banner.style.display = 'none';
+        console.log("Heatmap Deactivated");
+    } else {
+        const points = filteredData.map(d => [d.lat, d.lon, 0.5]);
+        heatLayer = L.heatLayer(points, { radius: 25, blur: 15, maxZoom: 13, gradient: { 0.4: 'blue', 0.6: 'lime', 0.8: 'yellow', 1: 'red' } }).addTo(map);
+        if (banner) {
+            banner.style.display = 'flex';
+            if (bannerText) bannerText.innerText = "Density Heatmap Active: Visualizing species concentration hotspots.";
+        }
+        console.log("Heatmap Activated");
+    }
+}
+
+function downloadSdmMap() {
+    const img = document.getElementById('sdm-map-image');
+    if (!img) return;
+    const link = document.createElement('a');
+    link.href = img.src;
+    const species = document.getElementById('sdm-species-select')?.value || 'habit_map';
+    link.download = `${species}_research_capture.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 }
 
 // ─────────────────────────────────────────────
 // 8. EVENT LISTENERS
 // ─────────────────────────────────────────────
 function bindEventListeners() {
-    ['nav-dashboard', 'nav-gis', 'nav-predictive', 'nav-export', 'nav-buffer', 'nav-trends', 'nav-habitat', 'nav-terrain'].forEach(id => {
+    ['nav-dashboard', 'nav-gis', 'nav-predictive', 'nav-export', 'nav-buffer', 'nav-trends', 'nav-habitat', 'nav-terrain', 'nav-heat', 'nav-stand'].forEach(id => {
         document.getElementById(id)?.addEventListener('click', (e) => {
             e.preventDefault();
-            if (id === 'nav-buffer') { window.GisAppState.isIdentifyMode = true; map.getContainer().style.cursor = 'crosshair'; }
-            else switchView(id);
+            if (id === 'nav-buffer' || id === 'nav-stand') {
+                toggleIdentifyMode();
+            } else if (id === 'nav-heat') {
+                toggleHeatmap();
+            } else {
+                switchView(id);
+            }
         });
+    });
+
+    document.getElementById('sdm-species-select')?.addEventListener('change', (e) => {
+        const val = e.target.value;
+        const img = document.getElementById('sdm-map-image');
+        if (img) img.src = `data/models/${val}.png`;
+        console.log("SDM Map Updated:", val);
+    });
+
+    document.getElementById('btn-download-sdm')?.addEventListener('click', downloadSdmMap);
+    
+    document.getElementById('btn-exit-mode')?.addEventListener('click', () => {
+        window.GisAppState.isIdentifyMode = false;
+        if (heatLayer) { map.removeLayer(heatLayer); heatLayer = null; }
+        document.getElementById('map-status-banner').style.display = 'none';
+        if (map) map.getContainer().style.cursor = '';
     });
 
     ['filter-species', 'filter-habitat', 'filter-monitor'].forEach(id => {

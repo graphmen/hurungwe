@@ -72,6 +72,12 @@
                 <a href="#" class="nav-item" id="nav-buffer">
                     <span class="icon">🎯</span> Identify & Buffer
                 </a>
+                <a href="#" class="nav-item" id="nav-heat">
+                    <span class="icon">🔥</span> Species Density Heatmap
+                </a>
+                <a href="#" class="nav-item" id="nav-stand">
+                    <span class="icon">📏</span> Stand Density Analysis
+                </a>
                 <a href="#" class="nav-item" id="nav-terrain">
                     <span class="icon">⛰️</span> Terrain Linkage
                 </a>
@@ -323,7 +329,7 @@
                         Select a species to view its highest probability habitat areas derived from the ensemble model.
                     </p>
                     
-                    <div style="margin-bottom: 20px;">
+                    <div style="margin-bottom: 20px; display: flex; gap: 12px; align-items: center;">
                         <select id="sdm-species-select" class="filter-select" style="max-width: 300px;">
                             <option value="species_suitability_grid">All Species Composite</option>
                             <option value="Acacia_Galpinii_suitability">Acacia Galpinii</option>
@@ -337,6 +343,9 @@
                             <option value="Trichilia_Emetica_suitability">Trichilia Emetica</option>
                             <option value="Waterberry_suitability">Waterberry</option>
                         </select>
+                        <button id="btn-download-sdm" class="btn-primary" style="white-space: nowrap; padding: 10px 20px;">
+                            📥 Export Quality Map
+                        </button>
                     </div>
 
                     <div style="text-align: center; background: var(--bg-main); padding: 20px; border-radius: 12px; border: 1px dashed var(--border-color);">
