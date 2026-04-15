@@ -179,12 +179,30 @@ function switchView(viewId) {
     document.querySelectorAll('.view-section').forEach(sec => sec.style.display = 'none');
 
     console.log("Navigating to view:", viewId);
-    if (viewId === 'nav-dashboard' || viewId === 'nav-gis' || viewId === 'nav-predictive') {
+    if (viewId === 'nav-dashboard' || viewId === 'nav-gis' || viewId === 'nav-predictive' || viewId === 'nav-terrain') {
         const dashboardView = document.getElementById('view-dashboard');
-        if (dashboardView) dashboardView.style.display = 'grid';
+        const viewTitle = document.getElementById('view-title');
+        
+        if (dashboardView) {
+            dashboardView.style.display = 'grid';
+            
+            // Layout Differentiation logic
+            if (viewId === 'nav-gis') {
+                dashboardView.classList.add('explorer-mode');
+                if (viewTitle) viewTitle.innerText = "Hurungwe GIS Explorer";
+                if (debugVal) debugVal.innerText = 'GIS_EXPLORER';
+            } else {
+                dashboardView.classList.remove('explorer-mode');
+                if (viewTitle) viewTitle.innerText = "Hurungwe Research Dashboard";
+                if (debugVal) debugVal.innerText = 'DASHBOARD';
+            }
+        }
+        
         switchPanel(viewId === 'nav-predictive' ? 'panel-predictive' : 'panel-dashboard');
         if (map) setTimeout(() => map.invalidateSize(), 400); 
-    } else if (viewId === 'nav-export') {
+    } 
+    
+    if (viewId === 'nav-export') {
         const exportView = document.getElementById('view-export');
         if (exportView) exportView.style.display = 'block';
     } else if (viewId === 'nav-habitat') {
@@ -193,10 +211,6 @@ function switchView(viewId) {
     } else if (viewId === 'nav-trends') {
         showTrendsModal();
     } else if (viewId === 'nav-terrain') {
-        // Highlighting the Spatial Insights panel
-        const dashboardView = document.getElementById('view-dashboard');
-        if (dashboardView) dashboardView.style.display = 'grid';
-        switchPanel('panel-dashboard');
         document.getElementById('spatial-insights-card')?.scrollIntoView({ behavior: 'smooth' });
     }
 }
@@ -247,8 +261,8 @@ function switchPanel(panelId) {
         if (map) map.getContainer().style.cursor = 'crosshair';
         setTimeout(() => initSDMCharts(), 100);
     } else {
-        if (viewTitle) viewTitle.innerText = 'District Distribution Map';
-        if (debugVal) debugVal.innerText = 'DASHBOARD';
+        setTimeout(() => initSDMCharts(), 100);
+    } else {
         window.GisAppState.isPredictiveMode = false;
         if (map) map.getContainer().style.cursor = '';
     }
@@ -599,7 +613,7 @@ function bindEventListeners() {
             e.preventDefault();
             if (id === 'nav-gis') {
                 clearAllModes();
-                switchView('nav-dashboard');
+                switchView('nav-gis');
             } else if (id === 'nav-buffer' || id === 'nav-stand') {
                 clearAllModes(true);
                 toggleIdentifyMode();

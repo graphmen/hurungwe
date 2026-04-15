@@ -212,11 +212,16 @@ h1, h2, h3 {
 
 /* Explorer Mode - Full Map View */
 .content-grid.explorer-mode {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr !important;
+    display: block !important;
 }
 
-.content-grid.explorer-mode .stats-panel {
-    display: none;
+.content-grid.explorer-mode .analysis-dock {
+    display: none !important;
+}
+
+.content-grid.explorer-mode .map-panel {
+    width: 100% !important;
 }
 
 /* Map Panel */
