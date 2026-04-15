@@ -220,38 +220,92 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function switchView(viewId) {
-        const grid = document.querySelector('.content-grid');
-        if (!grid) return;
-
-        // 1. High-Level Layout Controls
-        grid.classList.remove('explorer-mode');
-        if (viewId === 'nav-gis' || viewId === 'nav-predictive' || viewId === 'nav-export') {
-            grid.classList.add('explorer-mode');
-        }
-
-        // 2. Sidebar UI Highlighting
+        // 1. Sidebar UI Highlighting
         document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
         const activeNav = document.getElementById(viewId);
         if (activeNav) activeNav.classList.add('active');
 
-        // 3. Right-Panel (Analysis Dock) Switching
-        if (viewId === 'nav-gis') switchPanel('panel-dashboard');
-        if (viewId === 'nav-predictive') switchPanel('panel-predictive');
-        if (viewId === 'nav-export') switchPanel('panel-export');
+        // 2. Hide all view sections
+        document.querySelectorAll('.view-section').forEach(sec => {
+            sec.style.display = 'none';
+        });
 
-        // 4. Modal Triggers
-        if (viewId === 'nav-trends' || viewId === 'nav-habitat') {
-            showAnalyticModal(viewId);
+        // 3. Show target view section
+        if (viewId === 'nav-gis') {
+            document.getElementById('view-dashboard').style.display = '';
+            // Global Reflow for Leaflet map when re-entering Dashboard
+            if (map) {
+                setTimeout(() => { map.invalidateSize(); }, 400); 
+            }
+        } else if (viewId === 'nav-export') {
+            document.getElementById('view-export').style.display = 'block';
+        } else if (viewId === 'nav-trends') {
+            document.getElementById('view-trends').style.display = 'block';
+        } else if (viewId === 'nav-habitat') {
+            document.getElementById('view-habitat').style.display = 'block';
         }
 
-        // 5. Global Reflow
-        if (map) {
-            setTimeout(() => { map.invalidateSize(); }, 400); 
-        }
-
-        // 6. Mobile Auto-Close
+        // 4. Mobile Auto-Close
         if (window.innerWidth <= 768) {
             toggleSidebar(false);
+        }
+    }
+
+    // --- DATA EXPORT LOGIC ---
+    function exportFilteredData(format) {
+        if (!filteredData || filteredData.length === 0) {
+            alert("No data available to export based on current filters.");
+            return;
+        }
+
+        let content = '';
+        let filename = 'Hurungwe_Eco_Export';
+        let mimeType = 'text/plain';
+
+        if (format === 'csv') {
+            // Generate CSV
+            const keys = Object.keys(filteredData[0]);
+            const header = keys.join(",");
+            const rows = filteredData.map(row => 
+                keys.map(key => {
+                    let cell = row[key] === null || row[key] === undefined ? '' : row[key];
+                    return `"${cell.toString().replace(/"/g, '""')}"`;
+                }).join(",")
+            );
+            content = header + "\n" + rows.join("\n");
+            filename += "_" + new Date().toISOString().split('T')[0] + ".csv";
+            mimeType = 'text/csv;charset=utf-8;';
+        } else if (format === 'json') {
+            // Generate GeoJSON
+            const geoJson = {
+                type: "FeatureCollection",
+                features: filteredData.map(d => ({
+                    type: "Feature",
+                    geometry: { type: "Point", coordinates: [parseFloat(d.lng || d.lon), parseFloat(d.lat)] },
+                    properties: { ...d }
+                }))
+            };
+            content = JSON.stringify(geoJson, null, 2);
+            filename += "_" + new Date().toISOString().split('T')[0] + ".geojson";
+            mimeType = 'application/json;charset=utf-8;';
+        }
+
+        const blob = new Blob([content], { type: mimeType });
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        
+        link.setAttribute("href", url);
+        link.setAttribute("download", filename);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        const status = document.getElementById('export-status');
+        if (status) {
+            status.innerText = `Exported ${filteredData.length} records to ${filename}`;
+            status.style.opacity = '1';
+            setTimeout(() => { status.style.opacity = '0'; }, 4000);
         }
     }
 
@@ -1239,6 +1293,29 @@ document.addEventListener('DOMContentLoaded', async () => {
         switchView('nav-export');
     });
 
-    document.getElementById('btn-final-export')?.addEventListener('click', downloadCSV);
+    // --- NEW PHASE 2 LISTENERS ---
+    
+    // 1. Export Buttons
+    document.getElementById('btn-export-csv')?.addEventListener('click', () => exportFilteredData('csv'));
+    document.getElementById('btn-export-json')?.addEventListener('click', () => exportFilteredData('json'));
+
+    // 2. SDM Map Interaction
+    const sdmSelect = document.getElementById('sdm-species-select');
+    const sdmImage = document.getElementById('sdm-map-image');
+    if (sdmSelect && sdmImage) {
+        sdmSelect.addEventListener('change', (e) => {
+            const fileName = e.target.value;
+            // Update the image source to point to our newly migrated data/models folder
+            sdmImage.src = `data/models/${fileName}.png`;
+            
+            // Add a subtle fade effect
+            sdmImage.style.opacity = '0.5';
+            setTimeout(() => { sdmImage.style.opacity = '1'; }, 150);
+        });
+    }
+
+    // 3. Navigation for Trends/Habitat
+    document.getElementById('nav-trends')?.addEventListener('click', (e) => { e.preventDefault(); switchView('nav-trends'); });
+    document.getElementById('nav-habitat')?.addEventListener('click', (e) => { e.preventDefault(); switchView('nav-habitat'); });
 
 });

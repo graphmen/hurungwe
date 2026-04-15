@@ -16,6 +16,7 @@
     <!-- Custom CSS -->
     <link rel="stylesheet" href="css/index.css?v=21">
 </head>
+<body>
     <div id="sidebar-overlay" class="sidebar-overlay"></div>
     
     <header class="mobile-header">
@@ -263,6 +264,76 @@
 
                 </aside>
             </div>
+
+            <!-- View: Data Export -->
+            <div id="view-export" class="view-section" style="display: none; padding: 24px;">
+                <div class="glass-card" style="max-width: 600px; margin: 0 auto; text-align: center;">
+                    <h2 style="margin-bottom: 16px; color: var(--accent);">Data Exports</h2>
+                    <p style="color: var(--text-secondary); margin-bottom: 24px;">
+                        Download the records currently visible on your map. Active filters (Species, Habitat, Recorder, and Time) will apply to the exported data.
+                    </p>
+                    <div style="display: flex; gap: 16px; justify-content: center;">
+                        <button id="btn-export-csv" class="btn-primary" style="padding: 12px 24px; font-weight: bold; cursor: pointer;">
+                            📄 Download CSV
+                        </button>
+                        <button id="btn-export-json" class="btn-primary" style="padding: 12px 24px; font-weight: bold; cursor: pointer;">
+                            🗺️ Download GeoJSON
+                        </button>
+                    </div>
+                    <div id="export-status" style="margin-top: 16px; font-size: 13px; color: var(--success);"></div>
+                </div>
+            </div>
+
+            <!-- View: Growth Trends -->
+            <div id="view-trends" class="view-section" style="display: none; padding: 24px;">
+                <div class="glass-card">
+                    <h2 style="margin-bottom: 20px; color: var(--accent);">Model Performance & Variable Importance</h2>
+                    <p style="color: var(--text-secondary); margin-bottom: 24px;">
+                        Evaluating the Species Distribution Models (Random Forest, CTA, SVM, ANN) across the study area.
+                    </p>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+                        <div style="text-align:center;">
+                            <h3 style="margin-bottom:10px; font-size:14px;">Evaluation Metrics</h3>
+                            <img src="data/models/metrics_line.png" alt="Metrics" style="width:100%; border-radius: 8px; border: 1px solid var(--border-color);">
+                        </div>
+                        <div style="text-align:center;">
+                            <h3 style="margin-bottom:10px; font-size:14px;">Variable Importance</h3>
+                            <img src="data/models/importance_heatmap.png" alt="Importance" style="width:100%; border-radius: 8px; border: 1px solid var(--border-color);">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- View: Habitat Health (SDM) -->
+            <div id="view-habitat" class="view-section" style="display: none; padding: 24px;">
+                <div class="glass-card">
+                    <h2 style="margin-bottom: 12px; color: var(--accent);">Habitat Suitability Maps</h2>
+                    <p style="color: var(--text-secondary); margin-bottom: 24px;">
+                        Select a species to view its highest probability habitat areas derived from the ensemble model.
+                    </p>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <select id="sdm-species-select" class="filter-select" style="max-width: 300px;">
+                            <option value="species_suitability_grid">All Species Composite</option>
+                            <option value="Acacia_Galpinii_suitability">Acacia Galpinii</option>
+                            <option value="Acacia_Polycantha_suitability">Acacia Polycantha</option>
+                            <option value="Acacia_Siebriana_suitability">Acacia Siebriana</option>
+                            <option value="Fidebhia_Abida_suitability">Fidebhia Abida</option>
+                            <option value="Kigelia_Africana_suitability">Kigelia Africana</option>
+                            <option value="Munyii_Bechemia_discolor_suitability">Munyii / Bechemia discolor</option>
+                            <option value="Pilostigma_Thonigilii_Monkey_Bread_suitability">Pilostigma Thonigilii</option>
+                            <option value="Red_Mahogany_suitability">Red Mahogany</option>
+                            <option value="Trichilia_Emetica_suitability">Trichilia Emetica</option>
+                            <option value="Waterberry_suitability">Waterberry</option>
+                        </select>
+                    </div>
+
+                    <div style="text-align: center; background: var(--bg-main); padding: 20px; border-radius: 12px; border: 1px dashed var(--border-color);">
+                        <img id="sdm-map-image" src="data/models/species_suitability_grid.png" alt="SDM Map Image" style="max-width: 100%; max-height: 60vh; border-radius: 4px;">
+                    </div>
+                </div>
+            </div>
+
         </main>
     </div>
 
