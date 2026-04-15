@@ -35,11 +35,16 @@
     box-sizing: border-box;
 }
 
+html {
+    height: -webkit-fill-available;
+}
+
 body {
     font-family: 'Inter', sans-serif;
     background-color: var(--bg-main);
     color: var(--text-primary);
     height: 100vh;
+    height: -webkit-fill-available;
     overflow: hidden;
 }
 
