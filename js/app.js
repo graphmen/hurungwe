@@ -20,6 +20,7 @@ window.GisAppState = {
     activeSuitabilityLayer: null,
     researchResults: null,
     suitabilityGrid: null,
+    ndviLayer: null,
     sdmCharts: { auc: null, importance: null }
 };
 
@@ -336,6 +337,15 @@ function updateCharts() {
         const srt = Object.entries(sc).sort((a,b) => b[1]-a[1]).slice(0, 6);
         donutChart.updateOptions({ series: srt.map(s => s[1]), labels: srt.map(s => shortenLabel(s[0])) });
     }
+    
+    if (terrainChart) {
+        const tc = countBy(filteredData.filter(d => d.terrain), 'terrain');
+        const tsrt = Object.entries(tc).sort((a,b) => b[1]-a[1]).slice(0, 5);
+        terrainChart.updateOptions({
+            series: [{ name: 'Sightings', data: tsrt.map(s => s[1]) }],
+            xaxis: { categories: tsrt.map(s => s[0]) }
+        });
+    }
 }
 
 function renderHabitatProgress() {
@@ -547,18 +557,59 @@ function downloadSdmMap() {
     document.body.removeChild(link);
 }
 
+function clearAllModes(leaveBanner = false) {
+    console.log("Global Mode Reset Initiated...");
+    window.GisAppState.isIdentifyMode = false;
+    window.GisAppState.isPredictiveMode = false;
+    
+    if (heatLayer) { map.removeLayer(heatLayer); heatLayer = null; }
+    if (window.GisAppState.ndviLayer) { map.removeLayer(window.GisAppState.ndviLayer); window.GisAppState.ndviLayer = null; }
+    if (analysisBuffer) { map.removeLayer(analysisBuffer); }
+    
+    if (!leaveBanner) {
+        const banner = document.getElementById('map-status-banner');
+        if (banner) banner.style.display = 'none';
+    }
+    
+    if (map) map.getContainer().style.cursor = '';
+}
+
+function toggleNdviLayer() {
+    clearAllModes(true);
+    const banner = document.getElementById('map-status-banner');
+    const bannerText = document.getElementById('banner-text');
+    
+    // Extent of Hurungwe based on GeoJSON/Raster bounds
+    const bounds = [[-17.1, 28.5], [-15.8, 30.5]];
+    window.GisAppState.ndviLayer = L.imageOverlay('data/models/species_suitability_grid.png', bounds, { opacity: 0.65 }).addTo(map);
+    
+    if (banner) {
+        banner.style.display = 'flex';
+        if (bannerText) bannerText.innerText = "NDVI Active: Highlighting regional vegetation density (Satellite Proxy).";
+    }
+    console.log("NDVI Layer Activated");
+}
+
 // ─────────────────────────────────────────────
 // 8. EVENT LISTENERS
 // ─────────────────────────────────────────────
 function bindEventListeners() {
-    ['nav-dashboard', 'nav-gis', 'nav-predictive', 'nav-export', 'nav-buffer', 'nav-trends', 'nav-habitat', 'nav-terrain', 'nav-heat', 'nav-stand'].forEach(id => {
+    ['nav-dashboard', 'nav-gis', 'nav-predictive', 'nav-export', 'nav-buffer', 'nav-trends', 'nav-habitat', 'nav-terrain', 'nav-heat', 'nav-stand', 'nav-ndvi'].forEach(id => {
         document.getElementById(id)?.addEventListener('click', (e) => {
             e.preventDefault();
-            if (id === 'nav-buffer' || id === 'nav-stand') {
+            if (id === 'nav-gis') {
+                clearAllModes();
+                switchView('nav-dashboard');
+            } else if (id === 'nav-buffer' || id === 'nav-stand') {
+                clearAllModes(true);
                 toggleIdentifyMode();
             } else if (id === 'nav-heat') {
+                clearAllModes(true);
                 toggleHeatmap();
+            } else if (id === 'nav-ndvi') {
+                toggleNdviLayer();
             } else {
+                clearAllModes();
                 switchView(id);
             }
         });
