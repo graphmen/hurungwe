@@ -182,6 +182,7 @@ function switchView(viewId) {
     if (viewId === 'nav-dashboard' || viewId === 'nav-gis' || viewId === 'nav-predictive' || viewId === 'nav-terrain') {
         const dashboardView = document.getElementById('view-dashboard');
         const viewTitle = document.getElementById('view-title');
+        const debugVal = document.getElementById('debug-mode-val');
         
         if (dashboardView) {
             dashboardView.style.display = 'grid';
@@ -259,8 +260,6 @@ function switchPanel(panelId) {
         window.GisAppState.isPredictiveMode = true;
         window.GisAppState.isIdentifyMode = false;
         if (map) map.getContainer().style.cursor = 'crosshair';
-        setTimeout(() => initSDMCharts(), 100);
-    } else {
         setTimeout(() => initSDMCharts(), 100);
     } else {
         window.GisAppState.isPredictiveMode = false;
