@@ -200,6 +200,14 @@ function switchView(viewId) {
         }
         
         switchPanel(viewId === 'nav-predictive' ? 'panel-predictive' : 'panel-dashboard');
+        
+        // Restore markers for Dashboard/GIS views
+        if (map && markerCluster) {
+            if (viewId === 'nav-dashboard' || viewId === 'nav-gis') {
+                if (!map.hasLayer(markerCluster)) map.addLayer(markerCluster);
+            }
+        }
+        
         if (map) setTimeout(() => map.invalidateSize(), 400); 
     } 
     
@@ -530,6 +538,7 @@ function toggleIdentifyMode() {
     
     if (banner) {
         banner.style.display = 'flex';
+        banner.classList.remove('hidden');
         if (bannerText) bannerText.innerText = "Research Mode: Click map to analyze stand density & 5km buffer.";
     }
     if (map) map.getContainer().style.cursor = 'crosshair';
@@ -553,6 +562,7 @@ function toggleHeatmap() {
     
     if (banner) {
         banner.style.display = 'flex';
+        banner.classList.remove('hidden');
         if (bannerText) bannerText.innerText = "Density Heatmap Active: Visualizing species concentration hotspots.";
     }
     console.log("Heatmap Activated");
@@ -580,13 +590,21 @@ function clearAllModes(leaveBanner = false) {
     if (window.GisAppState.ndviLayer) { map.removeLayer(window.GisAppState.ndviLayer); window.GisAppState.ndviLayer = null; }
     if (analysisBuffer) { map.removeLayer(analysisBuffer); analysisBuffer = null; }
     
+    // NEW: Hide Tree Markers to prevent 'mixing up'
+    if (map && markerCluster) {
+        map.removeLayer(markerCluster);
+    }
+    
     // 2. Clear Active Popups
     if (map) map.closePopup();
     
     // 3. Reset UI Elements
     if (!leaveBanner) {
         const banner = document.getElementById('map-status-banner');
-        if (banner) banner.style.display = 'none';
+        if (banner) {
+            banner.style.display = 'none';
+            banner.classList.add('hidden');
+        }
     }
     
     // 4. Reset Visual States
@@ -604,6 +622,7 @@ function toggleNdviLayer() {
     
     if (banner) {
         banner.style.display = 'flex';
+        banner.classList.remove('hidden');
         if (bannerText) bannerText.innerText = "NDVI Active: Highlighting regional vegetation density (Satellite Proxy).";
     }
     console.log("NDVI Layer Activated");

@@ -255,6 +255,42 @@ h1, h2, h3 {
 
 .btn-secondary.active { background: var(--bg-sidebar); color: #fff; border-color: var(--bg-sidebar); }
 
+/* Analytical Banners */
+.map-status-banner {
+    background: #31572C;
+    color: #fff;
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13px;
+    font-weight: 500;
+    border-bottom: 2px solid rgba(255,255,255,0.1);
+    animation: slideDown 0.3s ease-out;
+    z-index: 1000;
+}
+
+.map-status-banner.hidden {
+    display: none !important;
+}
+
+.btn-exit-banner {
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: #fff;
+    padding: 4px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 11px;
+    transition: all 0.2s;
+}
+.btn-exit-banner:hover { background: rgba(255,255,255,0.25); }
+
+@keyframes slideDown {
+    from { transform: translateY(-100%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
 /* THE MAP CONTAINER - FIX: Relative positioning with flex grow */
 #map {
     flex: 1; 
