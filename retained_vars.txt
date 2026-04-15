@@ -1,0 +1,11 @@
+bio_13
+bio_14
+bio_15
+bio_16
+bio_18
+bio_19
+bio_2
+bio_4
+bio_6
+dist_rivers
+soil_type
