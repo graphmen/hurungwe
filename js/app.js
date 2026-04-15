@@ -35,6 +35,7 @@ let terrainChart = null;
 let sortedDates = [];
 let activeFilters = { species: 'all', habitat: 'all', monitor: 'all', dateIndex: -1, search: '' };
 let analysisBuffer = null;
+let boundaryMask = null;
 
 // ─────────────────────────────────────────────
 // 2. CORE ENGINE INITIALIZATION
@@ -599,6 +600,7 @@ function clearAllModes(leaveBanner = false) {
     if (heatLayer) { map.removeLayer(heatLayer); heatLayer = null; }
     if (window.GisAppState.ndviLayer) { map.removeLayer(window.GisAppState.ndviLayer); window.GisAppState.ndviLayer = null; }
     if (analysisBuffer) { map.removeLayer(analysisBuffer); analysisBuffer = null; }
+    if (boundaryMask) { map.removeLayer(boundaryMask); boundaryMask = null; }
     
     // 2. Clear Active Popups & Legend
     if (map) map.closePopup();
@@ -650,6 +652,31 @@ function updateMapLegend(type) {
     }
 }
 
+function addBoundaryStencil() {
+    if (!hurungweBoundary || !map) return;
+    
+    // 1. World-wide mask
+    const worldCoords = [[-90, -180], [-90, 180], [90, 180], [90, -180], [-90, -180]];
+    
+    // 2. District Hole
+    const feature = hurungweBoundary.features[0];
+    const districtCoords = feature.geometry.type === 'Polygon' 
+        ? feature.geometry.coordinates 
+        : feature.geometry.coordinates[0]; 
+    
+    const leafletDistrict = districtCoords.map(ring => ring.map(c => [c[1], c[0]]));
+    const combined = [worldCoords].concat(leafletDistrict);
+    
+    boundaryMask = L.polygon(combined, {
+        fillColor: '#FDFDFD', // Match dashboard bg
+        fillOpacity: 1,
+        color: '#7A816C',
+        weight: 1,
+        dashArray: '5, 5',
+        pointerEvents: 'none'
+    }).addTo(map);
+}
+
 function toggleNdviLayer() {
     clearAllModes(true);
     const banner = document.getElementById('map-status-banner');
@@ -657,7 +684,13 @@ function toggleNdviLayer() {
     
     // ROI: Hurungwe District Extent from GEE ROI
     const bounds = [[-17.43389, 28.82297], [-15.60714, 30.33481]];
-    window.GisAppState.ndviLayer = L.imageOverlay('data/models/NDVI_Hurungwe_ExactExtent.png', bounds, { opacity: 0.8 }).addTo(map);
+    window.GisAppState.ndviLayer = L.imageOverlay('data/models/NDVI_Hurungwe_ExactExtent.png', bounds, { 
+        opacity: 0.8,
+        interactive: false
+    }).addTo(map);
+    
+    // Add the Clipping Stencil
+    addBoundaryStencil();
     
     updateMapLegend('ndvi');
     
@@ -666,7 +699,7 @@ function toggleNdviLayer() {
         banner.classList.remove('hidden');
         if (bannerText) bannerText.innerText = "NDVI Active: Classified Vegetation Density (Sentinel-2 Synthesis).";
     }
-    console.log("NDVI Layer Activated within ROI");
+    console.log("NDVI Layer Activated and Clipped");
 }
 
 // ─────────────────────────────────────────────
