@@ -249,6 +249,37 @@
                         </div>
                     </div>
 
+                    <!-- PANEL: NDVI Analysis -->
+                    <div id="panel-ndvi" class="content-panel hidden">
+                        <div class="analytics-card">
+                            <h3><span style="font-size:16px;">🌿</span> Live NDVI Query</h3>
+                            <p class="card-subtitle">Connects securely to Google Earth Engine</p>
+                            
+                            <div class="simulator-controls" style="margin-top: 15px;">
+                                <div class="filter-group" style="margin-bottom: 12px;">
+                                    <label class="filter-label">Start Date</label>
+                                    <input type="date" id="ndvi-start-date" class="filter-select" style="width:100%" value="2020-02-01">
+                                </div>
+                                <div class="filter-group" style="margin-bottom: 12px;">
+                                    <label class="filter-label">End Date</label>
+                                    <input type="date" id="ndvi-end-date" class="filter-select" style="width:100%" value="2020-02-28">
+                                </div>
+                            </div>
+
+                            <button id="btn-run-ndvi" class="btn-primary" style="width:100%; font-size: 12px; margin-top:10px;">
+                                <span class="btn-icon">⚡</span> Generate High-Res Layer
+                            </button>
+                        </div>
+                        
+                        <div class="glass-card stat-card" style="margin-top: 15px; padding: 12px;">
+                            <div style="font-size: 10px; color: var(--text-secondary); line-height: 1.4;">
+                                <strong>System Notice:</strong> 
+                                This tool sends a live compute request directly to Google's Sentinel-2 archives. 
+                                Depending on the length of the timeframe you select, rendering map tiles may take 5-15 seconds.
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- PANEL: Export Interface -->
                     <div id="panel-export" class="content-panel hidden">
                         <div class="analytics-card">

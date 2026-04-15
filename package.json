@@ -6,6 +6,7 @@
     "start": "npx serve -l 3005 ."
   },
   "dependencies": {
+    "@google/earthengine": "^1.7.22",
     "serve": "^14.2.1"
   }
 }
