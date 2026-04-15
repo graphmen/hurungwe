@@ -255,17 +255,27 @@ function switchPanel(panelId) {
     const allPanels = ['panel-dashboard', 'panel-predictive', 'panel-export'];
     allPanels.forEach(id => {
         const el = document.getElementById(id);
-        if (el) { el.style.display = 'none'; el.classList.add('hidden'); }
+        if (el) {
+            el.style.display = 'none';
+            el.classList.add('hidden');
+            el.classList.remove('active-dock'); // Ensure absolute removal
+        }
     });
 
     const target = document.getElementById(panelId);
-    if (target) { target.style.display = 'flex'; target.classList.remove('hidden'); }
+    if (target) {
+        target.style.display = 'flex';
+        target.classList.remove('hidden');
+        target.classList.add('active-dock');
+    }
 
     const viewTitle = document.getElementById('view-title');
     if (panelId === 'panel-predictive') {
         if (viewTitle) viewTitle.innerText = '🤖 Research Modeling Interface';
         if (debugVal) debugVal.innerText = 'PREDICTIVE';
         window.GisAppState.isPredictiveMode = true;
+        window.GisAppState.isIdentifyMode = false;
+        clearMapLegend(); // Clean legend on panel switch
         window.GisAppState.isIdentifyMode = false;
         if (map) map.getContainer().style.cursor = 'crosshair';
         setTimeout(() => initSDMCharts(), 100);
@@ -585,18 +595,14 @@ function clearAllModes(leaveBanner = false) {
     window.GisAppState.isIdentifyMode = false;
     window.GisAppState.isPredictiveMode = false;
     
-    // 1. Remove Layers (Raster, Heat, Buffer)
+    // 1. Remove Specialized Layers
     if (heatLayer) { map.removeLayer(heatLayer); heatLayer = null; }
     if (window.GisAppState.ndviLayer) { map.removeLayer(window.GisAppState.ndviLayer); window.GisAppState.ndviLayer = null; }
     if (analysisBuffer) { map.removeLayer(analysisBuffer); analysisBuffer = null; }
     
-    // NEW: Hide Tree Markers to prevent 'mixing up'
-    if (map && markerCluster) {
-        map.removeLayer(markerCluster);
-    }
-    
-    // 2. Clear Active Popups
+    // 2. Clear Active Popups & Legend
     if (map) map.closePopup();
+    clearMapLegend();
     
     // 3. Reset UI Elements
     if (!leaveBanner) {
@@ -607,8 +613,41 @@ function clearAllModes(leaveBanner = false) {
         }
     }
     
-    // 4. Reset Visual States
+    // 4. Force Marker Cleanup in Analytical Modes
+    if (map && markerCluster) map.removeLayer(markerCluster);
+    
+    // Reset visual cursor
     if (map) map.getContainer().style.cursor = '';
+}
+
+function clearMapLegend() {
+    const leg = document.getElementById('map-legend');
+    if (leg) {
+        leg.innerHTML = '';
+        leg.classList.add('hidden');
+    }
+}
+
+function updateMapLegend(type) {
+    const leg = document.getElementById('map-legend');
+    if (!leg) return;
+    leg.classList.remove('hidden');
+    
+    if (type === 'ndvi') {
+        leg.innerHTML = `
+            <div class="legend-card">
+                <div class="legend-title">🌿 Vegetation Health (NDVI)</div>
+                <div class="legend-items">
+                    <div class="legend-item"><span class="swatch" style="background:darkgreen"></span> Very High (>0.5)</div>
+                    <div class="legend-item"><span class="swatch" style="background:green"></span> High (0.3 - 0.5)</div>
+                    <div class="legend-item"><span class="swatch" style="background:lightgreen"></span> Moderate (0.1 - 0.3)</div>
+                    <div class="legend-item"><span class="swatch" style="background:yellow"></span> Low (-0.1 - 0.1)</div>
+                    <div class="legend-item"><span class="swatch" style="background:brown"></span> Very Low (<-0.1)</div>
+                </div>
+                <div class="legend-meta">Source: Sentinel-2 SR | ROI Clipped</div>
+            </div>
+        `;
+    }
 }
 
 function toggleNdviLayer() {
@@ -616,16 +655,18 @@ function toggleNdviLayer() {
     const banner = document.getElementById('map-status-banner');
     const bannerText = document.getElementById('banner-text');
     
-    // Extent of Hurungwe based on GeoJSON/Raster bounds
-    const bounds = [[-17.1, 28.5], [-15.8, 30.5]];
-    window.GisAppState.ndviLayer = L.imageOverlay('data/models/species_suitability_grid.png', bounds, { opacity: 0.65 }).addTo(map);
+    // ROI: Hurungwe District Extent from GEE ROI
+    const bounds = [[-17.43389, 28.82297], [-15.60714, 30.33481]];
+    window.GisAppState.ndviLayer = L.imageOverlay('data/models/NDVI_Hurungwe_ExactExtent.png', bounds, { opacity: 0.8 }).addTo(map);
+    
+    updateMapLegend('ndvi');
     
     if (banner) {
         banner.style.display = 'flex';
         banner.classList.remove('hidden');
-        if (bannerText) bannerText.innerText = "NDVI Active: Highlighting regional vegetation density (Satellite Proxy).";
+        if (bannerText) bannerText.innerText = "NDVI Active: Classified Vegetation Density (Sentinel-2 Synthesis).";
     }
-    console.log("NDVI Layer Activated");
+    console.log("NDVI Layer Activated within ROI");
 }
 
 // ─────────────────────────────────────────────
