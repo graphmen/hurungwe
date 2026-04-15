@@ -186,6 +186,39 @@ function switchView(viewId) {
     } else if (viewId === 'nav-export') {
         const exportView = document.getElementById('view-export');
         if (exportView) exportView.style.display = 'block';
+    } else if (viewId === 'nav-habitat') {
+        const habitatView = document.getElementById('view-habitat');
+        if (habitatView) habitatView.style.display = 'block';
+    } else if (viewId === 'nav-trends') {
+        showTrendsModal();
+    } else if (viewId === 'nav-terrain') {
+        // Highlighting the Spatial Insights panel
+        const dashboardView = document.getElementById('view-dashboard');
+        if (dashboardView) dashboardView.style.display = 'grid';
+        switchPanel('panel-dashboard');
+        document.getElementById('spatial-insights-card')?.scrollIntoView({ behavior: 'smooth' });
+    }
+}
+
+function showTrendsModal() {
+    const modal = document.getElementById('analytic-modal');
+    if (!modal) return;
+    modal.classList.remove('hidden');
+    
+    const chartContainer = document.getElementById('modal-chart-container');
+    if (chartContainer) {
+        chartContainer.innerHTML = '';
+        const speciesCounts = countBy(allData, 'species');
+        const sorted = Object.entries(speciesCounts).sort((a,b) => b[1]-a[1]).slice(0, 5);
+        
+        new ApexCharts(chartContainer, {
+            series: [{ name: 'Records', data: sorted.map(s => s[1]) }],
+            chart: { type: 'line', height: 350, foreColor: '#1A1A1A' },
+            colors: ['#2D6A4F'],
+            xaxis: { categories: sorted.map(s => s[0]) },
+            stroke: { curve: 'smooth' },
+            title: { text: 'Growth Records by Species', align: 'left' }
+        }).render();
     }
 }
 
@@ -345,13 +378,52 @@ async function loadResearchData() {
 function initSDMCharts() {
     const r = window.GisAppState.researchResults;
     if (!r) return;
+    
+    // 1. Reliability (AUC & Kappa)
     const aucEl = document.querySelector("#chart-auc-kappa");
     if (aucEl) {
         const sNames = Object.keys(r.species_metrics);
         const aVals = sNames.map(s => r.species_metrics[s].auc);
+        const kVals = sNames.map(s => r.species_metrics[s].kappa);
+        
         if (window.GisAppState.sdmCharts.auc) window.GisAppState.sdmCharts.auc.destroy();
-        window.GisAppState.sdmCharts.auc = new ApexCharts(aucEl, { series: [{ name: 'AUC', data: aVals }], chart: { height: 180, type: 'bar' }, colors: ['#2D6A4F'], xaxis: { categories: sNames.map(s => s.split(' ')[0]) } });
+        window.GisAppState.sdmCharts.auc = new ApexCharts(aucEl, {
+            series: [
+                { name: 'AUC (Reliability)', data: aVals },
+                { name: 'Kappa (Agreement)', data: kVals }
+            ],
+            chart: { height: 220, type: 'bar', toolbar: { show: false }, foreColor: '#1A1A1A' },
+            colors: ['#2D6A4F', '#3498DB'],
+            plotOptions: { bar: { horizontal: false, columnWidth: '55%' } },
+            legend: { position: 'top' },
+            xaxis: { categories: sNames.map(s => s.split(' ')[0]) },
+            yaxis: { max: 1.0 }
+        });
         window.GisAppState.sdmCharts.auc.render();
+    }
+
+    // 2. Variable Influence (Influence Driver)
+    const impEl = document.querySelector("#chart-importance");
+    if (impEl) {
+        // Aggregate driver frequency
+        const driverCounts = {};
+        Object.values(r.species_metrics).forEach(m => {
+            driverCounts[m.main_driver] = (driverCounts[m.main_driver] || 0) + 1;
+        });
+
+        const dLabels = Object.keys(driverCounts).map(d => r.driver_metadata[d] || d);
+        const dValues = Object.values(driverCounts);
+
+        if (window.GisAppState.sdmCharts.importance) window.GisAppState.sdmCharts.importance.destroy();
+        window.GisAppState.sdmCharts.importance = new ApexCharts(impEl, {
+            series: [{ name: 'Impact Count', data: dValues }],
+            chart: { height: 220, type: 'bar', toolbar: { show: false }, foreColor: '#1A1A1A' },
+            colors: ['#F39C12'],
+            plotOptions: { bar: { horizontal: true } },
+            xaxis: { categories: dLabels.map(l => shortenLabel(l)) },
+            title: { text: 'Driver Frequency across Species', style: { fontSize: '10px' } }
+        });
+        window.GisAppState.sdmCharts.importance.render();
     }
 }
 
@@ -427,5 +499,9 @@ function bindEventListeners() {
     document.getElementById('mobile-menu-trigger')?.addEventListener('click', (e) => {
         e.preventDefault();
         document.querySelector('.sidebar')?.classList.toggle('mobile-active');
+    });
+
+    document.getElementById('close-modal')?.addEventListener('click', () => {
+        document.getElementById('analytic-modal')?.classList.add('hidden');
     });
 }
