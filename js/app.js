@@ -521,41 +521,41 @@ function performBufferAnalysis(latlng) {
 }
 
 function toggleIdentifyMode() {
-    window.GisAppState.isIdentifyMode = !window.GisAppState.isIdentifyMode;
+    // Force clean slate before starting Identify tool
+    clearAllModes(true);
+    
+    window.GisAppState.isIdentifyMode = true; // explicitly enable
     const banner = document.getElementById('map-status-banner');
     const bannerText = document.getElementById('banner-text');
     
-    if (window.GisAppState.isIdentifyMode) {
-        window.GisAppState.isPredictiveMode = false;
-        if (banner) {
-            banner.style.display = 'flex';
-            if (bannerText) bannerText.innerText = "Research Mode: Click map to analyze stand density & 5km buffer.";
-        }
-        if (map) map.getContainer().style.cursor = 'crosshair';
-    } else {
-        if (banner) banner.style.display = 'none';
-        if (map) map.getContainer().style.cursor = '';
+    if (banner) {
+        banner.style.display = 'flex';
+        if (bannerText) bannerText.innerText = "Research Mode: Click map to analyze stand density & 5km buffer.";
     }
+    if (map) map.getContainer().style.cursor = 'crosshair';
 }
 
 function toggleHeatmap() {
+    // If heatmap is already active, turn it off and return to clean state
+    if (heatLayer) {
+        clearAllModes(false);
+        console.log("Heatmap Deactivated");
+        return;
+    }
+
+    // Otherwise, wipe other tools (NDVI, Buffer) and start Heatmap
+    clearAllModes(true);
     const banner = document.getElementById('map-status-banner');
     const bannerText = document.getElementById('banner-text');
     
-    if (heatLayer) {
-        map.removeLayer(heatLayer);
-        heatLayer = null;
-        if (banner) banner.style.display = 'none';
-        console.log("Heatmap Deactivated");
-    } else {
-        const points = filteredData.map(d => [d.lat, d.lon, 0.5]);
-        heatLayer = L.heatLayer(points, { radius: 25, blur: 15, maxZoom: 13, gradient: { 0.4: 'blue', 0.6: 'lime', 0.8: 'yellow', 1: 'red' } }).addTo(map);
-        if (banner) {
-            banner.style.display = 'flex';
-            if (bannerText) bannerText.innerText = "Density Heatmap Active: Visualizing species concentration hotspots.";
-        }
-        console.log("Heatmap Activated");
+    const points = filteredData.map(d => [d.lat, d.lon, 0.5]);
+    heatLayer = L.heatLayer(points, { radius: 25, blur: 15, maxZoom: 13, gradient: { 0.4: 'blue', 0.6: 'lime', 0.8: 'yellow', 1: 'red' } }).addTo(map);
+    
+    if (banner) {
+        banner.style.display = 'flex';
+        if (bannerText) bannerText.innerText = "Density Heatmap Active: Visualizing species concentration hotspots.";
     }
+    console.log("Heatmap Activated");
 }
 
 function downloadSdmMap() {
@@ -575,15 +575,21 @@ function clearAllModes(leaveBanner = false) {
     window.GisAppState.isIdentifyMode = false;
     window.GisAppState.isPredictiveMode = false;
     
+    // 1. Remove Layers (Raster, Heat, Buffer)
     if (heatLayer) { map.removeLayer(heatLayer); heatLayer = null; }
     if (window.GisAppState.ndviLayer) { map.removeLayer(window.GisAppState.ndviLayer); window.GisAppState.ndviLayer = null; }
-    if (analysisBuffer) { map.removeLayer(analysisBuffer); }
+    if (analysisBuffer) { map.removeLayer(analysisBuffer); analysisBuffer = null; }
     
+    // 2. Clear Active Popups
+    if (map) map.closePopup();
+    
+    // 3. Reset UI Elements
     if (!leaveBanner) {
         const banner = document.getElementById('map-status-banner');
         if (banner) banner.style.display = 'none';
     }
     
+    // 4. Reset Visual States
     if (map) map.getContainer().style.cursor = '';
 }
 
