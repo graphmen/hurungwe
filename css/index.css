@@ -624,12 +624,6 @@ h1, h2, h3 {
 .analysis-dock::-webkit-scrollbar { width: 6px; }
 .analysis-dock::-webkit-scrollbar-thumb { background: rgba(45, 106, 79, 0.2); border-radius: 3px; }
 
-.content-panel {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
-
 /* Global Utilities */
 .hidden { display: none !important; }
 .active-dock { display: flex !important; animation: fadeIn 0.4s ease; }
@@ -662,13 +656,12 @@ h1, h2, h3 {
     text-align: center;
 }
 
-/* Analytics Content Panels */
+/* Base Panel Style */
 .content-panel {
     display: none;
     flex-direction: column;
-    gap: 20px;
+    gap: 22px;
 }
-.content-panel.active-dock { display: flex; }
 
 /* ============================================================
    Elite Responsiveness & Mobile Shell

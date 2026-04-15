@@ -231,12 +231,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         // 3. Show target view section
-        if (viewId === 'nav-gis') {
-            document.getElementById('view-dashboard').style.display = '';
-            // Global Reflow for Leaflet map when re-entering Dashboard
-            if (map) {
-                setTimeout(() => { map.invalidateSize(); }, 400); 
-            }
+        console.log("Switching view to:", viewId);
+        if (viewId === 'nav-dashboard' || viewId === 'nav-gis') {
+            document.getElementById('view-dashboard').style.display = 'grid';
+            switchPanel('panel-dashboard');
+            if (map) setTimeout(() => { map.invalidateSize(); }, 400); 
+        } else if (viewId === 'nav-predictive') {
+            document.getElementById('view-dashboard').style.display = 'grid';
+            switchPanel('panel-predictive');
+            if (map) setTimeout(() => { map.invalidateSize(); }, 400);
         } else if (viewId === 'nav-export') {
             document.getElementById('view-export').style.display = 'block';
         } else if (viewId === 'nav-trends') {
@@ -310,41 +313,61 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function switchPanel(panelId) {
-        // Core Visibility Logic
-        document.querySelectorAll('.content-panel').forEach(p => {
-            p.classList.add('hidden');
-            p.classList.remove('active-dock');
-        });
+        console.log("Switching panel to:", panelId);
+        try {
+            // Core Visibility Logic
+            document.querySelectorAll('.content-panel').forEach(p => {
+                p.classList.add('hidden');
+                p.classList.remove('active-dock');
+                p.style.setProperty('display', 'none', 'important'); // Triple-layer safety
+            });
 
-        const target = document.getElementById(panelId);
-        if (target) {
-            target.classList.remove('hidden');
-            target.classList.add('active-dock');
-        }
-
-        // --- RESEARCH MODE ENHANCEMENTS ---
-        const viewTitle = document.getElementById('view-title');
-        
-        if (panelId === 'panel-predictive') {
-            if (viewTitle) viewTitle.innerText = '🤖 Research Modeling Interface';
-            initSDMCharts();
-            isPredictiveMode = true;
-            map.getContainer().style.cursor = 'crosshair';
-        } else {
-            if (viewTitle) viewTitle.innerText = 'District Distribution Map';
-            isPredictiveMode = false;
-            map.getContainer().style.cursor = '';
-            
-            // Clear scientific overlays
-            if (activeSuitabilityLayer) {
-                map.removeLayer(activeSuitabilityLayer);
-                activeSuitabilityLayer = null;
+            const target = document.getElementById(panelId);
+            if (target) {
+                target.classList.remove('hidden');
+                target.classList.add('active-dock');
+                target.style.setProperty('display', 'flex', 'important'); // Triple-layer safety
             }
-        }
 
-        isIdentifyMode = false; // Reset identify reset
-        const banner = document.getElementById('map-status-banner');
-        if (banner) banner.classList.add('hidden');
+            // --- RESEARCH MODE ENHANCEMENTS ---
+            const viewTitle = document.getElementById('view-title');
+            
+            if (panelId === 'panel-predictive') {
+                if (viewTitle) viewTitle.innerText = '🤖 Research Modeling Interface';
+                
+                // Mode state
+                isPredictiveMode = true;
+                if (map) map.getContainer().style.cursor = 'crosshair';
+                
+                // Initialize charts safely
+                setTimeout(() => {
+                    try {
+                        initSDMCharts();
+                    } catch (chartErr) {
+                        console.error("SDM Chart Init Failed:", chartErr);
+                    }
+                }, 100);
+
+                console.log("Predictive mode ACTIVATED");
+            } else {
+                if (viewTitle) viewTitle.innerText = 'District Distribution Map';
+                isPredictiveMode = false;
+                if (map) map.getContainer().style.cursor = '';
+                
+                // Clear scientific overlays
+                if (activeSuitabilityLayer) {
+                    map.removeLayer(activeSuitabilityLayer);
+                    activeSuitabilityLayer = null;
+                }
+            }
+
+            isIdentifyMode = false; // Reset identify reset
+            const banner = document.getElementById('map-status-banner');
+            if (banner) banner.classList.add('hidden');
+        } catch (e) {
+            console.error("Critical Failure in switchPanel:", e);
+        }
+    }
     }
 
     let modalChart = null;
@@ -432,12 +455,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     function initMap() {
         if (!document.getElementById('map')) return;
 
-        // Switch to LIGHT map tiles
+        // Switch to reliable LIGHT map tiles (CartoDB Positron)
         const lightTiles = L.tileLayer(
-            'https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png',
+            'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
             {
                 maxZoom: 20,
-                attribution: '&copy; Stadia Maps, &copy; OpenStreetMap'
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
             }
         );
 
@@ -952,12 +975,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         // Navigation Handlers
-        ['nav-dashboard', 'nav-gis', 'nav-export', 'nav-trends', 'nav-habitat', 'nav-buffer', 'nav-terrain'].forEach(id => {
+        ['nav-dashboard', 'nav-gis', 'nav-export', 'nav-trends', 'nav-habitat', 'nav-buffer', 'nav-terrain', 'nav-predictive'].forEach(id => {
             const el = document.getElementById(id);
             if (el) {
                 el.addEventListener('click', (e) => {
                     e.preventDefault();
-                        if (id === 'nav-buffer') {
+                    if (id === 'nav-buffer') {
                         toggleIdentifyMode();
                     } else if (id === 'nav-terrain') {
                         showAnalyticModal('nav-terrain');
@@ -1035,17 +1058,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         const aucVals = speciesNames.map(s => researchResults.species_metrics[s].auc);
         const kappaVals = speciesNames.map(s => researchResults.species_metrics[s].kappa);
 
-        if (sdmCharts.auc) sdmCharts.auc.destroy();
-        sdmCharts.auc = new ApexCharts(document.querySelector("#chart-auc-kappa"), {
-            series: [{ name: 'AUC', data: aucVals }, { name: 'Kappa', data: kappaVals }],
-            chart: { height: 250, type: 'bar', toolbar: { show: false } },
-            plotOptions: { bar: { horizontal: false, columnWidth: '55%', borderRadius: 4 } },
-            dataLabels: { enabled: false },
-            colors: ['#2D6A4F', '#D90429'],
-            xaxis: { categories: speciesNames.map(s => s.split(' ')[0]), labels: { style: { fontSize: '10px' } } },
-            title: { text: 'Model Evaluation Scores', style: { fontSize: '12px', fontWeight: 600 } }
-        });
-        sdmCharts.auc.render();
+        const aucEl = document.querySelector("#chart-auc-kappa");
+        if (aucEl) {
+            if (sdmCharts.auc) sdmCharts.auc.destroy();
+            sdmCharts.auc = new ApexCharts(aucEl, {
+                series: [{ name: 'AUC', data: aucVals }, { name: 'Kappa', data: kappaVals }],
+                chart: { height: 180, type: 'bar', toolbar: { show: false } },
+                plotOptions: { bar: { horizontal: false, columnWidth: '55%', borderRadius: 4 } },
+                dataLabels: { enabled: false },
+                colors: ['#2D6A4F', '#D90429'],
+                xaxis: { categories: speciesNames.map(s => s.split(' ')[0]), labels: { style: { fontSize: '10px' } } },
+                title: { text: 'Model Evaluation Scores', style: { fontSize: '12px', fontWeight: 600 } }
+            });
+            sdmCharts.auc.render();
+        }
 
         // 2. Variable Importance (Mock Aggregated)
         const drivers = researchResults.driver_metadata;
@@ -1056,16 +1082,19 @@ document.addEventListener('DOMContentLoaded', async () => {
             driverCounts[d] = (driverCounts[d] || 0) + 1;
         });
 
-        if (sdmCharts.importance) sdmCharts.importance.destroy();
-        sdmCharts.importance = new ApexCharts(document.querySelector("#chart-importance"), {
-            series: [{ name: 'Species Dominance', data: driverKeys.map(k => driverCounts[k] || 0) }],
-            chart: { height: 250, type: 'bar', toolbar: { show: false } },
-            plotOptions: { bar: { horizontal: true, borderRadius: 4 } },
-            colors: ['#52B788'],
-            xaxis: { categories: driverKeys },
-            title: { text: 'Driver Influence Frequency', style: { fontSize: '12px', fontWeight: 600 } }
-        });
-        sdmCharts.importance.render();
+        const impEl = document.querySelector("#chart-importance");
+        if (impEl) {
+            if (sdmCharts.importance) sdmCharts.importance.destroy();
+            sdmCharts.importance = new ApexCharts(impEl, {
+                series: [{ name: 'Species Dominance', data: driverKeys.map(k => driverCounts[k] || 0) }],
+                chart: { height: 180, type: 'bar', toolbar: { show: false } },
+                plotOptions: { bar: { horizontal: true, borderRadius: 4 } },
+                colors: ['#52B788'],
+                xaxis: { categories: driverKeys },
+                title: { text: 'Driver Influence Frequency', style: { fontSize: '12px', fontWeight: 600 } }
+            });
+            sdmCharts.importance.render();
+        }
     }
 
     // --- KNN LOOKUP FOR PREDICTION ---
@@ -1123,7 +1152,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const percent = (r.score * 100).toFixed(1);
             const color = r.score > 0.7 ? '#2D6A4F' : r.score > 0.4 ? '#F5CB5C' : '#D90429';
             return `
-                <div class="prediction-item">
+                <div class="prediction-item" data-species="${r.species}" style="cursor:pointer">
                     <h4>${r.species}</h4>
                     <div class="suitability-bar-container">
                         <div class="suitability-bar-fill" style="width: ${percent}%; background: ${color}"></div>
@@ -1132,6 +1161,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </div>
             `;
         }).join('');
+
+        // Re-bind click listeners to new results
+        resultsGrid.querySelectorAll('.prediction-item').forEach(el => {
+            el.addEventListener('click', () => {
+                const spec = el.dataset.species;
+                showSuitabilityHeatmap(spec);
+            });
+        });
     }
 
     // --- SUITABILITY HEATMAP (RESEARCH OVERLAY) ---
@@ -1188,30 +1225,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     // --- EVENT LISTENERS ---
-    document.getElementById('nav-dashboard')?.addEventListener('click', (e) => {
-        e.preventDefault();
-        switchView('nav-dashboard');
-    });
-
-    document.getElementById('nav-predictive')?.addEventListener('click', (e) => {
-        e.preventDefault();
-        switchView('nav-predictive');
-    });
-
-    document.getElementById('nav-gis')?.addEventListener('click', (e) => {
-        e.preventDefault();
-        switchView('nav-gis');
-    });
-
-    document.getElementById('nav-trends')?.addEventListener('click', (e) => {
-        e.preventDefault();
-        switchView('nav-trends');
-    });
-
-    document.getElementById('nav-habitat')?.addEventListener('click', (e) => {
-        e.preventDefault();
-        switchView('nav-habitat');
-    });
+    // ... logic handled in main loop above ...
 
     // Unified Map Click Handler (Mode Interlock)
     map.on('click', (e) => {
