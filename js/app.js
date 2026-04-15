@@ -272,9 +272,9 @@ function initCharts() {
     donutChart = new ApexCharts(donutEl, {
         series: srt.map(s => s[1]),
         labels: srt.map(s => shortenLabel(s[0])),
-        chart: { type: 'donut', height: 280 },
+        chart: { type: 'donut', height: 280, foreColor: '#2D3436' },
         colors: ['#2D6A4F', '#52B788', '#7A816C', '#C2923A', '#A77F6A', '#6F4E37'],
-        plotOptions: { pie: { donut: { size: '75%', labels: { show: true, total: { show: true, label: 'Records', formatter: () => filteredData.length } } } } }
+        plotOptions: { pie: { donut: { size: '75%', labels: { show: true, name: { color: '#2D3436' }, value: { color: '#2D3436' }, total: { show: true, label: 'Records', color: '#2D3436', formatter: () => filteredData.length } } } } }
     });
     donutChart.render();
     initTerrainChart();
@@ -370,9 +370,26 @@ function renderPredictionResults(results) {
     const empty = document.getElementById('prediction-report-empty');
     if (empty) empty.classList.add('hidden');
     if (active) active.classList.remove('hidden');
+    
     results.sort((a,b) => b.score - a.score);
     if (grid) {
-        grid.innerHTML = results.map(r => `<div class="prediction-item"><h4>${r.species}</h4><div class="suitability-bar-container"><div class="suitability-bar-fill" style="width: ${r.score*100}%"></div></div><small>${(r.score*100).toFixed(1)}% Match</small></div>`).join('');
+        grid.innerHTML = results.map(r => {
+            let color = '#C0392B'; // Default Red
+            if (r.score >= 0.75) color = '#2D6A4F'; // Deep Green
+            else if (r.score >= 0.5) color = '#3498DB'; // Azure Blue
+            else if (r.score >= 0.25) color = '#F39C12'; // Vibrant Orange
+            
+            const pct = (r.score * 100).toFixed(1);
+            return `
+                <div class="prediction-item">
+                    <h4>${r.species}</h4>
+                    <div class="suitability-bar-container">
+                        <div class="suitability-bar-fill" style="width: ${pct}%; background: ${color}"></div>
+                    </div>
+                    <small style="color:${color}; font-weight:600;">${pct}% Match</small>
+                </div>
+            `;
+        }).join('');
     }
 }
 
@@ -387,7 +404,7 @@ function performBufferAnalysis(latlng) {
 // 8. EVENT LISTENERS
 // ─────────────────────────────────────────────
 function bindEventListeners() {
-    ['nav-dashboard', 'nav-gis', 'nav-predictive', 'nav-export', 'nav-buffer'].forEach(id => {
+    ['nav-dashboard', 'nav-gis', 'nav-predictive', 'nav-export', 'nav-buffer', 'nav-trends', 'nav-habitat', 'nav-terrain'].forEach(id => {
         document.getElementById(id)?.addEventListener('click', (e) => {
             e.preventDefault();
             if (id === 'nav-buffer') { window.GisAppState.isIdentifyMode = true; map.getContainer().style.cursor = 'crosshair'; }
