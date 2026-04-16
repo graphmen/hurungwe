@@ -8,10 +8,16 @@
 // 1. GLOBAL STATE & CONSTANTS
 // ─────────────────────────────────────────────
 const SPECIES_COLORS = {
-    'Acacia Polycantha': '#2D6A4F', 'Acacia Siebriana': '#52B788', 'Acacia Galpinii': '#7A816C',
-    'Pilostigma': '#95A5A6', 'Waterberry': '#1B4332', 'Kigelia Africana': '#C2923A',
-    'Munyii': '#A77F6A', 'Red Mahogany': '#6F4E37', 'Trichilia Emetica': '#4A5D23',
-    'Fidebhia Abida': '#BDB76B',
+    'Acacia Polycantha': '#006D4E', // Emerald Deep
+    'Acacia Siebriana': '#34A853',  // Botanical Green
+    'Acacia Galpinii': '#70AF85',   // Sage Soft
+    'Pilostigma': '#4EB1BA',        // Teal
+    'Waterberry': '#014D4E',        // Forest
+    'Kigelia Africana': '#E67E22',  // Sunset Orange
+    'Munyii': '#D35400',            // Burnt Sienna
+    'Red Mahogany': '#8E44AD',      // Plum (Mouth-watering accent)
+    'Trichilia Emetica': '#27AE60', // Vibrant Leaf
+    'Fidebhia Abida': '#F1C40F',    // Sunlit Yellow
 };
 
 window.GisAppState = {
@@ -68,6 +74,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Analytical Layer Bootstrap
         await loadResearchData();
+
+        // ─────────────────────────────────────────────
+        // Sync Initial View & Labels
+        // ─────────────────────────────────────────────
+        switchView('nav-dashboard');
+
+        // Final UI Polish: Ensure map adapts to initial container size
+        setTimeout(() => {
+            if (map) {
+                map.invalidateSize();
+                console.log("Startup: Map size synchronized.");
+            }
+        }, 1000);
 
         console.log("ULTIMATE_GIS_LOAD_SUCCESS: Platform 100% Operational.");
     } catch (err) {
@@ -148,6 +167,7 @@ function populateFilterDropdowns() {
 function fillSelect(id, values, placeholder) {
     const sel = document.getElementById(id);
     if (!sel) return;
+    // Premium select styling
     sel.innerHTML = `<option value="all">${placeholder}</option>` + values.map(v => `<option value="${v}">${v}</option>`).join('');
 }
 
@@ -197,8 +217,7 @@ function switchView(viewId) {
                 if (debugVal) debugVal.innerText = 'GIS_EXPLORER';
             } else {
                 dashboardView.classList.remove('explorer-mode');
-                if (viewTitle) viewTitle.innerText = "Hurungwe Research Dashboard";
-                if (debugVal) debugVal.innerText = 'DASHBOARD';
+                // DON'T set title here, let switchPanel handle it for consistency
             }
         }
 
@@ -240,11 +259,18 @@ function showTrendsModal() {
 
         new ApexCharts(chartContainer, {
             series: [{ name: 'Records', data: sorted.map(s => s[1]) }],
-            chart: { type: 'line', height: 350, foreColor: '#1A1A1A' },
-            colors: ['#2D6A4F'],
+            chart: { 
+                type: 'line', 
+                height: 350, 
+                foreColor: '#2D3436',
+                animations: { enabled: true },
+                dropShadow: { enabled: true, blur: 3, opacity: 0.1 }
+            },
+            colors: ['#006D4E'],
             xaxis: { categories: sorted.map(s => s[0]) },
-            stroke: { curve: 'smooth' },
-            title: { text: 'Growth Records by Species', align: 'left' }
+            stroke: { curve: 'smooth', width: 4 },
+            dataLabels: { enabled: true, background: { enabled: true, foreColor: '#fff', borderRadius: 4, padding: 4 } },
+            title: { text: 'Growth Records by Species', align: 'left', style: { fontSize: '14px', fontWeight: 700 } }
         }).render();
     }
 }
@@ -288,12 +314,20 @@ function switchPanel(panelId) {
         window.GisAppState.isIdentifyMode = false;
         clearMapLegend();
     } else {
-        if (viewTitle) viewTitle.innerText = 'Hurungwe Spatial Interface';
+        if (viewTitle) viewTitle.innerText = 'Hurungwe Research Dashboard';
         if (debugVal) debugVal.innerText = 'DASHBOARD';
         window.GisAppState.isPredictiveMode = false;
         window.GisAppState.isIdentifyMode = false;
         clearMapLegend(); 
         if (map) map.getContainer().style.cursor = '';
+    }
+
+    // Force map to recalculate its container size immediately after panel shift
+    if (map) {
+        setTimeout(() => {
+            map.invalidateSize({ animate: true });
+            console.log("Layout Sync: Map container recalculated.");
+        }, 300);
     }
 }
 
@@ -394,9 +428,30 @@ function initCharts() {
     donutChart = new ApexCharts(donutEl, {
         series: srt.map(s => s[1]),
         labels: srt.map(s => shortenLabel(s[0])),
-        chart: { type: 'donut', height: 280, foreColor: '#2D3436' },
-        colors: ['#2D6A4F', '#52B788', '#7A816C', '#C2923A', '#A77F6A', '#6F4E37'],
-        plotOptions: { pie: { donut: { size: '75%', labels: { show: true, name: { color: '#2D3436' }, value: { color: '#2D3436' }, total: { show: true, label: 'Records', color: '#2D3436', formatter: () => filteredData.length } } } } }
+        chart: { 
+            type: 'donut', 
+            height: 280, 
+            foreColor: '#2D3436', 
+            animations: { enabled: true, easing: 'easeinout', speed: 800 },
+            dropShadow: { enabled: true, blur: 4, left: 0, top: 4, opacity: 0.1 }
+        },
+        colors: ['#006D4E', '#E67E22', '#34A853', '#014D4E', '#D35400', '#4EB1BA'],
+        legend: { position: 'bottom', fontSize: '12px', fontWeight: 500, labels: { colors: '#2D3436' } },
+        plotOptions: { 
+            pie: { 
+                donut: { 
+                    size: '72%', 
+                    labels: { 
+                        show: true, 
+                        name: { show: true, fontSize: '12px', fontWeight: 600, color: '#636e72', offsetY: -10 }, 
+                        value: { show: true, fontSize: '20px', fontWeight: 700, color: '#2d3436', offsetY: 10, formatter: (val) => val }, 
+                        total: { show: true, label: 'TOTAL SIGHTINGS', fontSize: '9px', fontWeight: 800, color: '#b2bec3', formatter: () => filteredData.length } 
+                    } 
+                } 
+            } 
+        },
+        stroke: { width: 0 },
+        dataLabels: { enabled: true, dropShadow: { enabled: false } }
     });
     donutChart.render();
     initTerrainChart();
@@ -410,9 +465,11 @@ function initTerrainChart() {
     if (terrainChart) terrainChart.destroy();
     terrainChart = new ApexCharts(el, {
         series: [{ name: 'Sightings', data: tsrt.map(s => s[1]) }],
-        chart: { type: 'bar', height: 250, toolbar: { show: false } },
-        colors: ['#2D6A4F'],
-        xaxis: { categories: tsrt.map(s => s[0]) }
+        chart: { type: 'bar', height: 250, toolbar: { show: false }, animations: { enabled: true } },
+        colors: ['#34A853'],
+        plotOptions: { bar: { borderRadius: 6, columnWidth: '45%', dataLabels: { position: 'top' } } },
+        xaxis: { categories: tsrt.map(s => s[0]), labels: { style: { fontWeight: 600 } } },
+        dataLabels: { enabled: true, offsetY: -20, style: { fontSize: '11px', colors: ["#2d3436"] } }
     });
     terrainChart.render();
 }
@@ -429,7 +486,8 @@ function updateCharts() {
         const tsrt = Object.entries(tc).sort((a, b) => b[1] - a[1]).slice(0, 5);
         terrainChart.updateOptions({
             series: [{ name: 'Sightings', data: tsrt.map(s => s[1]) }],
-            xaxis: { categories: tsrt.map(s => s[0]) }
+            xaxis: { categories: tsrt.map(s => s[0]) },
+            dataLabels: { enabled: true }
         });
     }
 }
@@ -491,11 +549,12 @@ function initSDMCharts() {
                 { name: 'Kappa (Agreement)', data: kVals }
             ],
             chart: { height: 220, type: 'bar', toolbar: { show: false }, foreColor: '#1A1A1A' },
-            colors: ['#2D6A4F', '#3498DB'],
-            plotOptions: { bar: { horizontal: false, columnWidth: '55%' } },
-            legend: { position: 'top' },
+            colors: ['#006D4E', '#3498DB'],
+            plotOptions: { bar: { horizontal: false, columnWidth: '55%', borderRadius: 4 } },
+            legend: { position: 'top', fontWeight: 600 },
             xaxis: { categories: sNames.map(s => s.split(' ')[0]) },
-            yaxis: { max: 1.0 }
+            yaxis: { max: 1.0 },
+            dataLabels: { enabled: false }
         });
         window.GisAppState.sdmCharts.auc.render();
     }

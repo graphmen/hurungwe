@@ -34,6 +34,13 @@ function authenticateGEE() {
 }
 
 module.exports = async (req, res) => {
+    // 1. CORS headers
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    if (req.method === 'OPTIONS') {
+        return res.status(200).end();
+    }
+
     try {
         const { start, end } = req.query;
         let startDate = start || '2020-02-01';
@@ -95,7 +102,7 @@ module.exports = async (req, res) => {
         const totalCarbonMg = carbon.multiply(pixelAreaHa).reduceRegion({
             reducer: ee.Reducer.sum(),
             geometry: ROI,
-            scale: 250, 
+            scale: 500, 
             maxPixels: 1e13
         });
         
@@ -107,10 +114,14 @@ module.exports = async (req, res) => {
             });
         });
 
+        // Fallback for property key name (sometimes GEE appends reducer name or returns a single key)
+        const carbonKey = Object.keys(result || {}).find(k => k.includes('Carbon') || k.includes('ha')) || 'Carbon_MgC_ha';
+        const totalVal = result[carbonKey];
+
         res.status(200).json({
             success: true,
             tileUrl: mapInfo.urlFormat,
-            totalCarbonMg: result.Carbon_MgC_ha ? Math.round(result.Carbon_MgC_ha).toLocaleString() : 'N/A'
+            totalCarbonMg: totalVal ? Math.round(totalVal).toLocaleString() : 'N/A'
         });
 
     } catch (err) {
