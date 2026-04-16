@@ -1,4 +1,6 @@
 const ee = require('@google/earthengine');
+const fs = require('fs');
+const path = require('path');
 
 /**
  * Authentication utility for Google Earth Engine
@@ -38,18 +40,26 @@ module.exports = async (req, res) => {
     try {
         await authenticateGEE();
 
-        // ROI — Hurungwe District bounding box
-        const ROI = ee.Geometry.Rectangle([
-            28.8229704360000483, -17.4338938509999366,
-            30.3348169510000503, -15.6071430269999496
-        ]);
+        // Load Hurungwe District Boundary from local GeoJSON
+        const geojsonPath = path.join(process.cwd(), 'data', 'Hurungwe.geojson');
+        const geojsonRaw = fs.readFileSync(geojsonPath, 'utf8');
+        const geojsonData = JSON.parse(geojsonRaw);
+        
+        let geom;
+        if (geojsonData.type === 'FeatureCollection') {
+            geom = geojsonData.features[0].geometry;
+        } else if (geojsonData.type === 'Feature') {
+            geom = geojsonData.geometry;
+        } else {
+            geom = geojsonData;
+        }
+        
+        const boundary = ee.Geometry(geom);
 
         // 1. Load ESA WorldCover v200 (ImageCollection → pick first image)
-        const wc = ee.ImageCollection("ESA/WorldCover/v200").first().clip(ROI);
+        const wc = ee.ImageCollection("ESA/WorldCover/v200").first().clip(boundary);
 
         // 2. Reclassify: map ESA codes → 6 simplified classes
-        // ESA codes: 10=Tree, 20=Shrub, 30=Grass, 40=Crop, 50=Built, 60=Bare, 80=Water, 90=Wetland
-        // Our classes: 1=Forest, 2=Grass/Shrub/Wetland, 3=Cropland, 4=Built-up, 5=Bare/Sparse, 6=Open Water
         const lulc = wc.remap(
             [10, 20, 30, 40, 50, 60, 80, 90],
             [1,  2,  2,  3,  4,  5,  6,  2],
@@ -70,7 +80,7 @@ module.exports = async (req, res) => {
             });
         });
 
-        // 4. Area statistics per class (scale=100m for serverless speed)
+        // 4. Area statistics per class (using actual boundary geometry)
         const pixelAreaHa = ee.Image.pixelArea().divide(10000);
         const classIds = [1, 2, 3, 4, 5, 6];
         const classNames = ['Forest', 'Grass/Shrub/Wetland', 'Cropland', 'Built-up', 'Bare/Sparse', 'Open Water'];
@@ -81,8 +91,8 @@ module.exports = async (req, res) => {
                     lulc.eq(id).multiply(pixelAreaHa)
                         .reduceRegion({
                             reducer: ee.Reducer.sum(),
-                            geometry: ROI,
-                            scale: 200,
+                            geometry: boundary,
+                            scale: 250, // Fast reduction for serverless limits
                             maxPixels: 1e13
                         })
                         .evaluate((val, err) => {
