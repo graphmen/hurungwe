@@ -14,8 +14,8 @@
     --text-primary: #1A202C; /* High-Contrast Slate */
     --text-secondary: #4A5568; 
     --text-muted: #718096;
-    --border-color: rgba(45, 106, 79, 0.12); /* Faint Emerald Edge */
-    --border-strong: rgba(45, 106, 79, 0.25);
+    --border-color: rgba(45, 106, 79, 0.22); /* More defined emerald edge */
+    --border-strong: rgba(45, 106, 79, 0.4);
     --glass-bg: rgba(255, 255, 255, 0.9);
     
     --sidebar-width: 280px;
@@ -278,13 +278,13 @@ h1, h2, h3 {
     align-items: center; 
     flex-shrink: 0; 
     background: #FFFFFF;
-    padding: 12px 20px;
-    border-radius: 12px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.03);
-    border: 1px solid var(--border-color);
+    padding: 12px 24px;
+    border-radius: 14px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+    border: 2px solid var(--border-color); /* Increased Edge Width */
     color: var(--text-primary);
     gap: 16px;
-    margin-bottom: 8px;
+    margin-bottom: 12px;
     z-index: 100;
 }
 
@@ -823,8 +823,8 @@ h1, h2, h3 {
     background: var(--bg-card);
     border-radius: var(--radius-md);
     padding: 24px;
-    border: 1px solid var(--border-color);
-    box-shadow: var(--shadow-sm);
+    border: 2px solid var(--border-color); /* 2px Professional Edge */
+    box-shadow: 0 6px 20px rgba(0,0,0,0.04);
     transition: all 0.3s ease;
     position: relative;
     overflow: hidden;
@@ -832,7 +832,8 @@ h1, h2, h3 {
 
 .glass-card:hover, .analytics-card:hover {
     border-color: var(--border-strong);
-    box-shadow: 0 4px 20px rgba(45, 106, 79, 0.08);
+    box-shadow: 0 8px 30px rgba(45, 106, 79, 0.1);
+    transform: translateY(-2px);
 }
 
 .analytics-card h3 {
@@ -986,14 +987,14 @@ h1, h2, h3 {
 }
 
 .map-panel {
-    background: #fff;
+    background: var(--bg-card);
     border-radius: var(--radius-lg);
-    border: 1px solid var(--border-color);
-    box-shadow: var(--shadow-sm);
+    border: 2px solid var(--border-color); /* Defined Edge */
+    box-shadow: 0 10px 40px rgba(0,0,0,0.05);
+    position: relative;
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    position: relative;
     height: 100%;
 }
 
@@ -1162,7 +1163,7 @@ h1, h2, h3 {
         transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         padding-top: 20px;
         box-shadow: 10px 0 30px rgba(0,0,0,0.06);
-        border-right: 1px solid var(--border-strong);
+        border-right: 2px solid var(--border-strong);
         background: var(--bg-sidebar);
     }
     .sidebar.mobile-active { left: 0 !important; }
