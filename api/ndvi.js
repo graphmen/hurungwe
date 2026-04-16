@@ -1,4 +1,6 @@
 const ee = require('@google/earthengine');
+const fs = require('fs');
+const path = require('path');
 
 /**
  * Authetication utility using the provided JSON key.
@@ -45,11 +47,21 @@ module.exports = async (req, res) => {
 
         // 3. EXECUTE GEE LOGIC (Mirrored from User's Script)
         
-        // ROI bounds matching the frontend SW/NE exactly
-        const ROI = ee.Geometry.Rectangle([
-            28.8229704360000483, -17.4338938509999366, // SW
-            30.3348169510000503, -15.6071430269999496  // NE
-        ]);
+        const geojsonPath = path.join(process.cwd(), 'data', 'Hurungwe.geojson');
+        const geojsonRaw = fs.readFileSync(geojsonPath, 'utf8');
+        const geojsonData = JSON.parse(geojsonRaw);
+        
+        let geom;
+        if (geojsonData.type === 'FeatureCollection') {
+            geom = geojsonData.features[0].geometry;
+        } else if (geojsonData.type === 'Feature') {
+            geom = geojsonData.geometry;
+        } else {
+            geom = geojsonData;
+        }
+        
+        // Use true complex multi-polygon geometry for perfect clipping
+        const ROI = ee.Geometry(geom);
 
         const S2 = ee.ImageCollection('COPERNICUS/S2_SR_HARMONIZED')
             .filterDate(startDate, endDate)

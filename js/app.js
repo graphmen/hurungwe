@@ -320,7 +320,7 @@ function initMap() {
     
     // Add Built-in Controls
     L.control.zoom({ position: 'topright' }).addTo(map);
-    L.control.layers(baseMaps, null, { position: 'bottomleft' }).addTo(map);
+    L.control.layers(baseMaps, null, { position: 'topright' }).addTo(map);
     L.control.scale({ imperial: false, position: 'bottomright' }).addTo(map); // Added metric scale bar
 
     // Initial Zoom to Hurungwe Extent bounds
@@ -704,30 +704,7 @@ function updateMapLegend(type) {
     }
 }
 
-function addBoundaryStencil() {
-    if (!hurungweBoundary || !map) return;
-
-    // 1. World-wide mask
-    const worldCoords = [[-90, -180], [-90, 180], [90, 180], [90, -180], [-90, -180]];
-
-    // 2. District Hole
-    const feature = hurungweBoundary.features[0];
-    const districtCoords = feature.geometry.type === 'Polygon'
-        ? feature.geometry.coordinates
-        : feature.geometry.coordinates[0];
-
-    const leafletDistrict = districtCoords.map(ring => ring.map(c => [c[1], c[0]]));
-    const combined = [worldCoords].concat(leafletDistrict);
-
-    boundaryMask = L.polygon(combined, {
-        fillColor: '#FDFDFD', // Match dashboard bg
-        fillOpacity: 1,
-        color: '#7A816C',
-        weight: 1,
-        dashArray: '5, 5',
-        pointerEvents: 'none'
-    }).addTo(map);
-}
+// Legacy addBoundaryStencil removed: Backend True Clipping now active.
 
 async function runNdviQuery() {
     const btn = document.getElementById('btn-run-ndvi');
@@ -758,14 +735,14 @@ async function runNdviQuery() {
             throw new Error(data.error || "Failed to retrieve map tiles from Earth Engine.");
         }
 
-        // Add the dynamic Google tile layer
+        // Add the dynamic Google tile layer, forcing zIndex so it sits above basemaps
         window.GisAppState.ndviLayer = L.tileLayer(data.tileUrl, {
             opacity: 0.9,
-            attribution: '&copy; Google Earth Engine'
+            attribution: '&copy; Google Earth Engine',
+            zIndex: 10
         }).addTo(map);
         
-        // Add the Clipping Stencil
-        addBoundaryStencil();
+        // (True GeoJSON polygon clip is now processed natively in GEE backend S2 API)
         
         updateMapLegend('ndvi');
         const metaLeg = document.getElementById('ndvi-legend-meta');
@@ -803,6 +780,12 @@ function bindEventListeners() {
             } else if (id === 'nav-ndvi') {
                 clearAllModes();
                 switchPanel('panel-ndvi');
+                
+                // Immediately auto-load the Live NDVI query if it's not already running
+                const btn = document.getElementById('btn-run-ndvi');
+                if (btn && !btn.disabled) {
+                    runNdviQuery();
+                }
             } else {
                 clearAllModes();
                 switchView(id);
