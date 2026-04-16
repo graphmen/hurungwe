@@ -300,9 +300,31 @@ function switchPanel(panelId) {
 // ─────────────────────────────────────────────
 function initMap() {
     if (!document.getElementById('map')) return;
-    const tiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom: 20, attribution: '&copy; CARTO' });
-    map = L.map('map', { layers: [tiles], zoomControl: false }).setView([-16.5, 29.5], 9);
+    
+    // Define Basemaps
+    const cartoLight = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { maxZoom: 20, attribution: '&copy; CARTO' });
+    const googleHybrid = L.tileLayer('http://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}', { maxZoom: 20, subdomains: ['mt0', 'mt1', 'mt2', 'mt3'], attribution: '&copy; Google' });
+    const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' });
+
+    const baseMaps = {
+        "Minimal Light": cartoLight,
+        "Google Satellite Hybrid": googleHybrid,
+        "OpenStreetMap": osm
+    };
+    
+    // Initialize Map Options
+    map = L.map('map', { 
+        layers: [googleHybrid], // Default to Google Hybrid
+        zoomControl: false 
+    });
+    
+    // Add Built-in Controls
     L.control.zoom({ position: 'topright' }).addTo(map);
+    L.control.layers(baseMaps, null, { position: 'bottomleft' }).addTo(map);
+
+    // Initial Zoom to Hurungwe Extent bounds
+    const hurungweBounds = [[-17.43389, 28.82297], [-15.60714, 30.33481]];
+    map.fitBounds(hurungweBounds);
 
     if (hurungweBoundary) {
         L.geoJSON(hurungweBoundary, { style: { color: '#7A816C', weight: 2, fillOpacity: 0.05, dashArray: '6, 4' } }).addTo(map);
@@ -322,6 +344,12 @@ function initMap() {
             setTimeout(() => { if (map) map.removeLayer(selMarker); }, 3000);
             predictAtLocation(e.latlng.lat, e.latlng.lng);
         }
+    });
+
+    // Wire up the Reset View Button
+    document.getElementById('reset-view')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        map.fitBounds(hurungweBounds);
     });
 }
 
