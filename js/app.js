@@ -765,7 +765,7 @@ async function runNdviQuery() {
 // 8. EVENT LISTENERS
 // ─────────────────────────────────────────────
 function bindEventListeners() {
-    ['nav-dashboard', 'nav-gis', 'nav-predictive', 'nav-export', 'nav-buffer', 'nav-trends', 'nav-habitat', 'nav-terrain', 'nav-heat', 'nav-stand', 'nav-ndvi'].forEach(id => {
+    ['nav-dashboard', 'nav-gis', 'nav-predictive', 'nav-buffer', 'nav-trends', 'nav-habitat', 'nav-terrain', 'nav-heat', 'nav-stand', 'nav-ndvi'].forEach(id => {
         document.getElementById(id)?.addEventListener('click', (e) => {
             e.preventDefault();
             if (id === 'nav-gis') {
@@ -858,6 +858,39 @@ function bindEventListeners() {
         
         activeFilters = { species: 'all', habitat: 'all', monitor: 'all', search: '' };
         applyFilters();
+    });
+
+    document.getElementById('btn-export-csv')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (!filteredData || filteredData.length === 0) {
+            alert("No data available to export based on current filters.");
+            return;
+        }
+
+        // Generate CSV Header
+        const headers = ["species", "habitat", "terrain", "monitor", "date", "lat", "lon"];
+        const csvRows = [headers.join(",")];
+
+        // Generate CSV Rows
+        filteredData.forEach(row => {
+            const values = headers.map(header => {
+                const val = row[header] ? String(row[header]).replace(/"/g, '""') : '';
+                return `"${val}"`;
+            });
+            csvRows.push(values.join(","));
+        });
+
+        // Trigger Download
+        const csvString = csvRows.join("\n");
+        const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", `hurungwe_filtered_export_${new Date().toISOString().split('T')[0]}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     });
 
     document.getElementById('mobile-menu-trigger')?.addEventListener('click', (e) => {

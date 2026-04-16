@@ -222,6 +222,27 @@ h1, h2, h3 {
     transform: rotate(-180deg);
 }
 
+.btn-export-header {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 0 14px;
+    height: 34px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 12px;
+    font-weight: 600;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+.btn-export-header:hover {
+    background: #FF5E4D;
+    transform: translateY(-1px);
+}
+
 .header-stats {
     display: flex;
     gap: 16px;

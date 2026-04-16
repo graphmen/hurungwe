@@ -56,9 +56,6 @@
                 <a href="#" class="nav-item" id="nav-gis">
                     <span class="icon">🗺️</span> GIS Explorer
                 </a>
-                <a href="#" class="nav-item" id="nav-export">
-                    <span class="icon">📁</span> Data Exports
-                </a>
                 
                 <div class="nav-section">ANALYTICS</div>
                 <a href="#" class="nav-item" id="nav-trends">
@@ -113,6 +110,7 @@
                         <option value="all">All Recorders</option>
                     </select>
                     <button id="reset-filters" class="btn-reset-header" title="Reset Filters">↺</button>
+                    <button id="btn-export-csv" class="btn-export-header" title="Export Filtered Data as CSV">📥 CSV</button>
                 </div>
 
                 <div class="header-stats">
@@ -255,62 +253,12 @@
                         </div>
                     </div>
 
-                    <!-- PANEL: Export Interface -->
-                    <div id="panel-export" class="content-panel hidden">
-                        <div class="analytics-card">
-                            <h3>📥 Research Data Export</h3>
-                            <p class="card-subtitle">Generate CSV for external analysis (R/QGIS)</p>
-                            
-                            <div class="simulator-controls" style="margin-top: 15px;">
-                                <div class="filter-group">
-                                    <label class="filter-label">Target Species Filter</label>
-                                    <select id="export-species-filter" class="filter-select">
-                                        <option value="all">Include All Species</option>
-                                        <!-- Dynamically Populated -->
-                                    </select>
-                                    <p style="font-size: 10px; color: var(--text-secondary); margin-top: 5px;">
-                                        Select a specific subtree or download the full dataset for the current map view.
-                                    </p>
-                                </div>
-                            </div>
-
-                            <button id="btn-final-export" class="btn-primary" style="width:100%; margin-top: 10px;">
-                                <span class="btn-icon">📦</span> Download CSV Dataset
-                            </button>
-                        </div>
-
-                        <div class="glass-card log-card" style="margin-top: 15px;">
-                            <div class="card-header">
-                                <h3>Export Preview</h3>
-                            </div>
-                            <div style="font-size: 11px; font-family: monospace; color: var(--text-secondary); background: #f8f9fa; padding: 12px; border-radius: 8px; border: 1px dashed #ced4da;">
-                                species, habitat, terrain, monitor, date, lat, lon <br>
-                                Acacia Galpinii, Riverine, Lowland, ...
-                            </div>
-                        </div>
-                    </div>
+        <!-- Removed Legacy Export Panel -->
 
                 </aside>
             </div>
 
-            <!-- View: Data Export -->
-            <div id="view-export" class="view-section" style="display: none; padding: 24px;">
-                <div class="glass-card" style="max-width: 600px; margin: 0 auto; text-align: center;">
-                    <h2 style="margin-bottom: 16px; color: var(--accent);">Data Exports</h2>
-                    <p style="color: var(--text-secondary); margin-bottom: 24px;">
-                        Download the records currently visible on your map. Active filters (Species, Habitat, Recorder, and Time) will apply to the exported data.
-                    </p>
-                    <div style="display: flex; gap: 16px; justify-content: center;">
-                        <button id="btn-export-csv" class="btn-primary" style="padding: 12px 24px; font-weight: bold; cursor: pointer;">
-                            📄 Download CSV
-                        </button>
-                        <button id="btn-export-json" class="btn-primary" style="padding: 12px 24px; font-weight: bold; cursor: pointer;">
-                            🗺️ Download GeoJSON
-                        </button>
-                    </div>
-                    <div id="export-status" style="margin-top: 16px; font-size: 13px; color: var(--success);"></div>
-                </div>
-            </div>
+            <!-- View: Data Export (Migrated to Header) -->
 
             <!-- View: Growth Trends -->
             <div id="view-trends" class="view-section" style="display: none; padding: 24px;">
