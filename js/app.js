@@ -440,7 +440,14 @@ function initCharts() {
             dropShadow: { enabled: true, blur: 4, left: 0, top: 4, opacity: 0.1 }
         },
         colors: ['#006D4E', '#E67E22', '#34A853', '#014D4E', '#D35400', '#4EB1BA'],
-        legend: { position: 'bottom', fontSize: '12px', fontWeight: 500, labels: { colors: '#2D3436' } },
+        legend: { 
+            position: 'bottom', 
+            fontSize: '12px', 
+            fontWeight: 500, 
+            labels: { colors: '#2D3436' },
+            markers: { radius: 12 },
+            itemMargin: { horizontal: 8, vertical: 4 }
+        },
         plotOptions: { 
             pie: { 
                 donut: { 
@@ -504,7 +511,16 @@ function renderHabitatProgress() {
     const total = filteredData.length || 1;
     list.innerHTML = sorted.map(([name, count]) => {
         const pct = Math.round((count / total) * 100);
-        return `<div class="progress-item"><div class="progress-labels"><span>${name}</span><span>${pct}%</span></div><div class="progress-bar-bg"><div class="progress-bar-fill" style="width: ${pct}%"></div></div></div>`;
+        return `
+            <div class="progress-item">
+                <div class="progress-labels">
+                    <span>${name}</span>
+                    <span class="pct-badge">${pct}%</span>
+                </div>
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill" style="width: ${pct}%"></div>
+                </div>
+            </div>`;
     }).join('');
 }
 
@@ -1032,6 +1048,12 @@ function bindEventListeners() {
                     clearAllModes();
                     switchView(id);
                 }
+                
+                // Responsiveness: Close sidebar on mobile nav click
+                const sidebar = document.querySelector('.sidebar');
+                const overlay = document.getElementById('sidebar-overlay');
+                if (sidebar) sidebar.classList.remove('mobile-active');
+                if (overlay) overlay.classList.remove('active');
             });
         }
     });
@@ -1171,11 +1193,23 @@ function bindEventListeners() {
     }
 
     const btnMenuMobile = document.getElementById('mobile-menu-trigger');
+    const sidebarOverlay = document.getElementById('sidebar-overlay');
+    
     if (btnMenuMobile) {
         btnMenuMobile.addEventListener('click', (e) => {
             e.preventDefault();
             const sidebar = document.querySelector('.sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
             if (sidebar) sidebar.classList.toggle('mobile-active');
+            if (overlay) overlay.classList.toggle('active');
+        });
+    }
+
+    if (sidebarOverlay) {
+        sidebarOverlay.addEventListener('click', () => {
+            const sidebar = document.querySelector('.sidebar');
+            if (sidebar) sidebar.classList.remove('mobile-active');
+            sidebarOverlay.classList.remove('active');
         });
     }
 
