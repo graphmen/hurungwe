@@ -849,6 +849,17 @@ function bindEventListeners() {
         applyFilters();
     });
 
+    document.getElementById('reset-filters')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        document.getElementById('filter-species').value = 'all';
+        document.getElementById('filter-habitat').value = 'all';
+        document.getElementById('filter-monitor').value = 'all';
+        document.getElementById('search-input').value = '';
+        
+        activeFilters = { species: 'all', habitat: 'all', monitor: 'all', search: '' };
+        applyFilters();
+    });
+
     document.getElementById('mobile-menu-trigger')?.addEventListener('click', (e) => {
         e.preventDefault();
         document.querySelector('.sidebar')?.classList.toggle('mobile-active');

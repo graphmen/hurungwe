@@ -92,44 +92,6 @@
                 </a>
             </nav>
 
-            <!-- Filters Section -->
-            <div class="sidebar-filters">
-                <div class="filter-section-label">FILTERS</div>
-
-                <div class="filter-group">
-                    <label class="filter-label" for="filter-species">Species</label>
-                    <select id="filter-species" class="filter-select">
-                        <option value="all">All Species</option>
-                    </select>
-                </div>
-
-                <div class="filter-group">
-                    <label class="filter-label" for="filter-habitat">Habitat</label>
-                    <select id="filter-habitat" class="filter-select">
-                        <option value="all">All Habitats</option>
-                    </select>
-                </div>
-
-                <div class="filter-group">
-                    <label class="filter-label" for="filter-monitor">Recorder</label>
-                    <select id="filter-monitor" class="filter-select">
-                        <option value="all">All Recorders</option>
-                    </select>
-                </div>
-
-                <button id="reset-filters" class="btn-reset-filters">Reset Filters</button>
-            </div>
-
-            <div class="sidebar-footer">
-                <div class="stat-mini-card">
-                    <span class="label">Total Records</span>
-                    <span class="value" id="stats-total-trees">0</span>
-                </div>
-                <div class="stat-mini-card">
-                    <span class="label">Diversity Index</span>
-                    <span class="value" id="stats-shannon">0.00</span>
-                </div>
-            </div>
         </aside>
 
         <!-- Main Content -->
@@ -137,7 +99,31 @@
             <header class="top-header">
                 <div class="search-bar">
                     <span class="search-icon">🔍</span>
-                    <input type="text" id="search-input" placeholder="Search species, habitat, or recorder...">
+                    <input type="text" id="search-input" placeholder="Search species, habitat...">
+                </div>
+
+                <div class="header-filters">
+                    <select id="filter-species" class="header-select" title="Filter by Species">
+                        <option value="all">All Species</option>
+                    </select>
+                    <select id="filter-habitat" class="header-select" title="Filter by Habitat">
+                        <option value="all">All Habitats</option>
+                    </select>
+                    <select id="filter-monitor" class="header-select" title="Filter by Recorder">
+                        <option value="all">All Recorders</option>
+                    </select>
+                    <button id="reset-filters" class="btn-reset-header" title="Reset Filters">↺</button>
+                </div>
+
+                <div class="header-stats">
+                    <div class="header-stat-badge">
+                        <span class="label">Total Records</span>
+                        <span class="value" id="stats-total-trees">0</span>
+                    </div>
+                    <div class="header-stat-badge">
+                        <span class="label">Diversity Index</span>
+                        <span class="value" id="stats-shannon">0.00</span>
+                    </div>
                 </div>
             </header>
 
