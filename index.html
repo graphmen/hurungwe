@@ -150,8 +150,9 @@
                         <button id="btn-exit-mode" class="btn-exit-banner">Exit</button>
                     </div>
                     <div id="map-legend" class="hidden"></div>
-                        <div id="map" class="map-container"></div>
-                    </section>
+                    <div id="global-map-progress" class="map-progress-bar"></div>
+                    <div id="map" class="map-container"></div>
+                </section>
 
                 <!-- RIGHT SIDEBAR: Toggling Panels -->
                 <aside class="analysis-dock">
@@ -225,7 +226,7 @@
                     <div id="panel-ndvi" class="content-panel hidden">
                         <div class="analytics-card">
                             <h3><span style="font-size:16px;">🌿</span> Live NDVI Query</h3>
-                            <p class="card-subtitle">Connects securely to Google Earth Engine</p>
+                            <p class="card-subtitle">Streams real-time vegetative analytics</p>
                             
                             <div class="simulator-controls" style="margin-top: 15px;">
                                 <div class="filter-group" style="margin-bottom: 12px;">
@@ -246,7 +247,7 @@
                         <div class="glass-card stat-card" style="margin-top: 15px; padding: 12px;">
                             <div style="font-size: 10px; color: var(--text-secondary); line-height: 1.4;">
                                 <strong>System Notice:</strong> 
-                                This tool sends a live compute request directly to Google's Sentinel-2 archives. 
+                                This tool sends a live compute request to analyze dense satellite imagery. 
                                 Depending on the length of the timeframe you select, rendering map tiles may take 5-15 seconds.
                             </div>
                         </div>

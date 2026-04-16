@@ -666,6 +666,10 @@ function clearAllModes(leaveBanner = false) {
             banner.classList.add('hidden');
         }
     }
+    
+    // 5. Hide Progress Bar
+    const progressBar = document.getElementById('global-map-progress');
+    if (progressBar) progressBar.classList.remove('active');
 
     // 4. Force Marker Cleanup in Analytical Modes
     if (map && markerCluster) map.removeLayer(markerCluster);
@@ -727,8 +731,13 @@ async function runNdviQuery() {
     
     if (!startStr || !endStr) return alert("Please select both start and end dates.");
     
-    btn.innerHTML = '<span class="btn-icon">⏳</span> Querying Google Servers...';
+    btn.innerHTML = '<span class="btn-icon spinning">⏳</span> Processing Satellite Data...';
     btn.disabled = true;
+    
+    const currentToken = ++window.GisAppState.activeLayerToken;
+    
+    const progressBar = document.getElementById('global-map-progress');
+    if (progressBar) progressBar.classList.add('active');
     
     try {
         clearAllModes(true);
@@ -738,25 +747,28 @@ async function runNdviQuery() {
         if (banner) {
             banner.style.display = 'flex';
             banner.classList.remove('hidden');
-            if (bannerText) bannerText.innerText = `NDVI Active: Fetching Live Sentinel-2 Data (${startStr} to ${endStr})...`;
+            if (bannerText) bannerText.innerText = `NDVI Active: Analyzing Satellite Telemetry (${startStr} to ${endStr})...`;
         }
 
         // Fetch Tile URL from Vercel Serverless Backend
         const response = await fetch(`/api/ndvi?start=${startStr}&end=${endStr}`);
         const data = await response.json();
         
+        // Discard payload if the user has navigated away or requested a different layer
+        if (window.GisAppState.activeLayerToken !== currentToken) return;
+
         if (!data.success || !data.tileUrl) {
-            throw new Error(data.error || "Failed to retrieve map tiles from Earth Engine.");
+            throw new Error(data.error || "Failed to retrieve map tiles from server.");
         }
 
-        // Add the dynamic Google tile layer, forcing zIndex so it sits above basemaps
+        // Add the dynamic tile layer, forcing zIndex so it sits above basemaps
         window.GisAppState.ndviLayer = L.tileLayer(data.tileUrl, {
             opacity: 0.9,
-            attribution: '&copy; Google Earth Engine',
+            attribution: '&copy; Satellite Analysis',
             zIndex: 10
         }).addTo(map);
         
-        // (True GeoJSON polygon clip is now processed natively in GEE backend S2 API)
+        // (True GeoJSON polygon clip is now processed natively in backend API)
         
         updateMapLegend('ndvi');
         const metaLeg = document.getElementById('ndvi-legend-meta');
@@ -766,12 +778,16 @@ async function runNdviQuery() {
         console.log("NDVI Live Layer Successfully Rendered.");
 
     } catch (err) {
+        if (window.GisAppState.activeLayerToken !== currentToken) return;
         console.error(err);
         alert("ERROR: " + err.message);
         clearAllModes();
     } finally {
-        btn.innerHTML = '<span class="btn-icon">⚡</span> Generate High-Res Layer';
-        btn.disabled = false;
+        if (window.GisAppState.activeLayerToken === currentToken) {
+            btn.innerHTML = '<span class="btn-icon">⚡</span> Generate High-Res Layer';
+            btn.disabled = false;
+            if (progressBar) progressBar.classList.remove('active');
+        }
     }
 }
 
@@ -782,8 +798,13 @@ async function runCarbonQuery() {
     
     if (!startStr || !endStr) return alert("Please select both start and end dates.");
     
-    btn.innerHTML = '<span class="btn-icon">⏳</span> Computing IPCC Matrix...';
+    btn.innerHTML = '<span class="btn-icon spinning">⏳</span> Computing IPCC Matrix...';
     btn.disabled = true;
+    
+    const currentToken = ++window.GisAppState.activeLayerToken;
+    
+    const progressBar = document.getElementById('global-map-progress');
+    if (progressBar) progressBar.classList.add('active');
     
     const badge = document.getElementById('carbon-total-badge');
     if (badge) badge.innerText = "Evaluating...";
@@ -802,13 +823,16 @@ async function runCarbonQuery() {
         const response = await fetch(`/api/carbon?start=${startStr}&end=${endStr}`);
         const data = await response.json();
         
+        // Discard if user actively clicked another analysis layer
+        if (window.GisAppState.activeLayerToken !== currentToken) return;
+        
         if (!data.success || !data.tileUrl) {
-            throw new Error(data.error || "Failed to retrieve map tiles from Earth Engine.");
+            throw new Error(data.error || "Failed to retrieve map tiles from server.");
         }
 
         window.GisAppState.carbonLayer = L.tileLayer(data.tileUrl, {
             opacity: 0.9,
-            attribution: '&copy; Google Earth Engine',
+            attribution: '&copy; Satellite Analysis',
             zIndex: 10
         }).addTo(map);
         
@@ -820,13 +844,17 @@ async function runCarbonQuery() {
         if (bannerText) bannerText.innerText = "Carbon Active: Live Sentinel-2 Estimated Biomass.";
 
     } catch (err) {
+        if (window.GisAppState.activeLayerToken !== currentToken) return;
         console.error(err);
         alert("ERROR: " + err.message);
         clearAllModes();
         if (badge) badge.innerText = "Error";
     } finally {
-        btn.innerHTML = '<span class="btn-icon">⚡</span> Calculate Live Carbon Stock';
-        btn.disabled = false;
+        if (window.GisAppState.activeLayerToken === currentToken) {
+            btn.innerHTML = '<span class="btn-icon">⚡</span> Calculate Live Carbon Stock';
+            btn.disabled = false;
+            if (progressBar) progressBar.classList.remove('active');
+        }
     }
 }
 
