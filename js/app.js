@@ -28,6 +28,7 @@ window.GisAppState = {
     suitabilityGrid: null,
     ndviLayer: null,
     carbonLayer: null,
+    landCoverLayer: null,
     activeLayerToken: 0,
     sdmCharts: { auc: null, importance: null }
 };
@@ -281,7 +282,7 @@ function switchPanel(panelId) {
     const debugBox = document.getElementById('gis-debug-state');
     if (debugBox) debugBox.style.display = 'block';
 
-    const allPanels = ['panel-dashboard', 'panel-predictive', 'panel-ndvi', 'panel-carbon'];
+    const allPanels = ['panel-dashboard', 'panel-predictive', 'panel-ndvi', 'panel-carbon', 'panel-landcover'];
     allPanels.forEach(id => {
         const el = document.getElementById(id);
         if (el) {
@@ -316,6 +317,12 @@ function switchPanel(panelId) {
     } else if (panelId === 'panel-carbon') {
         if (viewTitle) viewTitle.innerText = '🌳 Carbon Stock Mapping';
         if (debugVal) debugVal.innerText = 'CARBON QUERY';
+        window.GisAppState.isPredictiveMode = false;
+        window.GisAppState.isIdentifyMode = false;
+        clearMapLegend();
+    } else if (panelId === 'panel-landcover') {
+        if (viewTitle) viewTitle.innerText = '🗺️ Land Cover / Land Use Mapping';
+        if (debugVal) debugVal.innerText = 'LULC QUERY';
         window.GisAppState.isPredictiveMode = false;
         window.GisAppState.isIdentifyMode = false;
         clearMapLegend();
@@ -719,6 +726,7 @@ function clearAllModes(leaveBanner = false) {
     if (heatLayer) { map.removeLayer(heatLayer); heatLayer = null; }
     if (window.GisAppState.ndviLayer) { map.removeLayer(window.GisAppState.ndviLayer); window.GisAppState.ndviLayer = null; }
     if (window.GisAppState.carbonLayer) { map.removeLayer(window.GisAppState.carbonLayer); window.GisAppState.carbonLayer = null; }
+    if (window.GisAppState.landCoverLayer) { map.removeLayer(window.GisAppState.landCoverLayer); window.GisAppState.landCoverLayer = null; }
     if (analysisBuffer) { map.removeLayer(analysisBuffer); analysisBuffer = null; }
 
     // 2. Clear Active Popups & Legend
@@ -788,8 +796,22 @@ function updateMapLegend(type) {
                 <div class="legend-meta" id="carbon-legend-meta">Source: IPCC Tier 1 Empirical</div>
             </div>
         `;
+    } else if (type === 'landcover') {
+        leg.innerHTML = `
+            <div class="legend-card">
+                <div class="legend-title">🗺️ Land Cover (ESA 2021)</div>
+                <div class="legend-items">
+                    <div class="legend-item"><span class="swatch" style="background:#1a9641"></span> Forest</div>
+                    <div class="legend-item"><span class="swatch" style="background:#a6d96a"></span> Grass / Shrub / Wetland</div>
+                    <div class="legend-item"><span class="swatch" style="background:#ffffbf"></span> Cropland</div>
+                    <div class="legend-item"><span class="swatch" style="background:#d7191c"></span> Built-up</div>
+                    <div class="legend-item"><span class="swatch" style="background:#fdae61"></span> Bare / Sparse</div>
+                    <div class="legend-item"><span class="swatch" style="background:#2c7fb8"></span> Open Water</div>
+                </div>
+                <div class="legend-meta">Source: ESA WorldCover v200 · 10m</div>
+            </div>
+        `;
     }
-}
 
 // Legacy addBoundaryStencil removed: Backend True Clipping now active.
 
@@ -945,11 +967,83 @@ async function runCarbonQuery() {
     }
 }
 
+async function runLandCoverQuery() {
+    const btn = document.getElementById('btn-run-landcover');
+    if (!btn) return;
+
+    btn.innerHTML = '<span class="btn-icon spinning">⏳</span> Mapping Land Cover...';
+    btn.disabled = true;
+
+    const currentToken = ++window.GisAppState.activeLayerToken;
+    const progressBar = document.getElementById('global-map-progress');
+    const mapLoader = document.getElementById('map-loader');
+    const badge = document.getElementById('landcover-status-badge');
+    const statsEl = document.getElementById('landcover-area-stats');
+
+    if (progressBar) progressBar.classList.add('active');
+    if (mapLoader) mapLoader.classList.remove('hidden');
+    if (badge) badge.innerText = 'Mapping...';
+
+    try {
+        clearAllModes(true);
+        const banner = document.getElementById('map-status-banner');
+        const bannerText = document.getElementById('banner-text');
+        if (banner) {
+            banner.style.display = 'flex';
+            banner.classList.remove('hidden');
+            if (bannerText) bannerText.innerText = 'LULC Active: Loading ESA WorldCover 2021 Classification...';
+        }
+
+        const response = await fetch('/api/landcover');
+        const data = await response.json();
+
+        if (window.GisAppState.activeLayerToken !== currentToken) return;
+        if (!data.success || !data.tileUrl) throw new Error(data.error || 'Failed to retrieve LULC tiles.');
+
+        const lcLayer = L.tileLayer(data.tileUrl, { opacity: 0.85, attribution: '&copy; ESA WorldCover', zIndex: 10 }).addTo(map);
+        window.GisAppState.landCoverLayer = lcLayer;
+
+        lcLayer.on('load', () => {
+            if (mapLoader) mapLoader.classList.add('hidden');
+            console.log('Land Cover Tiles Loaded.');
+        });
+
+        updateMapLegend('landcover');
+        if (bannerText) bannerText.innerText = 'LULC Active: ESA WorldCover 2021 — Hurungwe District.';
+        if (badge) badge.innerText = 'Live';
+
+        // Render area statistics
+        if (data.areaStats && statsEl) {
+            const colors = { 'Forest': '#1a9641', 'Grass/Shrub/Wetland': '#a6d96a', 'Cropland': '#ffffbf', 'Built-up': '#d7191c', 'Bare/Sparse': '#fdae61', 'Open Water': '#2c7fb8' };
+            statsEl.innerHTML = data.areaStats.map(cls => `
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+                    <span style="width:12px; height:12px; border-radius:3px; background:${colors[cls.name] || '#999'}; flex-shrink:0; display:inline-block;"></span>
+                    <span style="flex:1; font-weight:600; color:var(--text-primary)">${cls.name}</span>
+                    <span style="font-weight:700; color:var(--accent)">${(cls.areaHa || 0).toLocaleString()} ha</span>
+                </div>
+            `).join('');
+        }
+
+    } catch (err) {
+        if (window.GisAppState.activeLayerToken !== currentToken) return;
+        console.error(err);
+        alert('LULC ERROR: ' + err.message);
+        clearAllModes();
+        if (badge) badge.innerText = 'Error';
+    } finally {
+        if (window.GisAppState.activeLayerToken === currentToken) {
+            btn.innerHTML = '<span class="btn-icon">⚡</span> Generate Land Cover Map';
+            btn.disabled = false;
+            if (progressBar) progressBar.classList.remove('active');
+        }
+    }
+}
+
 // ─────────────────────────────────────────────
 // 8. EVENT LISTENERS
 // ─────────────────────────────────────────────
 function bindEventListeners() {
-    ['nav-dashboard', 'nav-gis', 'nav-predictive', 'nav-buffer', 'nav-trends', 'nav-habitat', 'nav-terrain', 'nav-heat', 'nav-ndvi', 'nav-carbon'].forEach(id => {
+    ['nav-dashboard', 'nav-gis', 'nav-predictive', 'nav-buffer', 'nav-trends', 'nav-habitat', 'nav-terrain', 'nav-heat', 'nav-ndvi', 'nav-carbon', 'nav-landcover'].forEach(id => {
         document.getElementById(id)?.addEventListener('click', (e) => {
             e.preventDefault();
             if (id === 'nav-gis') {
@@ -973,12 +1067,13 @@ function bindEventListeners() {
             } else if (id === 'nav-carbon') {
                 clearAllModes();
                 switchPanel('panel-carbon');
-                
-                // Immediately auto-load the Live Carbon query if it's not already running
                 const btn = document.getElementById('btn-run-carbon');
-                if (btn && !btn.disabled) {
-                    runCarbonQuery();
-                }
+                if (btn && !btn.disabled) runCarbonQuery();
+            } else if (id === 'nav-landcover') {
+                clearAllModes();
+                switchPanel('panel-landcover');
+                const btn = document.getElementById('btn-run-landcover');
+                if (btn && !btn.disabled) runLandCoverQuery();
             } else {
                 clearAllModes();
                 switchView(id);
@@ -989,6 +1084,7 @@ function bindEventListeners() {
     // New Event Listeners
     document.getElementById('btn-run-ndvi')?.addEventListener('click', runNdviQuery);
     document.getElementById('btn-run-carbon')?.addEventListener('click', runCarbonQuery);
+    document.getElementById('btn-run-landcover')?.addEventListener('click', runLandCoverQuery);
 
     // Geographic Utilities
     document.getElementById('btn-fullscreen')?.addEventListener('click', (e) => {

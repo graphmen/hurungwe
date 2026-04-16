@@ -20,7 +20,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="css/index.css?v=fixes_v27">
+    <link rel="stylesheet" href="css/index.css?v=landcover_v28">
 </head>
 <body>
     <div id="sidebar-overlay" class="sidebar-overlay"></div>
@@ -85,6 +85,9 @@
                 </a>
                 <a href="#" class="nav-item" id="nav-carbon">
                     <span class="nav-icon">🌳</span> Carbon Stock Mapping
+                </a>
+                <a href="#" class="nav-item" id="nav-landcover">
+                    <span class="nav-icon">🗺️</span> Land Cover Mapping
                 </a>
             </nav>
 
@@ -298,6 +301,34 @@
                         </div>
                     </div>
 
+                    <!-- PANEL: Land Cover Mapping -->
+                    <div id="panel-landcover" class="content-panel hidden">
+                        <div class="analytics-card">
+                            <h3><span style="font-size:16px;">🗺️</span> Land Cover Analysis</h3>
+                            <p class="card-subtitle">ESA WorldCover 2021 · 10m Resolution · LULC Classification</p>
+
+                            <div class="glass-card stat-card" style="margin-top:14px; padding:12px; background: linear-gradient(135deg, rgba(26,150,65,0.08), rgba(44,127,184,0.08)); border-left: 3px solid #1a9641;">
+                                <div style="font-size: 10px; color: var(--text-secondary); line-height: 1.5;">
+                                    <strong>Data Source:</strong> ESA WorldCover v200 — 6 reclassified land types across Hurungwe District. No date input needed; imagery is fixed at 2021 baseline.
+                                </div>
+                            </div>
+
+                            <button id="btn-run-landcover" class="btn-primary" style="width:100%; margin-top:14px;">
+                                <span class="btn-icon">⚡</span> Generate Land Cover Map
+                            </button>
+                        </div>
+
+                        <div class="glass-card log-card" style="margin-top: 15px;">
+                            <div class="card-header">
+                                <h3>Area Statistics (ha)</h3>
+                                <span class="badge" style="background:#1a9641;" id="landcover-status-badge">Pending</span>
+                            </div>
+                            <div id="landcover-area-stats" style="padding: 10px; font-size: 11px; color: var(--text-secondary); line-height: 1.6;">
+                                Run the analysis to view per-class area estimates.
+                            </div>
+                        </div>
+                    </div>
+
         <!-- Removed Legacy Export Panel -->
 
                 </aside>
@@ -382,6 +413,6 @@
     <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
     <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-    <script src="js/app.js?v=fixes_v27"></script>
+    <script src="js/app.js?v=landcover_v28"></script>
 </body>
 </html>
