@@ -253,7 +253,7 @@ function switchPanel(panelId) {
     const debugBox = document.getElementById('gis-debug-state');
     if (debugBox) debugBox.style.display = 'block';
 
-    const allPanels = ['panel-dashboard', 'panel-predictive', 'panel-ndvi', 'panel-export'];
+    const allPanels = ['panel-dashboard', 'panel-predictive', 'panel-ndvi', 'panel-carbon'];
     allPanels.forEach(id => {
         const el = document.getElementById(id);
         if (el) {
@@ -770,7 +770,7 @@ async function runNdviQuery() {
         alert("ERROR: " + err.message);
         clearAllModes();
     } finally {
-        btn.innerHTML = '<span class="btn-icon">⚡</span> Calculate Live Carbon Stock';
+        btn.innerHTML = '<span class="btn-icon">⚡</span> Generate High-Res Layer';
         btn.disabled = false;
     }
 }

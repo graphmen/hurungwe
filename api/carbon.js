@@ -77,14 +77,19 @@ module.exports = async (req, res) => {
         // Carbon = AGB × 0.47
         const carbon = agb.multiply(0.47).rename('Carbon_MgC_ha');
 
-        // 4. Dynamic Visualization
+        // 4. Dynamic Visualization (Asynchronous wrapper prevents `.node-xmlhttprequest-sync` locks on Vercel)
         const carbonVis = {
             min: 0,
             max: 45,
             palette: ['f5f5f5', 'a1d99b', '41b6c4', '225ea8', '081d58']
         };
 
-        const mapId = carbon.getMap(carbonVis);
+        const mapInfo = await new Promise((resolve, reject) => {
+            carbon.getMap(carbonVis, (mapInfo, err) => {
+                if (err) reject(err);
+                else resolve(mapInfo);
+            });
+        });
 
         // 5. Total Carbon Reducer (Asynchronous Execution)
         // Using scale 100m to aggressively prevent serverless timeouts while approximating the district sum.
@@ -106,7 +111,7 @@ module.exports = async (req, res) => {
 
         res.status(200).json({
             success: true,
-            tileUrl: mapId.urlFormat,
+            tileUrl: mapInfo.urlFormat,
             totalCarbonMg: result.Carbon_MgC_ha ? Math.round(result.Carbon_MgC_ha).toLocaleString() : 'N/A'
         });
 
