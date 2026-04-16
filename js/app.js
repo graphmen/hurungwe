@@ -812,6 +812,7 @@ function updateMapLegend(type) {
             </div>
         `;
     }
+}
 
 // Legacy addBoundaryStencil removed: Backend True Clipping now active.
 
