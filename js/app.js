@@ -986,12 +986,13 @@ async function runLandCoverQuery() {
     const badge = document.getElementById('landcover-status-badge');
     const statsEl = document.getElementById('landcover-area-stats');
 
-    if (progressBar) progressBar.classList.add('active');
-    if (mapLoader) mapLoader.classList.remove('hidden');
-    if (badge) badge.innerText = 'Mapping...';
-
     try {
-        clearAllModes(true);
+        clearAllModes(true); // Clear everything first
+        
+        if (progressBar) progressBar.classList.add('active');
+        if (mapLoader) mapLoader.classList.remove('hidden');
+        if (badge) badge.innerText = 'Mapping...';
+
         const banner = document.getElementById('map-status-banner');
         const bannerText = document.getElementById('banner-text');
         if (banner) {
@@ -999,6 +1000,11 @@ async function runLandCoverQuery() {
             banner.classList.remove('hidden');
             if (bannerText) bannerText.innerText = `LULC Active: Loading ESA WorldCover Classification for ${startStr}...`;
         }
+
+        // Show legend immediately
+        updateMapLegend('landcover');
+        const metaLeg = document.getElementById('map-legend')?.querySelector('.legend-meta');
+        if (metaLeg) metaLeg.innerText = `Source: ESA WorldCover · Baseline: ${startStr} to ${endStr}`;
 
         const response = await fetch(`/api/landcover?start=${startStr}&end=${endStr}`);
         const data = await response.json();
@@ -1014,10 +1020,6 @@ async function runLandCoverQuery() {
             console.log('Land Cover Tiles Loaded.');
         });
 
-        updateMapLegend('landcover');
-        const metaLeg = document.getElementById('map-legend').querySelector('.legend-meta');
-        if (metaLeg) metaLeg.innerText = `Source: ESA WorldCover · Baseline: ${startStr} to ${endStr}`;
-        
         if (bannerText) bannerText.innerText = `LULC Active: ESA WorldCover — Baseline: ${new Date(startStr).getFullYear()}.`;
         if (badge) badge.innerText = 'Live';
 
