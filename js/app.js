@@ -970,7 +970,12 @@ async function runCarbonQuery() {
 
 async function runLandCoverQuery() {
     const btn = document.getElementById('btn-run-landcover');
+    const startStr = document.getElementById('landcover-start-date').value;
+    const endStr = document.getElementById('landcover-end-date').value;
+
     if (!btn) return;
+
+    if (!startStr || !endStr) return alert("Please select both start and end baseline dates.");
 
     btn.innerHTML = '<span class="btn-icon spinning">⏳</span> Mapping Land Cover...';
     btn.disabled = true;
@@ -992,10 +997,10 @@ async function runLandCoverQuery() {
         if (banner) {
             banner.style.display = 'flex';
             banner.classList.remove('hidden');
-            if (bannerText) bannerText.innerText = 'LULC Active: Loading ESA WorldCover 2021 Classification...';
+            if (bannerText) bannerText.innerText = `LULC Active: Loading ESA WorldCover Classification for ${startStr}...`;
         }
 
-        const response = await fetch('/api/landcover');
+        const response = await fetch(`/api/landcover?start=${startStr}&end=${endStr}`);
         const data = await response.json();
 
         if (window.GisAppState.activeLayerToken !== currentToken) return;
@@ -1010,7 +1015,10 @@ async function runLandCoverQuery() {
         });
 
         updateMapLegend('landcover');
-        if (bannerText) bannerText.innerText = 'LULC Active: ESA WorldCover 2021 — Hurungwe District.';
+        const metaLeg = document.getElementById('map-legend').querySelector('.legend-meta');
+        if (metaLeg) metaLeg.innerText = `Source: ESA WorldCover · Baseline: ${startStr} to ${endStr}`;
+        
+        if (bannerText) bannerText.innerText = `LULC Active: ESA WorldCover — Baseline: ${new Date(startStr).getFullYear()}.`;
         if (badge) badge.innerText = 'Live';
 
         // Render area statistics

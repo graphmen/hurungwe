@@ -38,6 +38,12 @@ module.exports = async (req, res) => {
     if (req.method === 'OPTIONS') return res.status(200).end();
 
     try {
+        const { start } = req.query;
+        const selectedYear = start ? new Date(start).getFullYear() : 2021;
+        
+        // ESA v100 is 2020, v200 is 2021. For anything else we pick the closest.
+        const collectionPath = selectedYear <= 2020 ? "ESA/WorldCover/v100" : "ESA/WorldCover/v200";
+
         await authenticateGEE();
 
         // Load Hurungwe District Boundary from local GeoJSON
@@ -56,10 +62,11 @@ module.exports = async (req, res) => {
         
         const boundary = ee.Geometry(geom);
 
-        // 1. Load ESA WorldCover v200 (ImageCollection → pick first image)
-        const wc = ee.ImageCollection("ESA/WorldCover/v200").first().clip(boundary);
+        // 1. Load the specific ESA version collection and clip
+        const wc = ee.ImageCollection(collectionPath).first().clip(boundary);
 
         // 2. Reclassify: map ESA codes → 6 simplified classes
+        // Our classes: 1=Forest, 2=Grass/Shrub/Wetland, 3=Cropland, 4=Built-up, 5=Bare/Sparse, 6=Open Water
         const lulc = wc.remap(
             [10, 20, 30, 40, 50, 60, 80, 90],
             [1,  2,  2,  3,  4,  5,  6,  2],
@@ -80,7 +87,7 @@ module.exports = async (req, res) => {
             });
         });
 
-        // 4. Area statistics per class (using actual boundary geometry)
+        // 4. Area statistics per class
         const pixelAreaHa = ee.Image.pixelArea().divide(10000);
         const classIds = [1, 2, 3, 4, 5, 6];
         const classNames = ['Forest', 'Grass/Shrub/Wetland', 'Cropland', 'Built-up', 'Bare/Sparse', 'Open Water'];
@@ -92,7 +99,7 @@ module.exports = async (req, res) => {
                         .reduceRegion({
                             reducer: ee.Reducer.sum(),
                             geometry: boundary,
-                            scale: 250, // Fast reduction for serverless limits
+                            scale: 250, 
                             maxPixels: 1e13
                         })
                         .evaluate((val, err) => {
@@ -109,7 +116,8 @@ module.exports = async (req, res) => {
         res.status(200).json({
             success: true,
             tileUrl: mapInfo.urlFormat,
-            areaStats: areaResults
+            areaStats: areaResults,
+            yearSource: selectedYear <= 2020 ? 2020 : 2021
         });
 
     } catch (err) {

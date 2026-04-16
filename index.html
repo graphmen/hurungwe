@@ -307,9 +307,20 @@
                             <h3><span style="font-size:16px;">🗺️</span> Land Cover Analysis</h3>
                             <p class="card-subtitle">ESA WorldCover 2021 · 10m Resolution · LULC Classification</p>
 
+                            <div class="simulator-controls" style="margin-top: 15px;">
+                                <div class="filter-group" style="margin-bottom: 12px;">
+                                    <label class="filter-label">Baseline Start</label>
+                                    <input type="date" id="landcover-start-date" class="filter-select" style="width:100%" value="2021-01-01">
+                                </div>
+                                <div class="filter-group">
+                                    <label class="filter-label">Baseline End</label>
+                                    <input type="date" id="landcover-end-date" class="filter-select" style="width:100%" value="2021-12-31">
+                                </div>
+                            </div>
+
                             <div class="glass-card stat-card" style="margin-top:14px; padding:12px; background: linear-gradient(135deg, rgba(26,150,65,0.08), rgba(44,127,184,0.08)); border-left: 3px solid #1a9641;">
                                 <div style="font-size: 10px; color: var(--text-secondary); line-height: 1.5;">
-                                    <strong>Data Source:</strong> ESA WorldCover v200 — 6 reclassified land types across Hurungwe District. No date input needed; imagery is fixed at 2021 baseline.
+                                    <strong>Source Sync:</strong> System automatically switches between ESA v100 (2020) and v200 (2021) based on your selected baseline year.
                                 </div>
                             </div>
 
