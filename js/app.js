@@ -308,8 +308,14 @@ function switchPanel(panelId) {
         if (map) map.getContainer().style.cursor = 'crosshair';
         setTimeout(() => initSDMCharts(), 100);
     } else if (panelId === 'panel-ndvi') {
-        if (viewTitle) viewTitle.innerText = '🌿 Normalized Difference Vegetation Index';
+        if (viewTitle) viewTitle.innerText = '🌿 Vegetation Health (NDVI)';
         if (debugVal) debugVal.innerText = 'NDVI QUERY';
+        window.GisAppState.isPredictiveMode = false;
+        window.GisAppState.isIdentifyMode = false;
+        clearMapLegend();
+    } else if (panelId === 'panel-carbon') {
+        if (viewTitle) viewTitle.innerText = '🌳 Carbon Stock Mapping';
+        if (debugVal) debugVal.innerText = 'CARBON QUERY';
         window.GisAppState.isPredictiveMode = false;
         window.GisAppState.isIdentifyMode = false;
         clearMapLegend();

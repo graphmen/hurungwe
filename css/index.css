@@ -65,7 +65,7 @@ h1, h2, h3 {
 /* Sidebar */
 .sidebar {
     width: 280px;
-    background: linear-gradient(175deg, #1a3a2a 0%, #213d2f 40%, #0d2318 100%);
+    background: linear-gradient(175deg, #2a5240 0%, #31572c 40%, #1e3d22 100%);
     display: flex;
     flex-direction: column;
     padding: 0;
@@ -74,7 +74,7 @@ h1, h2, h3 {
     overflow-y: auto;
     overflow-x: hidden;
     position: relative;
-    box-shadow: 4px 0 24px rgba(0,0,0,0.3);
+    box-shadow: 4px 0 24px rgba(0,0,0,0.2);
 }
 
 /* Faint left-border glow */
@@ -503,7 +503,8 @@ h1, h2, h3 {
     min-height: 500px;
 }
 
-.panel-header { padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); }
+.panel-header { padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); }
+.panel-header h2 { font-size: 15px; font-weight: 700; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 400px; }
 .map-controls { display: flex; gap: 8px; }
 
 .btn-secondary {
