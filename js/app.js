@@ -22,7 +22,6 @@ const SPECIES_COLORS = {
 
 window.GisAppState = {
     isPredictiveMode: false,
-    isIdentifyMode: false,
     activeSuitabilityLayer: null,
     researchResults: null,
     suitabilityGrid: null,
@@ -43,7 +42,6 @@ let donutChart = null;
 let terrainChart = null;
 let sortedDates = [];
 let activeFilters = { species: 'all', habitat: 'all', monitor: 'all', dateIndex: -1, search: '' };
-let analysisBuffer = null;
 let boundaryMask = null;
 
 // ─────────────────────────────────────────────
@@ -312,25 +310,21 @@ function switchPanel(panelId) {
         if (viewTitle) viewTitle.innerText = '🌿 Vegetation Health (NDVI)';
         if (debugVal) debugVal.innerText = 'NDVI QUERY';
         window.GisAppState.isPredictiveMode = false;
-        window.GisAppState.isIdentifyMode = false;
         clearMapLegend();
     } else if (panelId === 'panel-carbon') {
         if (viewTitle) viewTitle.innerText = '🌳 Carbon Stock Mapping';
         if (debugVal) debugVal.innerText = 'CARBON QUERY';
         window.GisAppState.isPredictiveMode = false;
-        window.GisAppState.isIdentifyMode = false;
         clearMapLegend();
     } else if (panelId === 'panel-landcover') {
         if (viewTitle) viewTitle.innerText = '🗺️ Land Cover / Land Use Mapping';
         if (debugVal) debugVal.innerText = 'LULC QUERY';
         window.GisAppState.isPredictiveMode = false;
-        window.GisAppState.isIdentifyMode = false;
         clearMapLegend();
     } else {
         if (viewTitle) viewTitle.innerText = 'Hurungwe Research Dashboard';
         if (debugVal) debugVal.innerText = 'DASHBOARD';
         window.GisAppState.isPredictiveMode = false;
-        window.GisAppState.isIdentifyMode = false;
         clearMapLegend(); 
         if (map) map.getContainer().style.cursor = '';
     }
@@ -385,10 +379,7 @@ function initMap() {
     map.addLayer(markerCluster);
 
     map.on('click', (e) => {
-        if (window.GisAppState.isIdentifyMode) {
-            performBufferAnalysis(e.latlng);
-        }
-        else if (window.GisAppState.isPredictiveMode) {
+        if (window.GisAppState.isPredictiveMode) {
             const selectIcon = L.divIcon({ html: '🎯', className: 'select-icon', iconSize: [24, 24], iconAnchor: [12, 12] });
             const selMarker = L.marker(e.latlng, { icon: selectIcon }).addTo(map);
             setTimeout(() => { if (map) map.removeLayer(selMarker); }, 3000);
@@ -635,51 +626,7 @@ function renderPredictionResults(results) {
     }
 }
 
-function performBufferAnalysis(latlng) {
-    if (analysisBuffer) map.removeLayer(analysisBuffer);
-    analysisBuffer = L.circle(latlng, { radius: 5000, color: '#2D6A4F', fillOpacity: 0.1 }).addTo(map);
 
-    const local = allData.filter(p => getHaversineDistance(latlng, { lat: p.lat, lon: p.lon }) <= 5);
-
-    // NEW: Stand Isolation Index (Nearest Neighbor)
-    let nnDist = "No siblings nearby";
-    if (local.length > 1) {
-        // Find the closest point that isn't the one identified (if we clicked on one)
-        const distances = local.map(p => getHaversineDistance(latlng, { lat: p.lat, lon: p.lon })).filter(d => d > 0);
-        if (distances.length > 0) {
-            nnDist = Math.min(...distances).toFixed(2) + " km";
-        }
-    }
-
-    const popupContent = `
-        <div class="map-popup">
-            <h4>Impact Zone Analysis</h4>
-            <p><strong>Radius:</strong> 5km</p>
-            <p><strong>Sighting Count:</strong> ${local.length}</p>
-            <hr>
-            <p><strong>Nearest Neighbor:</strong> ${nnDist}</p>
-            <small style="color: var(--accent); font-weight:bold;">Stand Health: ${local.length > 10 ? 'High Density' : 'Opportunistic'}</small>
-        </div>
-    `;
-
-    L.popup().setLatLng(latlng).setContent(popupContent).openOn(map);
-}
-
-function toggleIdentifyMode() {
-    // Force clean slate before starting Identify tool
-    clearAllModes(true);
-
-    window.GisAppState.isIdentifyMode = true; // explicitly enable
-    const banner = document.getElementById('map-status-banner');
-    const bannerText = document.getElementById('banner-text');
-
-    if (banner) {
-        banner.style.display = 'flex';
-        banner.classList.remove('hidden');
-        if (bannerText) bannerText.innerText = "Research Mode: Click map to analyze stand density & 5km buffer.";
-    }
-    if (map) map.getContainer().style.cursor = 'crosshair';
-}
 
 function toggleHeatmap() {
     // If heatmap is already active, turn it off and return to clean state
@@ -719,7 +666,6 @@ function downloadSdmMap() {
 
 function clearAllModes(leaveBanner = false) {
     console.log("Global Mode Reset Initiated...");
-    window.GisAppState.isIdentifyMode = false;
     window.GisAppState.isPredictiveMode = false;
 
     // 1. Remove Specialized Layers
@@ -727,7 +673,6 @@ function clearAllModes(leaveBanner = false) {
     if (window.GisAppState.ndviLayer) { map.removeLayer(window.GisAppState.ndviLayer); window.GisAppState.ndviLayer = null; }
     if (window.GisAppState.carbonLayer) { map.removeLayer(window.GisAppState.carbonLayer); window.GisAppState.carbonLayer = null; }
     if (window.GisAppState.landCoverLayer) { map.removeLayer(window.GisAppState.landCoverLayer); window.GisAppState.landCoverLayer = null; }
-    if (analysisBuffer) { map.removeLayer(analysisBuffer); analysisBuffer = null; }
 
     // 2. Clear Active Popups & Legend
     if (map) map.closePopup();
@@ -1054,15 +999,12 @@ async function runLandCoverQuery() {
 // 8. EVENT LISTENERS
 // ─────────────────────────────────────────────
 function bindEventListeners() {
-    ['nav-dashboard', 'nav-gis', 'nav-predictive', 'nav-buffer', 'nav-trends', 'nav-habitat', 'nav-terrain', 'nav-heat', 'nav-ndvi', 'nav-carbon', 'nav-landcover'].forEach(id => {
+    ['nav-dashboard', 'nav-gis', 'nav-predictive', 'nav-trends', 'nav-habitat', 'nav-terrain', 'nav-heat', 'nav-ndvi', 'nav-carbon', 'nav-landcover'].forEach(id => {
         document.getElementById(id)?.addEventListener('click', (e) => {
             e.preventDefault();
             if (id === 'nav-gis') {
                 clearAllModes();
                 switchView('nav-gis');
-            } else if (id === 'nav-buffer') {
-                clearAllModes(true);
-                toggleIdentifyMode();
             } else if (id === 'nav-heat') {
                 clearAllModes(true);
                 toggleHeatmap();
@@ -1132,7 +1074,6 @@ function bindEventListeners() {
     document.getElementById('btn-download-sdm')?.addEventListener('click', downloadSdmMap);
 
     document.getElementById('btn-exit-mode')?.addEventListener('click', () => {
-        window.GisAppState.isIdentifyMode = false;
         if (heatLayer) { map.removeLayer(heatLayer); heatLayer = null; }
         document.getElementById('map-status-banner').style.display = 'none';
         if (map) map.getContainer().style.cursor = '';
