@@ -728,9 +728,11 @@ function clearAllModes(leaveBanner = false) {
         }
     }
     
-    // 5. Hide Progress Bar
+    // 5. Hide Progress Bar & Loader
     const progressBar = document.getElementById('global-map-progress');
+    const mapLoader = document.getElementById('map-loader');
     if (progressBar) progressBar.classList.remove('active');
+    if (mapLoader) mapLoader.classList.add('hidden');
 
     // 4. Force Marker Cleanup in Analytical Modes
     if (map && markerCluster) map.removeLayer(markerCluster);
@@ -823,11 +825,20 @@ async function runNdviQuery() {
         }
 
         // Add the dynamic tile layer, forcing zIndex so it sits above basemaps
-        window.GisAppState.ndviLayer = L.tileLayer(data.tileUrl, {
+        const ndviLayer = L.tileLayer(data.tileUrl, {
             opacity: 0.9,
             attribution: '&copy; Satellite Analysis',
             zIndex: 10
         }).addTo(map);
+
+        window.GisAppState.ndviLayer = ndviLayer;
+
+        // NEW: Hide loader once tiles are rendered
+        document.getElementById('map-loader')?.classList.remove('hidden'); 
+        ndviLayer.on('load', () => {
+            document.getElementById('map-loader')?.classList.add('hidden');
+            console.log("NDVI Tiles Loaded: Hiding Loader.");
+        });
         
         // (True GeoJSON polygon clip is now processed natively in backend API)
         
@@ -891,11 +902,20 @@ async function runCarbonQuery() {
             throw new Error(data.error || "Failed to retrieve map tiles from server.");
         }
 
-        window.GisAppState.carbonLayer = L.tileLayer(data.tileUrl, {
+        const carbonLayer = L.tileLayer(data.tileUrl, {
             opacity: 0.9,
             attribution: '&copy; Satellite Analysis',
             zIndex: 10
         }).addTo(map);
+
+        window.GisAppState.carbonLayer = carbonLayer;
+
+        // NEW: Hide loader once tiles are rendered
+        document.getElementById('map-loader')?.classList.remove('hidden');
+        carbonLayer.on('load', () => {
+            document.getElementById('map-loader')?.classList.add('hidden');
+            console.log("Carbon Tiles Loaded: Hiding Loader.");
+        });
         
         if (badge) badge.innerText = `${data.totalCarbonMg} Mg C`;
         
@@ -985,7 +1005,7 @@ function bindEventListeners() {
         e.preventDefault();
         if (!map) return;
         const btn = e.currentTarget;
-        btn.innerHTML = '<span class="btn-icon">⏳</span> Locating...';
+        btn.innerHTML = '<span class="btn-icon spinning">⏳</span> Locating...';
         map.locate({setView: true, maxZoom: 16});
     });
 
