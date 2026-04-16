@@ -20,7 +20,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="css/index.css?v=premium_ui_v25">
+    <link rel="stylesheet" href="css/index.css?v=sidebar_v26">
 </head>
 <body>
     <div id="sidebar-overlay" class="sidebar-overlay"></div>
@@ -51,42 +51,51 @@
             <nav class="sidebar-nav">
                 <div class="nav-section">MAIN</div>
                 <a href="#" class="nav-item active" id="nav-dashboard">
-                    <span class="icon">📊</span> Dashboard
+                    <span class="nav-icon">📊</span> Dashboard
                 </a>
                 <a href="#" class="nav-item" id="nav-gis">
-                    <span class="icon">🗺️</span> GIS Explorer
+                    <span class="nav-icon">🗺️</span> GIS Explorer
                 </a>
                 
                 <div class="nav-section">ANALYTICS</div>
                 <a href="#" class="nav-item" id="nav-trends">
-                    <span class="icon">📈</span> Growth Trends
+                    <span class="nav-icon">📈</span> Growth Trends
                 </a>
                 <a href="#" class="nav-item" id="nav-habitat">
-                    <span class="icon">🧪</span> Habitat Health
+                    <span class="nav-icon">🧪</span> Habitat Health
                 </a>
 
                 <div class="nav-section">SPATIAL ANALYSIS</div>
                 <a href="#" class="nav-item" id="nav-buffer">
-                    <span class="icon">🎯</span> Identify & Buffer
+                    <span class="nav-icon">🎯</span> Identify & Buffer
                 </a>
                 <a href="#" class="nav-item" id="nav-heat">
-                    <span class="icon">🔥</span> Species Density Heatmap
+                    <span class="nav-icon">🔥</span> Species Density Heatmap
                 </a>
                 <a href="#" class="nav-item" id="nav-terrain">
-                    <span class="icon">⛰️</span> Terrain Linkage
+                    <span class="nav-icon">⛰️</span> Terrain Linkage
                 </a>
 
                 <div class="nav-section">RESEARCH & SDM</div>
                 <a href="#" class="nav-item" id="nav-predictive">
-                    <span class="icon">🤖</span> Predictive Engine
+                    <span class="nav-icon">🤖</span> Predictive Engine
                 </a>
                 <a href="#" class="nav-item" id="nav-ndvi">
-                    <span class="icon">🌿</span> Vegetation Health (NDVI)
+                    <span class="nav-icon">🌿</span> Vegetation Health (NDVI)
                 </a>
                 <a href="#" class="nav-item" id="nav-carbon">
-                    <span class="icon">🌳</span> Carbon Stock Mapping
+                    <span class="nav-icon">🌳</span> Carbon Stock Mapping
                 </a>
             </nav>
+
+            <!-- Sidebar Footer Badge -->
+            <div class="sidebar-footer">
+                <div class="sidebar-version-badge">
+                    <span class="version-dot"></span>
+                    <span>Hurungwe v2.5 — Live</span>
+                </div>
+                <div class="sidebar-org">Zimbabwe Forestry Commission</div>
+            </div>
 
         </aside>
 
@@ -373,6 +382,6 @@
     <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
     <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-    <script src="js/app.js?v=premium_ui_v25"></script>
+    <script src="js/app.js?v=sidebar_v26"></script>
 </body>
 </html>
