@@ -66,10 +66,8 @@ module.exports = async (req, res) => {
 
         const ndvi = S2.normalizedDifference(['B8', 'B4']).rename('NDVI');
 
-        // 2. Mask non-vegetated pixels using Scene Classification Layer
-        const scl = S2.select('SCL');
-        const vegMask = scl.neq(1).and(scl.neq(6)).and(scl.neq(7)).and(scl.neq(8)).and(scl.neq(9)).and(scl.neq(10));
-        const ndviMasked = ndvi.updateMask(vegMask);
+        // 2. Eliminate negative NDVI values before computing IPCC biomass.
+        const ndviMasked = ndvi.updateMask(ndvi.gt(0));
 
         // 3. IPCC Carbon Empirical Formula
         // AGB (Mg/ha) = 15.5 + 185.2 × NDVI
@@ -97,7 +95,7 @@ module.exports = async (req, res) => {
         const totalCarbonMg = carbon.multiply(pixelAreaHa).reduceRegion({
             reducer: ee.Reducer.sum(),
             geometry: ROI,
-            scale: 100, 
+            scale: 250, 
             maxPixels: 1e13
         });
         
