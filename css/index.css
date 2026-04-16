@@ -100,7 +100,7 @@ h1, h2, h3 {
     align-items: center;
     gap: 14px;
     padding: 32px 24px;
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 2px solid var(--border-color); /* Thicker logo divider */
     margin-bottom: 10px;
     background: #F8FAFC;
     position: relative;
@@ -163,9 +163,10 @@ h1, h2, h3 {
 .nav-section::after {
     content: '';
     flex: 1;
-    height: 1px;
+    height: 3px; /* Thicker section divider */
     background: var(--border-color);
     margin-right: 12px;
+    border-radius: 2px;
 }
 
 /* Nav Items */
@@ -286,8 +287,20 @@ h1, h2, h3 {
     border: 2px solid var(--border-color); /* Increased Edge Width */
     color: var(--text-primary);
     gap: 16px;
-    margin-bottom: 12px;
+    margin-bottom: 16px;
     z-index: 100;
+}
+
+.top-header::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 10%;
+    right: 10%;
+    height: 3px;
+    background: var(--border-color);
+    border-radius: 4px;
+    opacity: 0.5;
 }
 
 .search-bar { position: relative; flex: 1; max-width: 300px; }
