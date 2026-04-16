@@ -1000,44 +1000,51 @@ async function runLandCoverQuery() {
 // ─────────────────────────────────────────────
 function bindEventListeners() {
     ['nav-dashboard', 'nav-gis', 'nav-predictive', 'nav-trends', 'nav-habitat', 'nav-terrain', 'nav-heat', 'nav-ndvi', 'nav-carbon', 'nav-landcover'].forEach(id => {
-        document.getElementById(id)?.addEventListener('click', (e) => {
-            e.preventDefault();
-            if (id === 'nav-gis') {
-                clearAllModes();
-                switchView('nav-gis');
-            } else if (id === 'nav-heat') {
-                clearAllModes(true);
-                toggleHeatmap();
-            } else if (id === 'nav-ndvi') {
-                clearAllModes();
-                switchPanel('panel-ndvi');
-                
-                // Immediately auto-load the Live NDVI query if it's not already running
-                const btn = document.getElementById('btn-run-ndvi');
-                if (btn && !btn.disabled) {
-                    runNdviQuery();
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (id === 'nav-gis') {
+                    clearAllModes();
+                    switchView('nav-gis');
+                } else if (id === 'nav-heat') {
+                    clearAllModes(true);
+                    toggleHeatmap();
+                } else if (id === 'nav-ndvi') {
+                    clearAllModes();
+                    switchPanel('panel-ndvi');
+                    
+                    const btn = document.getElementById('btn-run-ndvi');
+                    if (btn && !btn.disabled) {
+                        runNdviQuery();
+                    }
+                } else if (id === 'nav-carbon') {
+                    clearAllModes();
+                    switchPanel('panel-carbon');
+                    const btn = document.getElementById('btn-run-carbon');
+                    if (btn && !btn.disabled) runCarbonQuery();
+                } else if (id === 'nav-landcover') {
+                    clearAllModes();
+                    switchPanel('panel-landcover');
+                    const btn = document.getElementById('btn-run-landcover');
+                    if (btn && !btn.disabled) runLandCoverQuery();
+                } else {
+                    clearAllModes();
+                    switchView(id);
                 }
-            } else if (id === 'nav-carbon') {
-                clearAllModes();
-                switchPanel('panel-carbon');
-                const btn = document.getElementById('btn-run-carbon');
-                if (btn && !btn.disabled) runCarbonQuery();
-            } else if (id === 'nav-landcover') {
-                clearAllModes();
-                switchPanel('panel-landcover');
-                const btn = document.getElementById('btn-run-landcover');
-                if (btn && !btn.disabled) runLandCoverQuery();
-            } else {
-                clearAllModes();
-                switchView(id);
-            }
-        });
+            });
+        }
     });
 
     // New Event Listeners
-    document.getElementById('btn-run-ndvi')?.addEventListener('click', runNdviQuery);
-    document.getElementById('btn-run-carbon')?.addEventListener('click', runCarbonQuery);
-    document.getElementById('btn-run-landcover')?.addEventListener('click', runLandCoverQuery);
+    const btnNdvi = document.getElementById('btn-run-ndvi');
+    if (btnNdvi) btnNdvi.addEventListener('click', runNdviQuery);
+
+    const btnCarbon = document.getElementById('btn-run-carbon');
+    if (btnCarbon) btnCarbon.addEventListener('click', runCarbonQuery);
+
+    const btnLulc = document.getElementById('btn-run-landcover');
+    if (btnLulc) btnLulc.addEventListener('click', runLandCoverQuery);
 
     // Geographic Utilities
     document.getElementById('btn-fullscreen')?.addEventListener('click', (e) => {
@@ -1056,91 +1063,127 @@ function bindEventListeners() {
         if (map) setTimeout(() => map.invalidateSize(), 200);
     });
 
-    document.getElementById('btn-locate')?.addEventListener('click', (e) => {
-        e.preventDefault();
-        if (!map) return;
-        const btn = e.currentTarget;
-        btn.innerHTML = '<span class="btn-icon spinning">⏳</span> Locating...';
-        map.locate({setView: true, maxZoom: 16});
-    });
+    const btnLocate = document.getElementById('btn-locate');
+    if (btnLocate) {
+        btnLocate.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (!map) return;
+            const btn = e.currentTarget;
+            btn.innerHTML = '<span class="btn-icon spinning">⏳</span> Locating...';
+            map.locate({setView: true, maxZoom: 16});
+        });
+    }
 
-    document.getElementById('sdm-species-select')?.addEventListener('change', (e) => {
-        const val = e.target.value;
-        const img = document.getElementById('sdm-map-image');
-        if (img) img.src = `data/models/${val}.png`;
-        console.log("SDM Map Updated:", val);
-    });
+    const sdmSelect = document.getElementById('sdm-species-select');
+    if (sdmSelect) {
+        sdmSelect.addEventListener('change', (e) => {
+            const val = e.target.value;
+            const img = document.getElementById('sdm-map-image');
+            if (img) img.src = `data/models/${val}.png`;
+        });
+    }
 
-    document.getElementById('btn-download-sdm')?.addEventListener('click', downloadSdmMap);
+    const btnDownloadSdm = document.getElementById('btn-download-sdm');
+    if (btnDownloadSdm) btnDownloadSdm.addEventListener('click', downloadSdmMap);
 
-    document.getElementById('btn-exit-mode')?.addEventListener('click', () => {
-        if (heatLayer) { map.removeLayer(heatLayer); heatLayer = null; }
-        document.getElementById('map-status-banner').style.display = 'none';
-        if (map) map.getContainer().style.cursor = '';
-    });
+    const btnExit = document.getElementById('btn-exit-mode');
+    if (btnExit) {
+        btnExit.addEventListener('click', () => {
+            if (heatLayer) { map.removeLayer(heatLayer); heatLayer = null; }
+            const banner = document.getElementById('map-status-banner');
+            if (banner) banner.style.display = 'none';
+            if (map) map.getContainer().style.cursor = '';
+        });
+    }
 
     ['filter-species', 'filter-habitat', 'filter-monitor'].forEach(id => {
-        document.getElementById(id)?.addEventListener('change', (e) => {
-            activeFilters[id.replace('filter-', '')] = e.target.value;
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('change', (e) => {
+                activeFilters[id.replace('filter-', '')] = e.target.value;
+                applyFilters();
+            });
+        }
+    });
+
+    const searchInput = document.getElementById('search-input');
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            activeFilters.search = e.target.value;
             applyFilters();
         });
-    });
+    }
 
-    document.getElementById('search-input')?.addEventListener('input', (e) => {
-        activeFilters.search = e.target.value;
-        applyFilters();
-    });
-
-    document.getElementById('reset-filters')?.addEventListener('click', (e) => {
-        e.preventDefault();
-        document.getElementById('filter-species').value = 'all';
-        document.getElementById('filter-habitat').value = 'all';
-        document.getElementById('filter-monitor').value = 'all';
-        document.getElementById('search-input').value = '';
-        
-        activeFilters = { species: 'all', habitat: 'all', monitor: 'all', search: '' };
-        applyFilters();
-    });
-
-    document.getElementById('btn-export-csv')?.addEventListener('click', (e) => {
-        e.preventDefault();
-        if (!filteredData || filteredData.length === 0) {
-            alert("No data available to export based on current filters.");
-            return;
-        }
-
-        // Generate CSV Header
-        const headers = ["species", "habitat", "terrain", "monitor", "date", "lat", "lon"];
-        const csvRows = [headers.join(",")];
-
-        // Generate CSV Rows
-        filteredData.forEach(row => {
-            const values = headers.map(header => {
-                const val = row[header] ? String(row[header]).replace(/"/g, '""') : '';
-                return `"${val}"`;
-            });
-            csvRows.push(values.join(","));
+    const btnReset = document.getElementById('reset-filters');
+    if (btnReset) {
+        btnReset.addEventListener('click', (e) => {
+            e.preventDefault();
+            const filterSpecies = document.getElementById('filter-species');
+            const filterHabitat = document.getElementById('filter-habitat');
+            const filterMonitor = document.getElementById('filter-monitor');
+            const searchInputReset = document.getElementById('search-input');
+            
+            if (filterSpecies) filterSpecies.value = 'all';
+            if (filterHabitat) filterHabitat.value = 'all';
+            if (filterMonitor) filterMonitor.value = 'all';
+            if (searchInputReset) searchInputReset.value = '';
+            
+            activeFilters = { species: 'all', habitat: 'all', monitor: 'all', search: '' };
+            applyFilters();
         });
+    }
 
-        // Trigger Download
-        const csvString = csvRows.join("\n");
-        const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement("a");
-        const url = URL.createObjectURL(blob);
-        link.setAttribute("href", url);
-        link.setAttribute("download", `hurungwe_filtered_export_${new Date().toISOString().split('T')[0]}.csv`);
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    });
+    const btnCsv = document.getElementById('btn-export-csv');
+    if (btnCsv) {
+        btnCsv.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (!filteredData || filteredData.length === 0) {
+                alert("No data available to export based on current filters.");
+                return;
+            }
 
-    document.getElementById('mobile-menu-trigger')?.addEventListener('click', (e) => {
-        e.preventDefault();
-        document.querySelector('.sidebar')?.classList.toggle('mobile-active');
-    });
+            // Generate CSV Header
+            const headers = ["species", "habitat", "terrain", "monitor", "date", "lat", "lon"];
+            const csvRows = [headers.join(",")];
 
-    document.getElementById('close-modal')?.addEventListener('click', () => {
-        document.getElementById('analytic-modal')?.classList.add('hidden');
-    });
+            // Generate CSV Rows
+            filteredData.forEach(row => {
+                const values = headers.map(header => {
+                    const rowVal = row[header];
+                    const val = rowVal ? String(rowVal).replace(/"/g, '""') : '';
+                    return `"${val}"`;
+                });
+                csvRows.push(values.join(","));
+            });
+
+            // Trigger Download
+            const csvString = csvRows.join("\n");
+            const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", `hurungwe_filtered_export_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+    }
+
+    const btnMenuMobile = document.getElementById('mobile-menu-trigger');
+    if (btnMenuMobile) {
+        btnMenuMobile.addEventListener('click', (e) => {
+            e.preventDefault();
+            const sidebar = document.querySelector('.sidebar');
+            if (sidebar) sidebar.classList.toggle('mobile-active');
+        });
+    }
+
+    const btnModalClose = document.getElementById('close-modal');
+    if (btnModalClose) {
+        btnModalClose.addEventListener('click', () => {
+            const modal = document.getElementById('analytic-modal');
+            if (modal) modal.classList.add('hidden');
+        });
+    }
 }
