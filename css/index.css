@@ -188,9 +188,9 @@ h1, h2, h3 {
 
 /* Sidebar Footer */
 .sidebar-footer {
-    padding: 16px 20px;
-    border-top: 1px solid rgba(255,255,255,0.07);
-    background: rgba(0,0,0,0.2);
+    padding: 24px 20px;
+    border-top: 2px solid var(--border-color); /* Thicker divider */
+    background: #F8FAFC; /* Subtle light background tint */
     margin-top: auto;
 }
 
@@ -198,56 +198,51 @@ h1, h2, h3 {
     display: flex;
     align-items: center;
     gap: 8px;
-    background: #F1F5F9;
-    padding: 6px 12px;
-    border-radius: 20px;
+    background: #FFFFFF;
+    padding: 8px 12px;
+    border-radius: 8px;
     border: 1px solid var(--border-color);
-    box-shadow: inset 0 1px 2px rgba(0,0,0,0.02);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+    margin-bottom: 12px;
 }
 
 .sidebar-version-badge span {
     font-size: 10px;
     font-weight: 800;
-    color: #000000; /* High contrast black */
+    color: #000000; /* Definite black */
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
 
 .sidebar-org {
+    padding: 2px 4px;
+}
+
+.sidebar-org-text {
     font-size: 10px;
-    color: #000000; /* High contrast black */
-    font-weight: 700;
-    line-height: 1.5;
+    color: #000000; /* Definite black */
+    font-weight: 800;
+    line-height: 1.4;
+    display: block;
+    margin-bottom: 4px;
 }
 
 .sidebar-tel {
     font-size: 11px;
     color: var(--accent);
     font-weight: 800;
-    margin-top: 2px;
-    display: inline-block;
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
 
 .version-dot {
-    width: 7px;
-    height: 7px;
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
-    background: #52B788;
-    box-shadow: 0 0 8px rgba(82,183,136,0.8);
+    background: #2D6A4F;
+    box-shadow: 0 0 8px rgba(45,106,79,0.3);
     animation: pulse-dot 2s ease-in-out infinite;
-}
-
-@keyframes pulse-dot {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.6; transform: scale(0.85); }
-}
-
-.sidebar-org {
-    font-size: 9.5px;
-    color: rgba(255,255,255,0.3);
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
 }
 
 .nav-item .nav-icon {
