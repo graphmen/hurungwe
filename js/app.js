@@ -21,6 +21,8 @@ window.GisAppState = {
     researchResults: null,
     suitabilityGrid: null,
     ndviLayer: null,
+    carbonLayer: null,
+    activeLayerToken: 0,
     sdmCharts: { auc: null, importance: null }
 };
 
