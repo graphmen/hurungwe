@@ -321,13 +321,14 @@ function initMap() {
     // Add Built-in Controls
     L.control.zoom({ position: 'topright' }).addTo(map);
     L.control.layers(baseMaps, null, { position: 'bottomleft' }).addTo(map);
+    L.control.scale({ imperial: false, position: 'bottomright' }).addTo(map); // Added metric scale bar
 
     // Initial Zoom to Hurungwe Extent bounds
     const hurungweBounds = [[-17.43389, 28.82297], [-15.60714, 30.33481]];
     map.fitBounds(hurungweBounds);
 
     if (hurungweBoundary) {
-        L.geoJSON(hurungweBoundary, { style: { color: '#7A816C', weight: 2, fillOpacity: 0.05, dashArray: '6, 4' } }).addTo(map);
+        L.geoJSON(hurungweBoundary, { style: { color: '#E74C3C', weight: 3, fillOpacity: 0.05, dashArray: '' } }).addTo(map);
     }
 
     markerCluster = L.markerClusterGroup();
@@ -344,6 +345,20 @@ function initMap() {
             setTimeout(() => { if (map) map.removeLayer(selMarker); }, 3000);
             predictAtLocation(e.latlng.lat, e.latlng.lng);
         }
+    });
+
+    // Locating Events
+    map.on('locationfound', (e) => {
+        const radius = e.accuracy / 2;
+        L.marker(e.latlng).addTo(map).bindPopup(`You are within ${radius} meters from this point`).openPopup();
+        L.circle(e.latlng, radius).addTo(map);
+        const btn = document.getElementById('btn-locate');
+        if (btn) btn.innerHTML = '<span class="btn-icon">📍</span> Locate Me';
+    });
+    map.on('locationerror', (e) => {
+        alert("GPS Error: " + e.message);
+        const btn = document.getElementById('btn-locate');
+        if (btn) btn.innerHTML = '<span class="btn-icon">📍</span> Locate Me';
     });
 
     // Wire up the Reset View Button
@@ -797,6 +812,31 @@ function bindEventListeners() {
 
     // New Event Listener for the NDVI Form Submission
     document.getElementById('btn-run-ndvi')?.addEventListener('click', runNdviQuery);
+
+    // Geographic Utilities
+    document.getElementById('btn-fullscreen')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        const mapContainer = document.querySelector('.map-panel');
+        if (!document.fullscreenElement) {
+            mapContainer.requestFullscreen().catch(err => {
+                alert(`Error attempting to enable fullscreen: ${err.message}`);
+            });
+        } else {
+            document.exitFullscreen();
+        }
+    });
+
+    document.addEventListener('fullscreenchange', () => {
+        if (map) setTimeout(() => map.invalidateSize(), 200);
+    });
+
+    document.getElementById('btn-locate')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (!map) return;
+        const btn = e.currentTarget;
+        btn.innerHTML = '<span class="btn-icon">⏳</span> Locating...';
+        map.locate({setView: true, maxZoom: 16});
+    });
 
     document.getElementById('sdm-species-select')?.addEventListener('change', (e) => {
         const val = e.target.value;
