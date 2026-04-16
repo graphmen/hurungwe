@@ -651,8 +651,8 @@ function clearAllModes(leaveBanner = false) {
     // 1. Remove Specialized Layers
     if (heatLayer) { map.removeLayer(heatLayer); heatLayer = null; }
     if (window.GisAppState.ndviLayer) { map.removeLayer(window.GisAppState.ndviLayer); window.GisAppState.ndviLayer = null; }
+    if (window.GisAppState.carbonLayer) { map.removeLayer(window.GisAppState.carbonLayer); window.GisAppState.carbonLayer = null; }
     if (analysisBuffer) { map.removeLayer(analysisBuffer); analysisBuffer = null; }
-    if (boundaryMask) { map.removeLayer(boundaryMask); boundaryMask = null; }
 
     // 2. Clear Active Popups & Legend
     if (map) map.closePopup();
@@ -699,6 +699,20 @@ function updateMapLegend(type) {
                     <div class="legend-item"><span class="swatch" style="background:brown"></span> Very Low (<-0.1)</div>
                 </div>
                 <div class="legend-meta" id="ndvi-legend-meta">Source: Sentinel-2 SR | Live Query</div>
+            </div>
+        `;
+    } else if (type === 'carbon') {
+        leg.innerHTML = `
+            <div class="legend-card">
+                <div class="legend-title">🌳 Carbon Stock (Mg C/ha)</div>
+                <div class="legend-items">
+                    <div class="legend-item"><span class="swatch" style="background:#081d58"></span> 35-45+ Mg C/ha</div>
+                    <div class="legend-item"><span class="swatch" style="background:#225ea8"></span> 25-35 Mg C/ha</div>
+                    <div class="legend-item"><span class="swatch" style="background:#41b6c4"></span> 15-25 Mg C/ha</div>
+                    <div class="legend-item"><span class="swatch" style="background:#a1d99b"></span> 5-15 Mg C/ha</div>
+                    <div class="legend-item"><span class="swatch" style="background:#f5f5f5"></span> 0-5 Mg C/ha</div>
+                </div>
+                <div class="legend-meta" id="carbon-legend-meta">Source: IPCC Tier 1 Empirical</div>
             </div>
         `;
     }
@@ -756,7 +770,62 @@ async function runNdviQuery() {
         alert("ERROR: " + err.message);
         clearAllModes();
     } finally {
-        btn.innerHTML = '<span class="btn-icon">⚡</span> Generate High-Res Layer';
+        btn.innerHTML = '<span class="btn-icon">⚡</span> Calculate Live Carbon Stock';
+        btn.disabled = false;
+    }
+}
+
+async function runCarbonQuery() {
+    const btn = document.getElementById('btn-run-carbon');
+    const startStr = document.getElementById('carbon-start-date').value;
+    const endStr = document.getElementById('carbon-end-date').value;
+    
+    if (!startStr || !endStr) return alert("Please select both start and end dates.");
+    
+    btn.innerHTML = '<span class="btn-icon">⏳</span> Computing IPCC Matrix...';
+    btn.disabled = true;
+    
+    const badge = document.getElementById('carbon-total-badge');
+    if (badge) badge.innerText = "Evaluating...";
+    
+    try {
+        clearAllModes(true);
+        const banner = document.getElementById('map-status-banner');
+        const bannerText = document.getElementById('banner-text');
+        
+        if (banner) {
+            banner.style.display = 'flex';
+            banner.classList.remove('hidden');
+            if (bannerText) bannerText.innerText = `Carbon Active: Analyzing Above-Ground Biomass...`;
+        }
+
+        const response = await fetch(`/api/carbon?start=${startStr}&end=${endStr}`);
+        const data = await response.json();
+        
+        if (!data.success || !data.tileUrl) {
+            throw new Error(data.error || "Failed to retrieve map tiles from Earth Engine.");
+        }
+
+        window.GisAppState.carbonLayer = L.tileLayer(data.tileUrl, {
+            opacity: 0.9,
+            attribution: '&copy; Google Earth Engine',
+            zIndex: 10
+        }).addTo(map);
+        
+        if (badge) badge.innerText = `${data.totalCarbonMg} Mg C`;
+        
+        updateMapLegend('carbon');
+        const metaLeg = document.getElementById('carbon-legend-meta');
+        if (metaLeg) metaLeg.innerText = `Source: Sentinel-2 SR | Dates: ${startStr} to ${endStr}`;
+        if (bannerText) bannerText.innerText = "Carbon Active: Live Sentinel-2 Estimated Biomass.";
+
+    } catch (err) {
+        console.error(err);
+        alert("ERROR: " + err.message);
+        clearAllModes();
+        if (badge) badge.innerText = "Error";
+    } finally {
+        btn.innerHTML = '<span class="btn-icon">⚡</span> Calculate Live Carbon Stock';
         btn.disabled = false;
     }
 }
@@ -765,13 +834,13 @@ async function runNdviQuery() {
 // 8. EVENT LISTENERS
 // ─────────────────────────────────────────────
 function bindEventListeners() {
-    ['nav-dashboard', 'nav-gis', 'nav-predictive', 'nav-buffer', 'nav-trends', 'nav-habitat', 'nav-terrain', 'nav-heat', 'nav-stand', 'nav-ndvi'].forEach(id => {
+    ['nav-dashboard', 'nav-gis', 'nav-predictive', 'nav-buffer', 'nav-trends', 'nav-habitat', 'nav-terrain', 'nav-heat', 'nav-ndvi', 'nav-carbon'].forEach(id => {
         document.getElementById(id)?.addEventListener('click', (e) => {
             e.preventDefault();
             if (id === 'nav-gis') {
                 clearAllModes();
                 switchView('nav-gis');
-            } else if (id === 'nav-buffer' || id === 'nav-stand') {
+            } else if (id === 'nav-buffer') {
                 clearAllModes(true);
                 toggleIdentifyMode();
             } else if (id === 'nav-heat') {
@@ -786,6 +855,15 @@ function bindEventListeners() {
                 if (btn && !btn.disabled) {
                     runNdviQuery();
                 }
+            } else if (id === 'nav-carbon') {
+                clearAllModes();
+                switchPanel('panel-carbon');
+                
+                // Immediately auto-load the Live Carbon query if it's not already running
+                const btn = document.getElementById('btn-run-carbon');
+                if (btn && !btn.disabled) {
+                    runCarbonQuery();
+                }
             } else {
                 clearAllModes();
                 switchView(id);
@@ -793,8 +871,9 @@ function bindEventListeners() {
         });
     });
 
-    // New Event Listener for the NDVI Form Submission
+    // New Event Listeners
     document.getElementById('btn-run-ndvi')?.addEventListener('click', runNdviQuery);
+    document.getElementById('btn-run-carbon')?.addEventListener('click', runCarbonQuery);
 
     // Geographic Utilities
     document.getElementById('btn-fullscreen')?.addEventListener('click', (e) => {

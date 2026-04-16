@@ -72,13 +72,6 @@
                 <a href="#" class="nav-item" id="nav-heat">
                     <span class="icon">🔥</span> Species Density Heatmap
                 </a>
-                <a href="#" class="nav-item" id="nav-stand">
-                    <span class="icon">📏</span> Stand Density Analysis
-                    <div style="font-size: 9px; opacity: 0.8; margin-left: 28px;">Isolation Index</div>
-                </a>
-                <a href="#" class="nav-item" id="nav-ndvi">
-                    <span class="icon">🌿</span> Vegetation Health (NDVI)
-                </a>
                 <a href="#" class="nav-item" id="nav-terrain">
                     <span class="icon">⛰️</span> Terrain Linkage
                 </a>
@@ -86,6 +79,12 @@
                 <div class="nav-section">RESEARCH & SDM</div>
                 <a href="#" class="nav-item" id="nav-predictive">
                     <span class="icon">🤖</span> Predictive Engine
+                </a>
+                <a href="#" class="nav-item" id="nav-ndvi">
+                    <span class="icon">🌿</span> Vegetation Health (NDVI)
+                </a>
+                <a href="#" class="nav-item" id="nav-carbon">
+                    <span class="icon">🌳</span> Carbon Stock Mapping
                 </a>
             </nav>
 
@@ -249,6 +248,38 @@
                                 <strong>System Notice:</strong> 
                                 This tool sends a live compute request directly to Google's Sentinel-2 archives. 
                                 Depending on the length of the timeframe you select, rendering map tiles may take 5-15 seconds.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PANEL: Carbon Stock Mapping -->
+                    <div id="panel-carbon" class="content-panel hidden">
+                        <div class="analytics-card">
+                            <h3><span style="font-size:16px;">🌳</span> Carbon Stock Mapping</h3>
+                            <p class="card-subtitle">IPCC Tier 1: AGB (Mg/ha) via Regional NDVI Model</p>
+                            
+                            <div class="simulator-controls" style="margin-top: 15px;">
+                                <div class="filter-group" style="margin-bottom: 12px;">
+                                    <label class="filter-label">Baseline Start</label>
+                                    <input type="date" id="carbon-start-date" class="filter-select" style="width:100%" value="2020-02-01">
+                                </div>
+                                <div class="filter-group">
+                                    <label class="filter-label">Baseline End</label>
+                                    <input type="date" id="carbon-end-date" class="filter-select" style="width:100%" value="2020-02-28">
+                                </div>
+                            </div>
+                            <button id="btn-run-carbon" class="btn-primary" style="width:100%; margin-top: 10px;">
+                                <span class="btn-icon">⚡</span> Calculate Live Carbon Stock
+                            </button>
+                        </div>
+
+                        <div class="glass-card log-card" style="margin-top: 15px;">
+                            <div class="card-header">
+                                <h3>Total Carbon Estimate</h3>
+                                <span class="badge" style="background:#52b788;" id="carbon-total-badge">Pending</span>
+                            </div>
+                            <div style="font-size: 10px; color: var(--text-secondary); line-height: 1.4; padding: 10px;">
+                                Total Metric Tonnes (Mg C) across the district is calculated dynamically based on above-ground biomass estimates.
                             </div>
                         </div>
                     </div>
