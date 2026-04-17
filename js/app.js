@@ -471,16 +471,47 @@ function initCharts() {
 function initTerrainChart() {
     const el = document.querySelector('#terrain-correlation-chart');
     if (!el) return;
+    
     const tc = countBy(filteredData.filter(d => d.terrain), 'terrain');
-    const tsrt = Object.entries(tc).sort((a, b) => b[1] - a[1]).slice(0, 5);
+    const terrains = Object.entries(tc).sort((a, b) => b[1] - a[1]).slice(0, 5).map(s => s[0]);
+    if (terrains.length === 0) return;
+
+    const sc = countBy(filteredData, 'species');
+    const topSpecies = Object.entries(sc).sort((a, b) => b[1] - a[1]).slice(0, 5).map(s => s[0]);
+
+    const series = topSpecies.map(sp => {
+        return {
+            name: shortenLabel(sp),
+            data: terrains.map(t => filteredData.filter(d => d.terrain === t && d.species === sp).length)
+        };
+    });
+
+    // Add 'Other' category
+    series.push({
+        name: 'Other Species',
+        data: terrains.map(t => filteredData.filter(d => d.terrain === t && !topSpecies.includes(d.species)).length)
+    });
+
     if (terrainChart) terrainChart.destroy();
     terrainChart = new ApexCharts(el, {
-        series: [{ name: 'Sightings', data: tsrt.map(s => s[1]) }],
-        chart: { type: 'bar', height: 250, toolbar: { show: false }, animations: { enabled: true } },
-        colors: ['#34A853'],
-        plotOptions: { bar: { borderRadius: 6, columnWidth: '45%', dataLabels: { position: 'top' } } },
-        xaxis: { categories: tsrt.map(s => s[0]), labels: { style: { fontWeight: 600 } } },
-        dataLabels: { enabled: true, offsetY: -20, style: { fontSize: '11px', colors: ["#2d3436"] } }
+        series: series,
+        chart: { 
+            type: 'bar', 
+            height: 320, 
+            stacked: true, 
+            toolbar: { show: false }, 
+            animations: { enabled: true } 
+        },
+        colors: ['#1B4332', '#2D6A4F', '#40916C', '#52B788', '#74C69D', '#B7E4C7'], 
+        plotOptions: { bar: { borderRadius: 4, columnWidth: '60%' } },
+        xaxis: { 
+            categories: terrains, 
+            labels: { style: { fontWeight: 600, fontSize: '10px', colors: '#4A5568' } } 
+        },
+        yaxis: { labels: { style: { fontSize: '10px' } } },
+        legend: { position: 'bottom', fontSize: '10px', horizontalAlign: 'left', markers: { radius: 12 } },
+        dataLabels: { enabled: false },
+        tooltip: { theme: 'light', y: { formatter: val => `${val} sightings` } }
     });
     terrainChart.render();
 }
@@ -494,11 +525,25 @@ function updateCharts() {
 
     if (terrainChart) {
         const tc = countBy(filteredData.filter(d => d.terrain), 'terrain');
-        const tsrt = Object.entries(tc).sort((a, b) => b[1] - a[1]).slice(0, 5);
+        const terrains = Object.entries(tc).sort((a, b) => b[1] - a[1]).slice(0, 5).map(s => s[0]);
+        
+        const sc = countBy(filteredData, 'species');
+        const topSpecies = Object.entries(sc).sort((a, b) => b[1] - a[1]).slice(0, 5).map(s => s[0]);
+
+        const series = topSpecies.map(sp => {
+            return {
+                name: shortenLabel(sp),
+                data: terrains.map(t => filteredData.filter(d => d.terrain === t && d.species === sp).length)
+            };
+        });
+        series.push({
+            name: 'Other Species',
+            data: terrains.map(t => filteredData.filter(d => d.terrain === t && !topSpecies.includes(d.species)).length)
+        });
+
         terrainChart.updateOptions({
-            series: [{ name: 'Sightings', data: tsrt.map(s => s[1]) }],
-            xaxis: { categories: tsrt.map(s => s[0]) },
-            dataLabels: { enabled: true }
+            series: series,
+            xaxis: { categories: terrains }
         });
     }
 }

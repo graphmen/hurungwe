@@ -68,18 +68,16 @@ h1, h2, h3 {
 /* Sidebar */
 .sidebar {
     width: var(--sidebar-width);
-    background: var(--bg-sidebar);
+    background: linear-gradient(to bottom, #FFFFFF, #F8FAFC);
     display: flex;
     flex-direction: column;
     padding: 0;
-    border: 2px solid var(--border-strong); /* Vivid emerald frame */
-    border-top: none; 
-    border-bottom: none;
+    border-right: 1px solid rgba(0,0,0,0.06); /* Ultra-fine separator */
     flex-shrink: 0;
     overflow-y: auto;
     overflow-x: hidden;
     position: relative;
-    box-shadow: 2px 0 15px rgba(0, 0, 0, 0.03);
+    box-shadow: 10px 0 40px rgba(0, 0, 0, 0.02); /* Soft elevation */
     z-index: 1000;
 }
 
@@ -103,11 +101,9 @@ h1, h2, h3 {
 .logo-area {
     display: flex;
     align-items: center;
-    gap: 14px;
-    padding: 32px 24px;
-    border-bottom: 2px solid var(--border-color); /* Thicker logo divider */
-    margin-bottom: 10px;
-    background: #F8FAFC;
+    gap: 16px;
+    padding: 42px 28px; /* Room for brand to breathe */
+    margin-bottom: 5px;
     position: relative;
 }
 
@@ -117,16 +113,17 @@ h1, h2, h3 {
 
 .logo-icon {
     font-size: 26px;
-    background: var(--accent);
+    background: linear-gradient(135deg, var(--accent), var(--accent-hover));
     color: #fff;
-    width: 44px;
-    height: 44px;
+    width: 48px;
+    height: 48px;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(45, 106, 79, 0.2);
+    border-radius: 14px;
+    box-shadow: 0 8px 16px rgba(45, 106, 79, 0.15);
     flex-shrink: 0;
+    transition: var(--transition);
 }
 
 .logo-text h1 { 
@@ -155,23 +152,22 @@ h1, h2, h3 {
 /* Section Dividers */
 .nav-section {
     font-size: 10px;
-    font-weight: 700;
-    color: var(--text-muted);
-    margin: 24px 0 10px 12px;
-    letter-spacing: 1px;
+    font-weight: 800;
+    color: #94A3B8;
     text-transform: uppercase;
+    letter-spacing: 1.5px;
+    padding: 24px 20px 10px 24px;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 12px;
 }
 
 .nav-section::after {
     content: '';
     flex: 1;
-    height: 3px; /* Thicker section divider */
-    background: var(--border-color);
+    height: 1px;
+    background: rgba(45, 106, 79, 0.1);
     margin-right: 12px;
-    border-radius: 2px;
 }
 
 /* Nav Items */
@@ -179,16 +175,39 @@ h1, h2, h3 {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 12px 16px;
-    text-decoration: none;
+    padding: 12px 20px;
+    margin: 4px 12px;
     color: var(--text-secondary);
-    border-radius: 8px;
-    margin: 1px 0;
-    transition: all 0.2s ease;
+    text-decoration: none;
     font-size: 14px;
     font-weight: 500;
+    border-radius: 12px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
-    border: 1px solid transparent;
+}
+
+.nav-item:hover {
+    background: var(--accent-soft);
+    color: var(--accent);
+    transform: translateX(4px);
+}
+
+.nav-item.active {
+    background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+    color: #FFFFFF !important;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(45, 106, 79, 0.2);
+}
+
+.nav-item.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 25%;
+    height: 50%;
+    width: 4px;
+    background: rgba(255, 255, 255, 0.4);
+    border-radius: 0 4px 4px 0;
 }
 
 /* Sidebar Footer */
