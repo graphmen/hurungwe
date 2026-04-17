@@ -1023,11 +1023,12 @@ h1, h2, h3 {
 
 .modal-header {
     padding: 20px 24px;
-    background: var(--bg-sidebar);
-    color: #fff;
+    background: #FFFFFF;
+    color: var(--text-primary);
     display: flex;
     justify-content: space-between;
     align-items: center;
+    border-bottom: 1px solid var(--border-color);
 }
 
 .modal-body { padding: 32px; }
@@ -1035,14 +1036,17 @@ h1, h2, h3 {
 .btn-close {
     background: none;
     border: none;
-    color: #fff;
+    color: var(--text-secondary);
     font-size: 28px;
     line-height: 1;
     cursor: pointer;
     transition: var(--transition);
 }
 
-.btn-close:hover { background: rgba(255, 255, 255, 0.2); }
+.btn-close:hover {
+    color: var(--accent);
+    transform: scale(1.1);
+}
 
 .modal-info-text {
     margin-top: 20px;
