@@ -29,7 +29,8 @@ window.GisAppState = {
     carbonLayer: null,
     landCoverLayer: null,
     sdmCharts: { auc: null, importance: null },
-    variableImportance: null
+    variableImportance: null,
+    activeLayerToken: 0
 };
 
 let map = null;
@@ -201,8 +202,8 @@ function switchView(viewId) {
     document.querySelectorAll('.view-section').forEach(sec => sec.style.display = 'none');
 
     console.log("Navigating to view:", viewId);
+    const dashboardView = document.getElementById('view-dashboard');
     if (viewId === 'nav-dashboard' || viewId === 'nav-gis' || viewId === 'nav-predictive' || viewId === 'nav-terrain') {
-        const dashboardView = document.getElementById('view-dashboard');
         const viewTitle = document.getElementById('view-title');
         const debugVal = document.getElementById('debug-mode-val');
 
@@ -216,7 +217,6 @@ function switchView(viewId) {
                 if (debugVal) debugVal.innerText = 'GIS_EXPLORER';
             } else {
                 dashboardView.classList.remove('explorer-mode');
-                // DON'T set title here, let switchPanel handle it for consistency
             }
         }
 
@@ -236,6 +236,9 @@ function switchView(viewId) {
                 console.log("View Switch: Map container synchronized.");
             }, 300);
         }
+    } else {
+        // Hide main dashboard for other full-page views
+        if (dashboardView) dashboardView.style.display = 'none';
     }
 
     if (viewId === 'nav-export') {
@@ -245,8 +248,11 @@ function switchView(viewId) {
         const habitatView = document.getElementById('view-habitat');
         if (habitatView) habitatView.style.display = 'block';
     } else if (viewId === 'nav-trends') {
+        const trendsView = document.getElementById('view-trends');
+        if (trendsView) trendsView.style.display = 'block';
         showTrendsModal();
     } else if (viewId === 'nav-terrain') {
+        if (dashboardView) dashboardView.style.display = 'grid'; // Ensure dashboard is visible
         document.getElementById('spatial-insights-card')?.scrollIntoView({ behavior: 'smooth' });
     }
 }
