@@ -1535,8 +1535,9 @@ async function runVulnerabilityQuery() {
             if (bannerText) bannerText.innerText = 'Future-Cast Active: Analyzing 2050 Climate Scenarios... (This may take ~30s)';
         }
 
+        const scenario = 'ssp585';
         console.log(`FETCHING Climate Forecast for scenario: ${scenario}, period: ${period}`);
-        const response = await fetch(`/api/climate-forecast?scenario=${scenario}&period=${period}`);
+        const response = await fetch(`/api/vulnerability?scenario=${scenario}&period=${period}`);
         if (!response.ok) {
             const errJson = await response.json();
             throw new Error(errJson.error || 'Server error');
@@ -1592,7 +1593,7 @@ async function runVulnerabilityQuery() {
             insightText.innerHTML = `
                 <div style="font-size: 0.9rem; line-height: 1.4;">
                     <p>🚨 <strong>High-Risk Alert</strong>: Approximately <strong>${data.stats.stressPercent}%</strong> of the district will face critical heat stress by ${period}.</p>
-                    <p>🌡️ Projecting an average temperature shift of <strong>+${data.stats.avgTempIncrease.toFixed(1)}°C</strong> relative to baseline.</p>
+                    <p>🌡️ Projecting an average temperature shift of <strong>+${parseFloat(data.stats.avgTempIncrease).toFixed(1)}°C</strong> relative to baseline.</p>
                 </div>
             `;
         }
