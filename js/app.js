@@ -1535,7 +1535,12 @@ async function runVulnerabilityQuery() {
             if (bannerText) bannerText.innerText = 'Future-Cast Active: Analyzing 2050 Climate Scenarios... (This may take ~30s)';
         }
 
-        const response = await fetch(`/api/vulnerability?scenario=ssp585&period=${period}`);
+        console.log(`FETCHING Climate Forecast for scenario: ${scenario}, period: ${period}`);
+        const response = await fetch(`/api/climate-forecast?scenario=${scenario}&period=${period}`);
+        if (!response.ok) {
+            const errJson = await response.json();
+            throw new Error(errJson.error || 'Server error');
+        }
         const data = await response.json();
         
         if (window.GisAppState.activeLayerToken !== currentToken) return;
