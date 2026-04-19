@@ -204,7 +204,7 @@ function switchView(viewId) {
 
     console.log("Navigating to view:", viewId);
     const dashboardView = document.getElementById('view-dashboard');
-    if (viewId === 'nav-dashboard' || viewId === 'nav-gis' || viewId === 'nav-predictive' || viewId === 'nav-terrain') {
+    if (viewId === 'nav-dashboard' || viewId === 'nav-gis' || viewId === 'nav-predictive' || viewId === 'nav-terrain' || viewId === 'nav-policy') {
         const viewTitle = document.getElementById('view-title');
         const debugVal = document.getElementById('debug-mode-val');
 
@@ -221,7 +221,12 @@ function switchView(viewId) {
             }
         }
 
-        switchPanel(viewId === 'nav-predictive' ? 'panel-predictive' : 'panel-dashboard');
+        let targetPanel = 'panel-dashboard';
+        if (viewId === 'nav-predictive') targetPanel = 'panel-predictive';
+        if (viewId === 'nav-policy') targetPanel = 'panel-policy';
+        
+        switchPanel(targetPanel);
+        if (viewId === 'nav-policy') populatePolicyPanel();
 
         // Restore markers for Dashboard/GIS views
         if (map && markerCluster) {
@@ -1215,6 +1220,9 @@ function bindEventListeners() {
                 } else if (id === 'nav-vulnerability') {
                     clearAllModes();
                     switchPanel('panel-vulnerability');
+                } else if (id === 'nav-policy') {
+                    clearAllModes();
+                    switchView(id);
                 } else if (id === 'nav-landcover') {
                     clearAllModes();
                     switchPanel('panel-landcover');
@@ -1656,4 +1664,70 @@ async function inspectClimateAtLocation(lat, lon) {
     } catch (err) {
         console.error("Inspect Error:", err);
     }
+}
+
+function populatePolicyPanel() {
+    const content = document.getElementById('policy-content');
+    const priority = document.getElementById('policy-priority');
+    const adaptation = document.getElementById('policy-adaptation');
+    if (!content) return;
+
+    // Logic for generating policy directives based on spatial context
+    let directives = [];
+    let priorityZone = "Northeast Region"; // Default placeholder or based on data
+    let adaptationNeed = "Medium";
+
+    // 1. Climate Connection
+    const climateInsight = document.getElementById('vulnerability-text')?.innerText;
+    if (climateInsight && climateInsight.includes('+')) {
+        directives.push({
+            title: "Climate Resilience Buffer",
+            desc: "Enforce strict vegetation buffer zones in coordinates showing > 2.0°C warming shift.",
+            icon: "🌡️"
+        });
+        adaptationNeed = "Critical";
+    }
+
+    // 2. Carbon Governance
+    if (window.GisAppState.carbonLayer) {
+        directives.push({
+            title: "Carbon Seq Enforcement",
+            desc: "Establish Protected Status for regions with high-biomass density to prevent carbon leakage.",
+            icon: "🌳"
+        });
+    }
+
+    // 3. Reforestation Priority
+    if (window.GisAppState.isPredictiveMode) {
+        directives.push({
+            title: "Targeted Reforestation",
+            desc: "Prioritize low-suitability zones for assisted migration of climate-resilient species.",
+            icon: "🌱"
+        });
+        priorityZone = "Western Corridors";
+    }
+
+    // Add baseline policy if empty
+    if (directives.length === 0) {
+        directives.push({
+            title: "Ecological Baseline Monitoring",
+            desc: "No active spatial stressors detected. Maintain current monitoring frequency.",
+            icon: "📋"
+        });
+    }
+
+    content.innerHTML = directives.map(d => `
+        <div class="glass-card" style="margin-bottom: 12px; padding: 15px; border-left: 4px solid var(--accent);">
+            <div style="display: flex; gap: 12px; align-items: flex-start;">
+                <span style="font-size: 20px;">${d.icon}</span>
+                <div>
+                    <h4 style="margin: 0; font-size: 13px;">${d.title}</h4>
+                    <p style="margin: 5px 0 0 0; font-size: 11px; color: var(--text-secondary); opacity: 0.9;">${d.desc}</p>
+                </div>
+            </div>
+        </div>
+    `).join('');
+
+    if (priority) priority.innerText = priorityZone;
+    if (adaptation) adaptation.innerText = adaptationNeed;
 }
