@@ -2,6 +2,7 @@ const ee = require('@google/earthengine');
 const fs = require('fs');
 const path = require('path');
 
+// Hurungwe District Area Constant (Square Meters)
 const HURUNGWE_AREA_M2 = 12600000000;
 
 function authenticateGEE() {
@@ -27,31 +28,44 @@ module.exports = async (req, res) => {
         const geojsonPath = path.join(process.cwd(), 'data', 'Hurungwe.geojson');
         const ROI = ee.Geometry(JSON.parse(fs.readFileSync(geojsonPath, 'utf8')).features[0].geometry);
 
-        // ULTRA-LIGHTWEIGHT CALCULATION
-        // Using only 1 year for baseline and 1 year for future to ENSURE speed.
-        const baseline = ee.ImageCollection("NASA/GDDP-CMIP6")
-            .filterDate('2010-01-01', '2010-01-31') // 1 month baseline
-            .filterBounds(ROI).select(['tas']).mean().clip(ROI);
+        // 1. SYNCHRONIZED CLIMATE LOGIC (User Snippet Translation)
+        const model = 'ACCESS-CM2';
+        const resolution = 25000; // Fast for Vercel
 
+        // Baseline (2005-2014) explicitly historical
+        const baseline = ee.ImageCollection("NASA/GDDP-CMIP6")
+            .filter(ee.Filter.eq('scenario', 'historical'))
+            .filter(ee.Filter.eq('model', model))
+            .filterDate('2005-01-01', '2014-12-31') 
+            .filterBounds(ROI)
+            .select(['tas'])
+            .mean()
+            .clip(ROI);
+
+        // Future (2050 window)
         const future = ee.ImageCollection("NASA/GDDP-CMIP6")
             .filter(ee.Filter.eq('scenario', scenario))
-            .filter(ee.Filter.eq('model', 'ACCESS-CM2'))
-            .filterDate('2050-01-01', '2050-01-31') // 1 month future
-            .filterBounds(ROI).select(['tas']).mean().clip(ROI);
+            .filter(ee.Filter.eq('model', model))
+            .filterDate('2050-01-01', '2050-12-31') 
+            .filterBounds(ROI)
+            .select(['tas'])
+            .mean()
+            .clip(ROI);
 
         const tempDelta = future.subtract(baseline).rename('vulnerability');
 
+        // 2. PARALLEL EXECUTION
         const statsTask = tempDelta.gt(1.5).multiply(ee.Image.pixelArea()).reduceRegion({
             reducer: ee.Reducer.sum(),
             geometry: ROI,
-            scale: 20000, // 20km ultra-coarse but lightning fast
+            scale: resolution,
             maxPixels: 1e9
         });
 
         const avgDeltaTask = tempDelta.reduceRegion({
             reducer: ee.Reducer.mean(),
             geometry: ROI,
-            scale: 20000
+            scale: resolution
         });
 
         const [statsResult, avgResult, mapInfo] = await Promise.all([
@@ -59,8 +73,8 @@ module.exports = async (req, res) => {
             new Promise((resolve) => avgDeltaTask.evaluate((v) => resolve(v || {}))),
             new Promise((resolve, reject) => {
                 tempDelta.getMap({
-                    min: 0, max: 4,
-                    palette: ['#ffffcc', '#feb24c', '#f03b20', '#bd0026', '#4a148c']
+                    min: 1.0, max: 3.5, // User's preferred range
+                    palette: ['#fee5d9', '#fcae91', '#fb6a4a', '#de2d26', '#a50f15'] // User's Preferred red-scale
                 }, (info, err) => err ? reject(err) : resolve(info));
             })
         ]);
