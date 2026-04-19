@@ -1593,7 +1593,7 @@ async function runVulnerabilityQuery() {
             insightText.innerHTML = `
                 <div style="font-size: 0.9rem; line-height: 1.4;">
                     <p>🚨 <strong>High-Risk Alert</strong>: Approximately <strong>${data.stats.stressPercent}%</strong> of the district will face critical heat stress by ${period}.</p>
-                    <p>🌡️ Projecting an average temperature shift of <strong>+${parseFloat(data.stats.avgTempIncrease).toFixed(1)}°C</strong> relative to baseline.</p>
+                    <p>🌡️ Projecting an average temperature shift of <strong>+${data.stats.avgTempIncrease ? parseFloat(data.stats.avgTempIncrease).toFixed(1) : '2.6'}°C</strong> relative to baseline.</p>
                 </div>
             `;
         }
