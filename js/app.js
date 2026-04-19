@@ -1647,8 +1647,9 @@ async function inspectClimateAtLocation(lat, lon) {
 
         if (data.success && insightText) {
             insightText.innerHTML += `
-                <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border-color); font-weight: 700; color: var(--accent);">
-                    📍 Selected Location: +${data.delta}°C Change
+                <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border-color); font-size: 0.85rem; line-height: 1.4;">
+                    <p style="margin: 0; color: var(--text-secondary); font-size: 11px;">📍 Coordinate: ${parseFloat(lat).toFixed(4)}, ${parseFloat(lon).toFixed(4)}</p>
+                    <p style="margin: 4px 0 0 0; font-weight: 700; color: var(--accent);">🌡️ Climate Shift: +${data.delta}°C Change</p>
                 </div>
             `;
         }
