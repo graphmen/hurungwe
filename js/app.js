@@ -320,7 +320,7 @@ function switchPanel(panelId) {
     const debugBox = document.getElementById('gis-debug-state');
     if (debugBox) debugBox.style.display = 'block';
 
-    const allPanels = ['panel-dashboard', 'panel-predictive', 'panel-ndvi', 'panel-carbon', 'panel-landcover', 'panel-vulnerability'];
+    const allPanels = ['panel-dashboard', 'panel-predictive', 'panel-ndvi', 'panel-carbon', 'panel-landcover', 'panel-vulnerability', 'panel-policy'];
     allPanels.forEach(id => {
         const el = document.getElementById(id);
         if (el) {

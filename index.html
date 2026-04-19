@@ -272,6 +272,34 @@
                         </div>
                     </div>
 
+                    <!-- PANEL: Policy Framework -->
+                    <div id="panel-policy" class="content-panel hidden">
+                        <div class="analytics-card accent-card">
+                            <h3>📜 Policy Connectivity Matrix</h3>
+                            <p class="card-subtitle">Translating spatial data into strategic governance</p>
+                            
+                            <div id="policy-content" class="policy-list" style="margin-top: 20px;">
+                                <div class="empty-state">
+                                    <p>Select analytical layers to generate policy directives.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="glass-card" style="margin-top: 15px;">
+                            <h3>Strategic Directives</h3>
+                            <div id="policy-directives" class="mini-grid">
+                                <div class="mini-stat">
+                                    <span class="label">Priority Zone</span>
+                                    <span class="value" id="policy-priority">-</span>
+                                </div>
+                                <div class="mini-stat">
+                                    <span class="label">Adaptation Need</span>
+                                    <span class="value" id="policy-adaptation">-</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- PANEL: NDVI Analysis -->
                     <div id="panel-ndvi" class="content-panel hidden">
                         <div class="analytics-card">
@@ -475,6 +503,6 @@
     <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
     <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-    <script src="js/app.js?v=policy_fix_v6"></script>
+    <script src="js/app.js?v=policy_visibility_v7"></script>
 </body>
 </html>
