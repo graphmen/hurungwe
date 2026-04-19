@@ -20,7 +20,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="css/index.css?v=modern_v34">
+    <link rel="stylesheet" href="css/index.css?v=modern_v35">
 </head>
 <body>
     <div id="sidebar-overlay" class="sidebar-overlay"></div>
@@ -78,6 +78,9 @@
                 <div class="nav-section">RESEARCH & SDM</div>
                 <a href="#" class="nav-item" id="nav-predictive">
                     <span class="nav-icon">🤖</span> Predictive Engine
+                </a>
+                <a href="#" class="nav-item" id="nav-vulnerability">
+                    <span class="nav-icon">🌎</span> Climate Future-Cast
                 </a>
                 <a href="#" class="nav-item" id="nav-ndvi">
                     <span class="nav-icon">🌿</span> Vegetation Health (NDVI)
@@ -222,8 +225,8 @@
                         </div>
 
                         <div class="analytics-card" style="margin-top: 15px;">
-                            <h3>Variable Influence</h3>
-                            <div id="chart-importance" style="height: 180px;"></div>
+                            <h3>Variable Influence Matrix (VIF Cleansed)</h3>
+                            <div id="chart-importance" style="height: 450px;"></div>
                         </div>
 
                         <div class="analytics-card wide" style="margin-top: 15px;">
@@ -237,6 +240,33 @@
                         </div>
                     </div>
 
+                    <!-- PANEL: Climate Future-Cast -->
+                    <div id="panel-vulnerability" class="content-panel hidden">
+                        <div class="analytics-card">
+                            <h3><span style="font-size:16px;">🌎</span> Climate Future-Cast</h3>
+                            <p class="card-subtitle">Forecasting habitat shifts for 2050 (CMIP6 SSP5-8.5)</p>
+                            
+                            <div class="simulator-controls" style="margin-top: 15px;">
+                                <div class="filter-group" style="margin-bottom: 12px;">
+                                    <label class="filter-label">Forecast Period</label>
+                                    <select id="climate-period" class="header-select" style="width:100%">
+                                        <option value="2050">2050 (High Emissions SSP5-8.5)</option>
+                                        <option value="2030">2030 (Medium Outlook)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <button id="btn-run-vulnerability" class="btn-primary" style="width:100%; font-size: 12px; margin-top:10px;">
+                                <span class="btn-icon">⚡</span> Run Future-Cast Engine
+                            </button>
+                        </div>
+
+                        <div id="vulnerability-insight-banner" class="insight-card hidden">
+                            <div class="insight-header">Vulnerability Insight</div>
+                            <div id="vulnerability-text" class="insight-body">Analyzing climate shifts...</div>
+                        </div>
+                    </div>
+
                     <!-- PANEL: NDVI Analysis -->
                     <div id="panel-ndvi" class="content-panel hidden">
                         <div class="analytics-card">
@@ -246,11 +276,11 @@
                             <div class="simulator-controls" style="margin-top: 15px;">
                                 <div class="filter-group" style="margin-bottom: 12px;">
                                     <label class="filter-label">Start Date</label>
-                                    <input type="date" id="ndvi-start-date" class="filter-select" style="width:100%" value="2020-02-01">
+                                    <input type="date" id="ndvi-start-date" class="filter-select" style="width:100%" value="2023-07-01">
                                 </div>
                                 <div class="filter-group" style="margin-bottom: 12px;">
                                     <label class="filter-label">End Date</label>
-                                    <input type="date" id="ndvi-end-date" class="filter-select" style="width:100%" value="2020-02-28">
+                                    <input type="date" id="ndvi-end-date" class="filter-select" style="width:100%" value="2023-07-28">
                                 </div>
                             </div>
 
@@ -369,32 +399,44 @@
             <!-- View: Habitat Health (SDM) -->
             <div id="view-habitat" class="view-section" style="display: none; padding: 24px;">
                 <div class="glass-card">
-                    <h2 style="margin-bottom: 12px; color: var(--accent);">Habitat Suitability Maps</h2>
+                    <h2 style="margin-bottom: 12px; color: var(--accent);">Habitat Suitability Analysis</h2>
                     <p style="color: var(--text-secondary); margin-bottom: 24px;">
-                        Select a species to view its highest probability habitat areas derived from the ensemble model.
+                        Interactive spatial modeling identifying high-probability habitat zones and their primary ecological drivers.
                     </p>
                     
-                    <div style="margin-bottom: 20px; display: flex; gap: 12px; align-items: center;">
-                        <select id="sdm-species-select" class="filter-select" style="max-width: 300px;">
-                            <option value="species_suitability_grid">All Species Composite</option>
-                            <option value="Acacia_Galpinii_suitability">Acacia Galpinii</option>
-                            <option value="Acacia_Polycantha_suitability">Acacia Polycantha</option>
-                            <option value="Acacia_Siebriana_suitability">Acacia Siebriana</option>
-                            <option value="Fidebhia_Abida_suitability">Fidebhia Abida</option>
-                            <option value="Kigelia_Africana_suitability">Kigelia Africana</option>
-                            <option value="Munyii_Bechemia_discolor_suitability">Munyii / Bechemia discolor</option>
-                            <option value="Pilostigma_Thonigilii_Monkey_Bread_suitability">Pilostigma Thonigilii</option>
-                            <option value="Red_Mahogany_suitability">Red Mahogany</option>
-                            <option value="Trichilia_Emetica_suitability">Trichilia Emetica</option>
-                            <option value="Waterberry_suitability">Waterberry</option>
-                        </select>
-                        <button id="btn-download-sdm" class="btn-primary" style="white-space: nowrap; padding: 10px 20px;">
-                            📥 Export Quality Map
-                        </button>
-                    </div>
+                    <div class="suitability-layout">
+                        <!-- Left Side: Map and Controls -->
+                        <div class="suitability-map-side">
+                            <div style="margin-bottom: 20px; display: flex; gap: 12px; align-items: center; justify-content: center;">
+                                <select id="sdm-species-select" class="header-select" style="max-width: 300px;">
+                                    <option value="species_suitability_grid">All Species Composite</option>
+                                    <option value="Acacia_Galpinii_suitability">Acacia Galpinii</option>
+                                    <option value="Acacia_Polycantha_suitability">Acacia Polycantha</option>
+                                    <option value="Acacia_Siebriana_suitability">Acacia Siebriana</option>
+                                    <option value="Fidebhia_Abida_suitability">Faidebhia Albida</option>
+                                    <option value="Kigelia_Africana_suitability">Kigelia Africana</option>
+                                    <option value="Munyii_Bechemia_discolor_suitability">Munyii / Bechemia discolor</option>
+                                    <option value="Pilostigma_Thonigilii_Monkey_Bread_suitability">Pilostigma Thonigilii</option>
+                                    <option value="Red_Mahogany_suitability">Red Mahogany</option>
+                                    <option value="Trichilia_Emetica_suitability">Trichilia Emetica</option>
+                                    <option value="Waterberry_suitability">Waterberry</option>
+                                </select>
+                                <button id="btn-download-sdm" class="btn-primary" style="white-space: nowrap; padding: 10px 20px;">
+                                    📥 Export
+                                </button>
+                            </div>
+                            <img id="sdm-map-image" src="data/models/species_suitability_grid.png" alt="SDM Map Image" style="max-width: 100%; max-height: 60vh; border-radius: 4px; box-shadow: var(--shadow);">
+                        </div>
 
-                    <div style="text-align: center; background: var(--bg-main); padding: 20px; border-radius: 12px; border: 1px dashed var(--border-color);">
-                        <img id="sdm-map-image" src="data/models/species_suitability_grid.png" alt="SDM Map Image" style="max-width: 100%; max-height: 60vh; border-radius: 4px;">
+                        <!-- Right Side: Ecological Insights -->
+                        <div class="suitability-info-side" id="sdm-insights-panel">
+                            <h3>Ecological Insights</h3>
+                            <div id="sdm-insights-content">
+                                <div class="empty-state">
+                                    <p>Select a species to view detailed ecological drivers and strategic forecasts.</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -410,9 +452,14 @@
                 <button id="close-modal" class="btn-close">&times;</button>
             </div>
             <div class="modal-body">
-                <div id="modal-chart-container" style="min-height: 350px;"></div>
-                <div id="modal-description" class="modal-info-text">
-                    Analyzing historical sighting trends across Hurungwe District...
+                <div class="modal-chart-side">
+                    <div id="modal-chart-container" style="min-height: 350px;"></div>
+                </div>
+                <div class="modal-info-side">
+                    <h4>📊 Temporal Dynamics</h4>
+                    <div id="modal-description" class="modal-info-text">
+                        Analyzing historical sighting trends across Hurungwe District...
+                    </div>
                 </div>
             </div>
         </div>
@@ -423,6 +470,6 @@
     <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
     <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-    <script src="js/app.js?v=modern_v34"></script>
+    <script src="js/app.js?v=modern_v35"></script>
 </body>
 </html>

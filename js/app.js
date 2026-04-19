@@ -28,8 +28,8 @@ window.GisAppState = {
     ndviLayer: null,
     carbonLayer: null,
     landCoverLayer: null,
-    activeLayerToken: 0,
-    sdmCharts: { auc: null, importance: null }
+    sdmCharts: { auc: null, importance: null },
+    variableImportance: null
 };
 
 let map = null;
@@ -229,7 +229,13 @@ function switchView(viewId) {
             }
         }
 
-        if (map) setTimeout(() => map.invalidateSize(), 400);
+        // Force map to adapt to new layout immediately
+        if (map) {
+            setTimeout(() => {
+                map.invalidateSize();
+                console.log("View Switch: Map container synchronized.");
+            }, 300);
+        }
     }
 
     if (viewId === 'nav-export') {
@@ -251,26 +257,48 @@ function showTrendsModal() {
     modal.classList.remove('hidden');
 
     const chartContainer = document.getElementById('modal-chart-container');
+    const descContainer = document.getElementById('modal-description');
+    
     if (chartContainer) {
         chartContainer.innerHTML = '';
         const speciesCounts = countBy(allData, 'species');
-        const sorted = Object.entries(speciesCounts).sort((a, b) => b[1] - a[1]).slice(0, 5);
+        const sorted = Object.entries(speciesCounts).sort((a, b) => b[1] - a[1]); // All species
 
         new ApexCharts(chartContainer, {
-            series: [{ name: 'Records', data: sorted.map(s => s[1]) }],
+            series: [{ name: 'Growth Records', data: sorted.map(s => s[1]) }],
             chart: { 
-                type: 'line', 
-                height: 350, 
+                type: 'bar', 
+                height: 550, // Expanded height
                 foreColor: '#2D3436',
                 animations: { enabled: true },
-                dropShadow: { enabled: true, blur: 3, opacity: 0.1 }
+                toolbar: { show: false }
             },
-            colors: ['#006D4E'],
+            colors: ['#2D6A4F'],
+            plotOptions: { 
+                bar: { 
+                    borderRadius: 4, 
+                    horizontal: true,
+                    barHeight: '70%' // Better spacing for more bars
+                } 
+            },
             xaxis: { categories: sorted.map(s => s[0]) },
-            stroke: { curve: 'smooth', width: 4 },
-            dataLabels: { enabled: true, background: { enabled: true, foreColor: '#fff', borderRadius: 4, padding: 4 } },
-            title: { text: 'Growth Records by Species', align: 'left', style: { fontSize: '14px', fontWeight: 700 } }
+            dataLabels: { enabled: true, formatter: (val) => `${val} trees` },
+            title: { text: 'Full Species Recruitment Distribution', align: 'left', style: { fontSize: '14px', fontWeight: 700 } }
         }).render();
+
+        // Populate dynamic insights
+        if (descContainer && sorted.length > 0) {
+            const topSpecies = sorted[0][0];
+            const secondSpecies = sorted[1] ? sorted[1][0] : 'other indigenous varieties';
+            
+            descContainer.innerHTML = `
+                <p>The current temporal analysis reveals that <strong>${topSpecies}</strong> is exhibiting the highest recruitment and adaptation rates across Hurungwe District, followed closely by <strong>${secondSpecies}</strong>.</p>
+                <p style="margin-top: 10px;">This frequency indicates a high degree of survival in current bioclimatic conditions, suggesting these species are becoming the "ecological anchors" of the corridor's recovery.</p>
+                <div style="margin-top: 15px; padding: 10px; background: rgba(45, 106, 79, 0.05); border-radius: 8px;">
+                    <small><strong>Strategic Recommendation:</strong> Prioritize seed collection and nursery propagation for these top-performing species to accelerate landscape restoration in high-drainage zones.</small>
+                </div>
+            `;
+        }
     }
 }
 
@@ -280,7 +308,7 @@ function switchPanel(panelId) {
     const debugBox = document.getElementById('gis-debug-state');
     if (debugBox) debugBox.style.display = 'block';
 
-    const allPanels = ['panel-dashboard', 'panel-predictive', 'panel-ndvi', 'panel-carbon', 'panel-landcover'];
+    const allPanels = ['panel-dashboard', 'panel-predictive', 'panel-ndvi', 'panel-carbon', 'panel-landcover', 'panel-vulnerability'];
     allPanels.forEach(id => {
         const el = document.getElementById(id);
         if (el) {
@@ -334,7 +362,15 @@ function switchPanel(panelId) {
         setTimeout(() => {
             map.invalidateSize({ animate: true });
             console.log("Layout Sync: Map container recalculated.");
-        }, 300);
+            
+            // If returning to a view that should have the boundary visible
+            if (hurungweBoundary && !map.hasLayer(hurungweBoundary)) {
+                // Hurungwe boundary is actually a GeoJSON layer, handled in initMap
+            }
+        }, 100); 
+        
+        // Immediate call without timeout for responsiveness
+        map.invalidateSize();
     }
 }
 
@@ -589,9 +625,14 @@ function initTimeSlider() {
 // ─────────────────────────────────────────────
 async function loadResearchData() {
     try {
-        const [res, grid] = await Promise.all([fetch('data/research_outputs.json'), fetch('data/suitability_grid.json')]);
+        const [res, grid, imp] = await Promise.all([
+            fetch('data/research_outputs.json'), 
+            fetch('data/suitability_grid.json'),
+            fetch('data/variable_importance.json')
+        ]);
         window.GisAppState.researchResults = await res.json();
         window.GisAppState.suitabilityGrid = await grid.json();
+        window.GisAppState.variableImportance = await imp.json();
         console.log("SDM_RESEARCH_LOADED_SUCCESSFULLY");
     } catch (e) { console.error("SDM_DATA_LOAD_ERROR", e); }
 }
@@ -624,26 +665,63 @@ function initSDMCharts() {
         window.GisAppState.sdmCharts.auc.render();
     }
 
-    // 2. Variable Influence (Influence Driver)
+    // 2. Variable Influence Heatmap (Premium Visualization)
     const impEl = document.querySelector("#chart-importance");
-    if (impEl) {
-        // Aggregate driver frequency
-        const driverCounts = {};
-        Object.values(r.species_metrics).forEach(m => {
-            driverCounts[m.main_driver] = (driverCounts[m.main_driver] || 0) + 1;
+    const vImp = window.GisAppState.variableImportance;
+    if (impEl && vImp) {
+        // Transform grid data for ApexCharts Heatmap
+        // Series should be an array of { name: species, data: [{ x: var, y: value }, ...] }
+        const series = vImp.species.map(sp => {
+            return {
+                name: sp,
+                data: vImp.variables.map(v => {
+                    const match = vImp.grid.find(g => g.species === sp && g.variable === v);
+                    return {
+                        x: v,
+                        y: match ? match.importance : 0
+                    };
+                })
+            };
         });
-
-        const dLabels = Object.keys(driverCounts).map(d => r.driver_metadata[d] || d);
-        const dValues = Object.values(driverCounts);
 
         if (window.GisAppState.sdmCharts.importance) window.GisAppState.sdmCharts.importance.destroy();
         window.GisAppState.sdmCharts.importance = new ApexCharts(impEl, {
-            series: [{ name: 'Impact Count', data: dValues }],
-            chart: { height: 220, type: 'bar', toolbar: { show: false }, foreColor: '#1A1A1A' },
-            colors: ['#F39C12'],
-            plotOptions: { bar: { horizontal: true } },
-            xaxis: { categories: dLabels.map(l => shortenLabel(l)) },
-            title: { text: 'Driver Frequency across Species', style: { fontSize: '10px' } }
+            series: series,
+            chart: {
+                height: 450,
+                type: 'heatmap',
+                toolbar: { show: false },
+                animations: { enabled: true }
+            },
+            dataLabels: { enabled: false },
+            colors: ["#2d6a4f"], // Base color for the scale
+            plotOptions: {
+                heatmap: {
+                    shadeIntensity: 0.5,
+                    radius: 2,
+                    useFillColorAsStroke: true,
+                    colorScale: {
+                        ranges: [
+                            { from: 0, to: 5, name: 'Low', color: '#f7fbff' },
+                            { from: 5, to: 10, name: 'Moderate', color: '#c6dbef' },
+                            { from: 10, to: 15, name: 'High', color: '#6baed6' },
+                            { from: 15, to: 25, name: 'Very High', color: '#2171b5' },
+                            { from: 25, to: 100, name: 'Critical Driver', color: '#08306b' }
+                        ]
+                    }
+                }
+            },
+            xaxis: {
+                type: 'category',
+                labels: { rotate: -45, offsetHeight: 10, style: { fontSize: '10px', fontWeight: 600 } }
+            },
+            yaxis: {
+                labels: { style: { fontSize: '10px', fontWeight: 600 } }
+            },
+            tooltip: {
+                theme: 'dark',
+                y: { formatter: (val) => `${val}% Contribution` }
+            }
         });
         window.GisAppState.sdmCharts.importance.render();
     }
@@ -734,6 +812,7 @@ function clearAllModes(leaveBanner = false) {
     if (window.GisAppState.ndviLayer) { map.removeLayer(window.GisAppState.ndviLayer); window.GisAppState.ndviLayer = null; }
     if (window.GisAppState.carbonLayer) { map.removeLayer(window.GisAppState.carbonLayer); window.GisAppState.carbonLayer = null; }
     if (window.GisAppState.landCoverLayer) { map.removeLayer(window.GisAppState.landCoverLayer); window.GisAppState.landCoverLayer = null; }
+    if (window.GisAppState.vulnerabilityLayer) { map.removeLayer(window.GisAppState.vulnerabilityLayer); window.GisAppState.vulnerabilityLayer = null; }
 
     // 2. Clear Active Popups & Legend
     if (map) map.closePopup();
@@ -805,7 +884,7 @@ function updateMapLegend(type) {
     } else if (type === 'landcover') {
         leg.innerHTML = `
             <div class="legend-card">
-                <div class="legend-title">🗺️ Land Cover (ESA 2021)</div>
+                <div class="legend-title">🗺️ Land Cover Mapping</div>
                 <div class="legend-items">
                     <div class="legend-item"><span class="swatch" style="background:#1a9641"></span> Forest</div>
                     <div class="legend-item"><span class="swatch" style="background:#a6d96a"></span> Grass / Shrub / Wetland</div>
@@ -868,12 +947,21 @@ async function runNdviQuery() {
 
         window.GisAppState.ndviLayer = ndviLayer;
 
-        // NEW: Hide loader once tiles are rendered
-        document.getElementById('map-loader')?.classList.remove('hidden'); 
-        ndviLayer.on('load', () => {
-            document.getElementById('map-loader')?.classList.add('hidden');
-            console.log("NDVI Tiles Loaded: Hiding Loader.");
-        });
+        // NEW: Hide loader once tiles are rendered (with timeout safety)
+        const loader = document.getElementById('map-loader');
+        if (loader) {
+            loader.classList.remove('hidden');
+            const safetyTimeout = setTimeout(() => {
+                loader.classList.add('hidden');
+                console.warn("NDVI Load Timeout: Forcing loader hide.");
+            }, 120000); // 120s safety bridge
+            
+            ndviLayer.on('load', () => {
+                clearTimeout(safetyTimeout);
+                loader.classList.add('hidden');
+                console.log("NDVI Tiles Loaded: Hiding Loader.");
+            });
+        }
         
         // (True GeoJSON polygon clip is now processed natively in backend API)
         
@@ -945,12 +1033,21 @@ async function runCarbonQuery() {
 
         window.GisAppState.carbonLayer = carbonLayer;
 
-        // NEW: Hide loader once tiles are rendered
-        document.getElementById('map-loader')?.classList.remove('hidden');
-        carbonLayer.on('load', () => {
-            document.getElementById('map-loader')?.classList.add('hidden');
-            console.log("Carbon Tiles Loaded: Hiding Loader.");
-        });
+        // NEW: Hide loader once tiles are rendered (with timeout safety)
+        const loader = document.getElementById('map-loader');
+        if (loader) {
+            loader.classList.remove('hidden');
+            const safetyTimeout = setTimeout(() => {
+                loader.classList.add('hidden');
+                console.warn("Carbon Load Timeout: Forcing loader hide.");
+            }, 120000); // 120s safety bridge
+            
+            carbonLayer.on('load', () => {
+                clearTimeout(safetyTimeout);
+                loader.classList.add('hidden');
+                console.log("Carbon Tiles Loaded: Hiding Loader.");
+            });
+        }
         
         if (badge) badge.innerText = `${data.totalCarbonMg} Mg C`;
         
@@ -1021,22 +1118,40 @@ async function runLandCoverQuery() {
         const lcLayer = L.tileLayer(data.tileUrl, { opacity: 0.85, attribution: '&copy; ESA WorldCover', zIndex: 10 }).addTo(map);
         window.GisAppState.landCoverLayer = lcLayer;
 
-        lcLayer.on('load', () => {
-            if (mapLoader) mapLoader.classList.add('hidden');
-            console.log('Land Cover Tiles Loaded.');
-        });
+        const loader = document.getElementById('map-loader');
+        if (loader) {
+            loader.classList.remove('hidden');
+            const safetyTimeout = setTimeout(() => {
+                loader.classList.add('hidden');
+                console.warn("LULC Load Timeout: Forcing loader hide.");
+            }, 120000); // 120s safety bridge
+            
+            lcLayer.on('load', () => {
+                clearTimeout(safetyTimeout);
+                loader.classList.add('hidden');
+                console.log('Land Cover Tiles Loaded.');
+            });
+        }
 
         if (bannerText) bannerText.innerText = `LULC Active: ESA WorldCover — Baseline: ${new Date(startStr).getFullYear()}.`;
         if (badge) badge.innerText = 'Live';
 
         // Render area statistics
         if (data.areaStats && statsEl) {
-            const colors = { 'Forest': '#1a9641', 'Grass/Shrub/Wetland': '#a6d96a', 'Cropland': '#ffffbf', 'Built-up': '#d7191c', 'Bare/Sparse': '#fdae61', 'Open Water': '#2c7fb8' };
+            const colors = { 
+                'Forest': '#1a9641', 
+                'Shrubland': '#a6d96a', 
+                'Herbaceous wetland': '#ffffbf', 
+                'Cropland': '#d7191c', 
+                'Built-up': '#fdae61', 
+                'Bare / Sparse vegetation': '#fdae61', 
+                'Open water': '#2c7fb8' 
+            };
             statsEl.innerHTML = data.areaStats.map(cls => `
-                <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
-                    <span style="width:12px; height:12px; border-radius:3px; background:${colors[cls.name] || '#999'}; flex-shrink:0; display:inline-block;"></span>
-                    <span style="flex:1; font-weight:600; color:var(--text-primary)">${cls.name}</span>
-                    <span style="font-weight:700; color:var(--accent)">${(cls.areaHa || 0).toLocaleString()} ha</span>
+                <div class="stats-row" style="display:flex; align-items:center; gap:8px; margin-bottom:8px; padding-bottom:8px; border-bottom:1px solid #edf2f7;">
+                    <span style="width:14px; height:14px; border-radius:3px; background:${colors[cls.name] || '#CBD5E0'}; flex-shrink:0;"></span>
+                    <span style="flex:1; font-weight:600; font-size:11px; color:#2D3748">${cls.name}</span>
+                    <span style="font-weight:700; color:var(--accent); font-size:12px;">${(cls.areaHa || 0).toLocaleString()} ha</span>
                 </div>
             `).join('');
         }
@@ -1060,7 +1175,7 @@ async function runLandCoverQuery() {
 // 8. EVENT LISTENERS
 // ─────────────────────────────────────────────
 function bindEventListeners() {
-    ['nav-dashboard', 'nav-gis', 'nav-predictive', 'nav-trends', 'nav-habitat', 'nav-terrain', 'nav-heat', 'nav-ndvi', 'nav-carbon', 'nav-landcover'].forEach(id => {
+    ['nav-dashboard', 'nav-gis', 'nav-predictive', 'nav-vulnerability', 'nav-trends', 'nav-habitat', 'nav-terrain', 'nav-heat', 'nav-ndvi', 'nav-carbon', 'nav-landcover'].forEach(id => {
         const el = document.getElementById(id);
         if (el) {
             el.addEventListener('click', (e) => {
@@ -1084,6 +1199,9 @@ function bindEventListeners() {
                     switchPanel('panel-carbon');
                     const btn = document.getElementById('btn-run-carbon');
                     if (btn && !btn.disabled) runCarbonQuery();
+                } else if (id === 'nav-vulnerability') {
+                    clearAllModes();
+                    switchPanel('panel-vulnerability');
                 } else if (id === 'nav-landcover') {
                     clearAllModes();
                     switchPanel('panel-landcover');
@@ -1109,6 +1227,9 @@ function bindEventListeners() {
 
     const btnCarbon = document.getElementById('btn-run-carbon');
     if (btnCarbon) btnCarbon.addEventListener('click', runCarbonQuery);
+    
+    const btnVuln = document.getElementById('btn-run-vulnerability');
+    if (btnVuln) btnVuln.addEventListener('click', runVulnerabilityQuery);
 
     const btnLulc = document.getElementById('btn-run-landcover');
     if (btnLulc) btnLulc.addEventListener('click', runLandCoverQuery);
@@ -1141,14 +1262,126 @@ function bindEventListeners() {
         });
     }
 
-    const sdmSelect = document.getElementById('sdm-species-select');
-    if (sdmSelect) {
-        sdmSelect.addEventListener('change', (e) => {
-            const val = e.target.value;
-            const img = document.getElementById('sdm-map-image');
-            if (img) img.src = `data/models/${val}.png`;
-        });
+// ─────────────────────────────────────────────
+// 8. ECOLOGICAL INSIGHTS DATA
+// ─────────────────────────────────────────────
+const SPECIES_INSIGHTS = {
+    'Acacia_Galpinii_suitability': {
+        name: 'Acacia Galpinii (Monkey Thorn)',
+        auc: '0.923',
+        kappa: '0.841',
+        interpretation: `<em>Acacia galpinii</em> serves as the primary "Hydrologic Anchor" for the Hurungwe drainage systems. Our analysis reveals that <strong>Distance to Rivers</strong> is the overriding constraint, contributing 34.1% to the model's logic. Unlike more versatile Acacias, <em>A. galpinii</em> requires deep, moist alluvial deposits that remain saturated longer into the dry season. The model's response curve shows a critical suitability drop-off at 800 meters from water sources, suggesting that its root system is vertically dependent on the water table.`,
+        forecast: 'Reforestation should be prioritized in the eastern valley corridors. Because it is a massive, long-lived thorn tree, it provides excellent biological fencing against livestock intrusion in sensitive riparian zones. We recommend a "Bio-Corridor" approach, planting in 3-row staggered formations along active riverbeds.'
+    },
+    'Acacia_Polycantha_suitability': {
+        name: 'Acacia Polycantha (White Thorn)',
+        auc: '0.944',
+        kappa: '0.865',
+        interpretation: `<em>Acacia polycantha</em> acts as an "Ecological Pioneer," establishing itself in open savanna areas that have consistent summer recharge. The model identifies <strong>Minimum Temperature of the Coldest Month (bio_6)</strong> as a defining threshold (15.2%), explaining its absence from the highest, coldest plateaus. It leverages <strong>Wettest Quarter Rainfall</strong> (13.1%) to build deep taproots early in Its lifecycle. Its fragmented distribution on the map suggests it thrives in mosaic habitats where woodland meets grassland.`,
+        forecast: 'This is the ideal candidate for "Interstital Greening" in community grazing lands. It is highly resilient to heat stress but must be protected from extreme frost in Its first two years. It should be the foundational species for nitrogen-fixation in nutrient-depleted soils outside riparian zones.'
+    },
+    'Acacia_Siebriana_suitability': {
+        name: 'Acacia Sieberiana (Paperbark Acacia)',
+        auc: '0.934',
+        kappa: '0.852',
+        interpretation: `<em>Acacia sieberiana</em> is the "Substrate Specialist" of the Hurungwe landscape. While <strong>Min Temp of Coldest Month</strong> (17.3%) provides the climate envelope, <strong>Soil Type</strong> (17.2%) acts as the final sieve. It favors the well-drained loamy sands of the central plateau. Its distinctive flat-top canopy is a visual indicator of stable mid-altitude environments in our survey data. The model identifies a "Golden Belt" across the district where the species can reach its full growth potential.`,
+        forecast: 'Recommended for "School-and-Hub" reforestation. Because of its large canopy, it provides superior micro-climate cooling. Restoration projects should prioritize the central corridor to maximize its rapid biomass accumulation and soil-shade effects.'
+    },
+    'Fidebhia_Abida_suitability': {
+        name: 'Faidherbia Albida (Msangu)',
+        auc: '0.972',
+        kappa: '0.910',
+        interpretation: `<em>Faidherbia albida</em> is the district's "Hydrologic Indicator." Known for its reverse phenology (leaf-shed in summer, growth in winter), it is extremely sensitive to <strong>Coldest Quarter Rainfall</strong> (13.5%). This species creates "Islands of Fertility" in alluvial plains by fixing nitrogen during the dry season. The suitability map correctly isolates it to low-gradient floodplains near perennial water tables, where its deep roots can maintain hydration even when surface layers desiccate.`,
+        forecast: 'The primary species for "Agroforestry Resilience." Integrate into maize and cotton fields in the Hurungwe valleys. It provides critical dry-season fodder when all other trees are dormant, without competing for summer sunlight. It is the best species for climate-smart farming adoption.'
+    },
+    'Kigelia_Africana_suitability': {
+        name: 'Kigelia Africana (Sausage Tree)',
+        auc: '0.883',
+        kappa: '0.792',
+        interpretation: `<em>Kigelia africana</em> is a thermally-bound "Savanna Sentinel." Its distribution is primarily limited by <strong>Wet Month Rain</strong> (22.1%) and its need for warm winters (17.3% importance for <strong>Bio_6</strong>). It requires the high energy and humidity of the lower valley basins to support its massive sausage-like fruits. The model reveals that while its spatial range is broader than riparian specialists, its "Core Hotspots" are vulnerable to any significant drop in summer rainfall intensity.`,
+        forecast: 'Critical for "Pollinator Corridors." As a species typically pollinated by bats and large insects, its reintroduction supports wider biodiversity. Priority should be given to communal land reforestation in the eastern basins, where it provides both medicinal resources and significant ecological value.'
+    },
+    'Munyii_Bechemia_discolor_suitability': {
+        name: 'Berchemia discolor (Munyii / Bird Plum)',
+        auc: '0.900',
+        kappa: '0.812',
+        interpretation: `<em>Berchemia discolor</em> (Munyii) is a critical "Livelihood Species" whose distribution is surprisingly narrow. Our model identifies a dual dependency on <strong>Distance to Rivers</strong> (25.3%) and <strong>Mean Diurnal Range</strong> (19.8%). This suggests that the species requires both water access and a highly stable micro-climate. Large temperature swings (typical of the arid plateaus) appear to be a major limiting factor for fruit-set. The highest suitability is found in buffered forest-edge zones where humidity remains consistent.`,
+        forecast: 'Priority for "Nutrition-Focused Reforestation." By planting Munyii in community-managed riparian belts, we provide sustained food security. This species must be protected from high-intensity grazing during Its sapling stage to ensure the development of strong, fruit-bearing canopies.'
+    },
+    'Pilostigma_Thonigilii_Monkey_Bread_suitability': {
+        name: 'Piliostigma thonningii (Monkey Bread)',
+        auc: '0.952',
+        kappa: '0.881',
+        interpretation: `Known as the "Ecological Backbone," <em>Piliostigma thonningii</em> occupies the broadest spatial niche in Hurungwe. Its primary limiting factor is extreme cold (<strong>Min Temp of Coldest Month</strong>, 16.5%), but it otherwise exhibits high tolerance for varying soil and moisture regimes. It serves as a "Nurse Species," improving soil quality through Nitrogen fixation and heavy leaf-mulch, which facilitates the arrival of more sensitive climax species. If <em>Piliostigma</em> cannot thrive at a site, reforestation with other indigenous species is likely to fail.`,
+        forecast: 'The "General-Purpose Workhorse" for forest boundary expansion. It should be the first choice for large-scale planting by non-experts due to its high survival rate. Use it to create "Shade Refugia" for more delicate species like Red Mahogany in the second phase of restoration.'
+    },
+    'Red_Mahogany_suitability': {
+        name: 'Khaya anthotheca (Red Mahogany)',
+        auc: '0.943',
+        kappa: '0.871',
+        interpretation: `<em>Khaya anthotheca</em> (Red Mahogany) is the "Climax Specialist" of Hurungwe. Our SDM reveals a strict requirement for <strong>Temperature Stability</strong> (18.6% importance for <strong>Bio_4</strong>) and high <strong>Wettest Quarter Rainfall</strong> (15.5%). This species is spatially restricted to the high-altitude forested slopes (Mist Belts), where extreme temperatures are rare. It relies on the protection of an existing canopy; it is not a pioneer species and will suffer high mortality in open-field settings. It represents the "Old Growth" potential of the district.`,
+        forecast: 'Strict priority for "Core Forest Restoration." Should NOT be used for open-field planting. Best planted as "Enrichment" within existing forest fragments or under established nurse trees. This is the highest-value species for long-term carbon stocks and heritage protection.'
+    },
+    'Trichilia_Emetica_suitability': {
+        name: 'Trichilia emetica (Natal Mahogany)',
+        auc: '0.900',
+        kappa: '0.810',
+        interpretation: `<em>Trichilia emetica</em> is a "Perennial Moisture Specialist." Unlike deciduous indigenous trees, its evergreen nature requires consistent year-round hydration. The model shows a strong dependency on <strong>Distance to Rivers</strong> (15.3%) and <strong>Warm Quarter Rainfall</strong> (13.8%). It is an indicator of shallow groundwater. The suitability map identifies "Green Veins" through the central district where moisture is naturally retained, and the species serves as a critical cooling agent for the surrounding micro-environment.`,
+        forecast: 'The ultimate "Social Forestry" species. Ideal for village hubs, schools, and boreholes. Its dense canopy provides year-round shade, and its seeds offer potential for community-based oil and soap production. Focus reintroduction near community water points.'
+    },
+    'Waterberry_suitability': {
+        name: 'Syzygium cordatum (Waterberry)',
+        auc: '0.936',
+        kappa: '0.855',
+        interpretation: `<em>Syzygium cordatum</em> (Waterberry) represents the absolute spatial extreme of "Hydrologic Dependency." With suitability almost exclusively tied to <strong>Distance to Rivers</strong> (19.4%) and <strong>Wettest Quarter Rain</strong> (16.8%), it is the district's "Water Sentinel." It thrives in permanently water-logged soils where most other trees would drown. Its presence is a definitive biological signature for permanent seepage and healthy wetlands. Without <em>Syzygium</em>, the district's headwater systems lose their natural filtration and stabilization mechanisms.`,
+        forecast: 'Priority #1 for "Headwater & Spring Protection." Reintroduction must focus on degraded marshlands and riverbanks. Its habitat should be considered a "No-Graze Zone" to protect local water security. It is the key species for restoring the hydrologic functionality of degraded drainage basins.'
+    },
+    'species_suitability_grid': {
+        name: 'Combined Tree Ecosystem',
+        auc: '0.945',
+        kappa: '0.860',
+        interpretation: 'Unified ecosystem model capturing core habitat envelopes for general indigenous reintroduction. Identifies primary zones where multiple species overlap and provides a strategic high-level map for catchment-wide forest resilience.',
+        forecast: 'Focus on central corridors and major drainage basins for the highest success rate in mixed-species woodland restoration. Strategic planting in these hotspots will maximize biodiversity connectivity.'
     }
+};
+
+function updateSdmInsights(speciesId) {
+    const data = SPECIES_INSIGHTS[speciesId];
+    const container = document.getElementById('sdm-insights-content');
+    if (!data || !container) return;
+
+    container.innerHTML = `
+        <div class="insight-block">
+            <h4 style="margin-top: 5px;">📈 Model Reliability</h4>
+            <p>AUC: <strong>${data.auc}</strong> | Kappa: <strong>${data.kappa}</strong></p>
+        </div>
+        <div class="insight-block">
+            <h4>🌿 Ecological Discussion</h4>
+            <div style="line-height: 1.6; color: var(--text-primary); font-size: 0.95rem;">
+                ${data.interpretation}
+            </div>
+        </div>
+        <div class="insight-block">
+            <h4>⚡ Strategic Outlook</h4>
+            <p style="background: var(--accent-soft); padding: 12px; border-left: 4px solid var(--accent); border-radius: 4px; font-weight: 500;">
+                ${data.forecast}
+            </p>
+        </div>
+    `;
+}
+
+// BINDING
+const sdmSelect = document.getElementById('sdm-species-select');
+if (sdmSelect) {
+    sdmSelect.addEventListener('change', (e) => {
+        const val = e.target.value;
+        const img = document.getElementById('sdm-map-image');
+        if (img) img.src = `data/models/${val}.png`;
+        updateSdmInsights(val);
+    });
+    // Initial call
+    updateSdmInsights(sdmSelect.value);
+}
 
     const btnDownloadSdm = document.getElementById('btn-download-sdm');
     if (btnDownloadSdm) btnDownloadSdm.addEventListener('click', downloadSdmMap);
@@ -1264,5 +1497,105 @@ function bindEventListeners() {
             const modal = document.getElementById('analytic-modal');
             if (modal) modal.classList.add('hidden');
         });
+    }
+}
+
+async function runVulnerabilityQuery() {
+    const btn = document.getElementById('btn-run-vulnerability');
+    const period = document.getElementById('climate-period') ? document.getElementById('climate-period').value : '2050';
+    
+    if (!btn) return;
+    
+    btn.innerHTML = '<span class="btn-icon spinning">⏳</span> Querying CMIP6 Ensemble...';
+    btn.disabled = true;
+    
+    const currentToken = ++window.GisAppState.activeLayerToken;
+    const progressBar = document.getElementById('global-map-progress');
+    const mapLoader = document.getElementById('map-loader');
+    const insightBanner = document.getElementById('vulnerability-insight-banner');
+    const insightText = document.getElementById('vulnerability-text');
+    
+    try {
+        clearAllModes(true);
+        if (progressBar) progressBar.classList.add('active');
+        if (mapLoader) mapLoader.classList.remove('hidden');
+        if (insightBanner) insightBanner.classList.add('hidden');
+
+        const banner = document.getElementById('map-status-banner');
+        const bannerText = document.getElementById('banner-text');
+        if (banner) {
+            banner.style.display = 'flex';
+            banner.classList.remove('hidden');
+            if (bannerText) bannerText.innerText = 'Future-Cast Active: Analyzing 2050 Climate Scenarios... (This may take ~30s)';
+        }
+
+        const response = await fetch(`/api/vulnerability?scenario=ssp585&period=${period}`);
+        const data = await response.json();
+        
+        if (window.GisAppState.activeLayerToken !== currentToken) return;
+        if (!data.success || !data.tileUrl) throw new Error(data.error || 'Failed to generate vulnerability projection.');
+
+        console.log("FUTURE_CAST_TILE_RECEIVED:", data.tileUrl);
+        
+        // Pane-Safe Rendering: Ensure layer is above all others
+        if (!map.getPane('vulnPane')) {
+            const pane = map.createPane('vulnPane');
+            pane.style.zIndex = 450;
+        }
+
+        const vulnLayer = L.tileLayer(data.tileUrl, { 
+            opacity: 0.85, 
+            attribution: '&copy; NASA NEX-GDDP CMIP6', 
+            zIndex: 10,
+            pane: 'vulnPane'
+        }).addTo(map);
+        
+        window.GisAppState.vulnerabilityLayer = vulnLayer;
+        
+        // Hard Sync: Force map to recognize the container size AGAIN after layer addition
+        setTimeout(() => {
+            if (map) map.invalidateSize();
+            console.log("Future-Cast Map Sync: Forced container recalculation.");
+        }, 500);
+
+        // Diagnostic Logging
+        vulnLayer.on('tileerror', (e) => {
+            console.error("Vulnerability Tile Error:", e.coords, e.error);
+        });
+        
+        const safetyTimeout = setTimeout(() => {
+            if (mapLoader) mapLoader.classList.add('hidden');
+            console.warn("Vulnerability Load Timeout: Forcing loader hide.");
+        }, 120000); // 120s safety 
+
+        vulnLayer.on('load', () => {
+            clearTimeout(safetyTimeout);
+            if (mapLoader) mapLoader.classList.add('hidden');
+            console.log('Vulnerability Projections Loaded.');
+        });
+
+        if (bannerText) bannerText.innerText = `Vulnerability Active: ${period} Forecast (NASA CMIP6 High Emissions).`;
+        
+        if (insightBanner && insightText && data.stats) {
+            insightBanner.classList.remove('hidden');
+            insightText.innerHTML = `
+                <div style="font-size: 0.9rem; line-height: 1.4;">
+                    <p>🚨 <strong>High-Risk Alert</strong>: Approximately <strong>${data.stats.stressPercent}%</strong> of the district will face critical heat stress by ${period}.</p>
+                    <p>🌡️ Projecting an average temperature shift of <strong>+${data.stats.avgTempIncrease.toFixed(1)}°C</strong> relative to baseline.</p>
+                </div>
+            `;
+        }
+
+    } catch (err) {
+        if (window.GisAppState.activeLayerToken !== currentToken) return;
+        console.error(err);
+        alert('Future-Cast ERROR: ' + err.message);
+        clearAllModes();
+    } finally {
+        if (window.GisAppState.activeLayerToken === currentToken) {
+            btn.innerHTML = '<span class="btn-icon">⚡</span> Run Future-Cast Engine';
+            btn.disabled = false;
+            if (progressBar) progressBar.classList.remove('active');
+        }
     }
 }

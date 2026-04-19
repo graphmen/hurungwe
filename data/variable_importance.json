@@ -1,0 +1,579 @@
+{
+    "grid": [
+        {
+            "species": "Acacia Galpinii",
+            "variable": "Precip. Wettest Month",
+            "importance": 9.83
+        },
+        {
+            "species": "Acacia Galpinii",
+            "variable": "Precip. Driest Month",
+            "importance": 4.83
+        },
+        {
+            "species": "Acacia Galpinii",
+            "variable": "Precip. Seasonality",
+            "importance": 5.12
+        },
+        {
+            "species": "Acacia Galpinii",
+            "variable": "Precip. Wettest Quarter",
+            "importance": 6.24
+        },
+        {
+            "species": "Acacia Galpinii",
+            "variable": "Precip. Warmest Quarter",
+            "importance": 7.75
+        },
+        {
+            "species": "Acacia Galpinii",
+            "variable": "Precip. Coldest Quarter",
+            "importance": 5.59
+        },
+        {
+            "species": "Acacia Galpinii",
+            "variable": "Mean Diurnal Range",
+            "importance": 7.82
+        },
+        {
+            "species": "Acacia Galpinii",
+            "variable": "Temp. Seasonality",
+            "importance": 7.24
+        },
+        {
+            "species": "Acacia Galpinii",
+            "variable": "Min Temp Coldest Month",
+            "importance": 6.23
+        },
+        {
+            "species": "Acacia Galpinii",
+            "variable": "Distance to Rivers",
+            "importance": 34.14
+        },
+        {
+            "species": "Acacia Galpinii",
+            "variable": "Soil Type",
+            "importance": 5.21
+        },
+        {
+            "species": "Acacia Polycantha",
+            "variable": "Precip. Wettest Month",
+            "importance": 5.62
+        },
+        {
+            "species": "Acacia Polycantha",
+            "variable": "Precip. Driest Month",
+            "importance": 3.44
+        },
+        {
+            "species": "Acacia Polycantha",
+            "variable": "Precip. Seasonality",
+            "importance": 7.2
+        },
+        {
+            "species": "Acacia Polycantha",
+            "variable": "Precip. Wettest Quarter",
+            "importance": 13.12
+        },
+        {
+            "species": "Acacia Polycantha",
+            "variable": "Precip. Warmest Quarter",
+            "importance": 7.16
+        },
+        {
+            "species": "Acacia Polycantha",
+            "variable": "Precip. Coldest Quarter",
+            "importance": 3.59
+        },
+        {
+            "species": "Acacia Polycantha",
+            "variable": "Mean Diurnal Range",
+            "importance": 11.56
+        },
+        {
+            "species": "Acacia Polycantha",
+            "variable": "Temp. Seasonality",
+            "importance": 8.83
+        },
+        {
+            "species": "Acacia Polycantha",
+            "variable": "Min Temp Coldest Month",
+            "importance": 15.23
+        },
+        {
+            "species": "Acacia Polycantha",
+            "variable": "Distance to Rivers",
+            "importance": 12.69
+        },
+        {
+            "species": "Acacia Polycantha",
+            "variable": "Soil Type",
+            "importance": 11.58
+        },
+        {
+            "species": "Acacia Siebriana",
+            "variable": "Precip. Wettest Month",
+            "importance": 6.13
+        },
+        {
+            "species": "Acacia Siebriana",
+            "variable": "Precip. Driest Month",
+            "importance": 2.44
+        },
+        {
+            "species": "Acacia Siebriana",
+            "variable": "Precip. Seasonality",
+            "importance": 10.11
+        },
+        {
+            "species": "Acacia Siebriana",
+            "variable": "Precip. Wettest Quarter",
+            "importance": 12.39
+        },
+        {
+            "species": "Acacia Siebriana",
+            "variable": "Precip. Warmest Quarter",
+            "importance": 3.9
+        },
+        {
+            "species": "Acacia Siebriana",
+            "variable": "Precip. Coldest Quarter",
+            "importance": 4.69
+        },
+        {
+            "species": "Acacia Siebriana",
+            "variable": "Mean Diurnal Range",
+            "importance": 7.8
+        },
+        {
+            "species": "Acacia Siebriana",
+            "variable": "Temp. Seasonality",
+            "importance": 9.11
+        },
+        {
+            "species": "Acacia Siebriana",
+            "variable": "Min Temp Coldest Month",
+            "importance": 17.3
+        },
+        {
+            "species": "Acacia Siebriana",
+            "variable": "Distance to Rivers",
+            "importance": 8.96
+        },
+        {
+            "species": "Acacia Siebriana",
+            "variable": "Soil Type",
+            "importance": 17.17
+        },
+        {
+            "species": "Fidebhia Abida",
+            "variable": "Precip. Wettest Month",
+            "importance": 9.05
+        },
+        {
+            "species": "Fidebhia Abida",
+            "variable": "Precip. Driest Month",
+            "importance": 9.45
+        },
+        {
+            "species": "Fidebhia Abida",
+            "variable": "Precip. Seasonality",
+            "importance": 9.35
+        },
+        {
+            "species": "Fidebhia Abida",
+            "variable": "Precip. Wettest Quarter",
+            "importance": 9.03
+        },
+        {
+            "species": "Fidebhia Abida",
+            "variable": "Precip. Warmest Quarter",
+            "importance": 6.49
+        },
+        {
+            "species": "Fidebhia Abida",
+            "variable": "Precip. Coldest Quarter",
+            "importance": 13.49
+        },
+        {
+            "species": "Fidebhia Abida",
+            "variable": "Mean Diurnal Range",
+            "importance": 6.33
+        },
+        {
+            "species": "Fidebhia Abida",
+            "variable": "Temp. Seasonality",
+            "importance": 10.19
+        },
+        {
+            "species": "Fidebhia Abida",
+            "variable": "Min Temp Coldest Month",
+            "importance": 7.82
+        },
+        {
+            "species": "Fidebhia Abida",
+            "variable": "Distance to Rivers",
+            "importance": 7.44
+        },
+        {
+            "species": "Fidebhia Abida",
+            "variable": "Soil Type",
+            "importance": 11.37
+        },
+        {
+            "species": "Kigelia Africana",
+            "variable": "Precip. Wettest Month",
+            "importance": 22.07
+        },
+        {
+            "species": "Kigelia Africana",
+            "variable": "Precip. Driest Month",
+            "importance": 2.44
+        },
+        {
+            "species": "Kigelia Africana",
+            "variable": "Precip. Seasonality",
+            "importance": 4.81
+        },
+        {
+            "species": "Kigelia Africana",
+            "variable": "Precip. Wettest Quarter",
+            "importance": 9.7
+        },
+        {
+            "species": "Kigelia Africana",
+            "variable": "Precip. Warmest Quarter",
+            "importance": 14.95
+        },
+        {
+            "species": "Kigelia Africana",
+            "variable": "Precip. Coldest Quarter",
+            "importance": 9.97
+        },
+        {
+            "species": "Kigelia Africana",
+            "variable": "Mean Diurnal Range",
+            "importance": 7.54
+        },
+        {
+            "species": "Kigelia Africana",
+            "variable": "Temp. Seasonality",
+            "importance": 3.02
+        },
+        {
+            "species": "Kigelia Africana",
+            "variable": "Min Temp Coldest Month",
+            "importance": 17.31
+        },
+        {
+            "species": "Kigelia Africana",
+            "variable": "Distance to Rivers",
+            "importance": 4.21
+        },
+        {
+            "species": "Kigelia Africana",
+            "variable": "Soil Type",
+            "importance": 3.98
+        },
+        {
+            "species": "Munyii",
+            "variable": "Precip. Wettest Month",
+            "importance": 7.66
+        },
+        {
+            "species": "Munyii",
+            "variable": "Precip. Driest Month",
+            "importance": 2.62
+        },
+        {
+            "species": "Munyii",
+            "variable": "Precip. Seasonality",
+            "importance": 5.06
+        },
+        {
+            "species": "Munyii",
+            "variable": "Precip. Wettest Quarter",
+            "importance": 5.35
+        },
+        {
+            "species": "Munyii",
+            "variable": "Precip. Warmest Quarter",
+            "importance": 3.78
+        },
+        {
+            "species": "Munyii",
+            "variable": "Precip. Coldest Quarter",
+            "importance": 7.8
+        },
+        {
+            "species": "Munyii",
+            "variable": "Mean Diurnal Range",
+            "importance": 19.79
+        },
+        {
+            "species": "Munyii",
+            "variable": "Temp. Seasonality",
+            "importance": 12.28
+        },
+        {
+            "species": "Munyii",
+            "variable": "Min Temp Coldest Month",
+            "importance": 6.62
+        },
+        {
+            "species": "Munyii",
+            "variable": "Distance to Rivers",
+            "importance": 25.26
+        },
+        {
+            "species": "Munyii",
+            "variable": "Soil Type",
+            "importance": 3.78
+        },
+        {
+            "species": "Pilostigma",
+            "variable": "Precip. Wettest Month",
+            "importance": 4.7
+        },
+        {
+            "species": "Pilostigma",
+            "variable": "Precip. Driest Month",
+            "importance": 3.97
+        },
+        {
+            "species": "Pilostigma",
+            "variable": "Precip. Seasonality",
+            "importance": 6.91
+        },
+        {
+            "species": "Pilostigma",
+            "variable": "Precip. Wettest Quarter",
+            "importance": 12.33
+        },
+        {
+            "species": "Pilostigma",
+            "variable": "Precip. Warmest Quarter",
+            "importance": 4.91
+        },
+        {
+            "species": "Pilostigma",
+            "variable": "Precip. Coldest Quarter",
+            "importance": 6.13
+        },
+        {
+            "species": "Pilostigma",
+            "variable": "Mean Diurnal Range",
+            "importance": 10.23
+        },
+        {
+            "species": "Pilostigma",
+            "variable": "Temp. Seasonality",
+            "importance": 11.35
+        },
+        {
+            "species": "Pilostigma",
+            "variable": "Min Temp Coldest Month",
+            "importance": 16.53
+        },
+        {
+            "species": "Pilostigma",
+            "variable": "Distance to Rivers",
+            "importance": 16.21
+        },
+        {
+            "species": "Pilostigma",
+            "variable": "Soil Type",
+            "importance": 6.72
+        },
+        {
+            "species": "Red Mahogany",
+            "variable": "Precip. Wettest Month",
+            "importance": 7.57
+        },
+        {
+            "species": "Red Mahogany",
+            "variable": "Precip. Driest Month",
+            "importance": 2.04
+        },
+        {
+            "species": "Red Mahogany",
+            "variable": "Precip. Seasonality",
+            "importance": 5.39
+        },
+        {
+            "species": "Red Mahogany",
+            "variable": "Precip. Wettest Quarter",
+            "importance": 15.51
+        },
+        {
+            "species": "Red Mahogany",
+            "variable": "Precip. Warmest Quarter",
+            "importance": 10.5
+        },
+        {
+            "species": "Red Mahogany",
+            "variable": "Precip. Coldest Quarter",
+            "importance": 3.13
+        },
+        {
+            "species": "Red Mahogany",
+            "variable": "Mean Diurnal Range",
+            "importance": 7.55
+        },
+        {
+            "species": "Red Mahogany",
+            "variable": "Temp. Seasonality",
+            "importance": 18.64
+        },
+        {
+            "species": "Red Mahogany",
+            "variable": "Min Temp Coldest Month",
+            "importance": 9.46
+        },
+        {
+            "species": "Red Mahogany",
+            "variable": "Distance to Rivers",
+            "importance": 8.16
+        },
+        {
+            "species": "Red Mahogany",
+            "variable": "Soil Type",
+            "importance": 12.05
+        },
+        {
+            "species": "Trichilia Emetica",
+            "variable": "Precip. Wettest Month",
+            "importance": 5.97
+        },
+        {
+            "species": "Trichilia Emetica",
+            "variable": "Precip. Driest Month",
+            "importance": 6.39
+        },
+        {
+            "species": "Trichilia Emetica",
+            "variable": "Precip. Seasonality",
+            "importance": 13.49
+        },
+        {
+            "species": "Trichilia Emetica",
+            "variable": "Precip. Wettest Quarter",
+            "importance": 12.53
+        },
+        {
+            "species": "Trichilia Emetica",
+            "variable": "Precip. Warmest Quarter",
+            "importance": 14.81
+        },
+        {
+            "species": "Trichilia Emetica",
+            "variable": "Precip. Coldest Quarter",
+            "importance": 4.87
+        },
+        {
+            "species": "Trichilia Emetica",
+            "variable": "Mean Diurnal Range",
+            "importance": 7.61
+        },
+        {
+            "species": "Trichilia Emetica",
+            "variable": "Temp. Seasonality",
+            "importance": 4.27
+        },
+        {
+            "species": "Trichilia Emetica",
+            "variable": "Min Temp Coldest Month",
+            "importance": 5.31
+        },
+        {
+            "species": "Trichilia Emetica",
+            "variable": "Distance to Rivers",
+            "importance": 15.26
+        },
+        {
+            "species": "Trichilia Emetica",
+            "variable": "Soil Type",
+            "importance": 9.49
+        },
+        {
+            "species": "Waterberry",
+            "variable": "Precip. Wettest Month",
+            "importance": 9.52
+        },
+        {
+            "species": "Waterberry",
+            "variable": "Precip. Driest Month",
+            "importance": 5.58
+        },
+        {
+            "species": "Waterberry",
+            "variable": "Precip. Seasonality",
+            "importance": 5.08
+        },
+        {
+            "species": "Waterberry",
+            "variable": "Precip. Wettest Quarter",
+            "importance": 16.78
+        },
+        {
+            "species": "Waterberry",
+            "variable": "Precip. Warmest Quarter",
+            "importance": 6.95
+        },
+        {
+            "species": "Waterberry",
+            "variable": "Precip. Coldest Quarter",
+            "importance": 3.31
+        },
+        {
+            "species": "Waterberry",
+            "variable": "Mean Diurnal Range",
+            "importance": 12.47
+        },
+        {
+            "species": "Waterberry",
+            "variable": "Temp. Seasonality",
+            "importance": 8.84
+        },
+        {
+            "species": "Waterberry",
+            "variable": "Min Temp Coldest Month",
+            "importance": 5.8
+        },
+        {
+            "species": "Waterberry",
+            "variable": "Distance to Rivers",
+            "importance": 19.36
+        },
+        {
+            "species": "Waterberry",
+            "variable": "Soil Type",
+            "importance": 6.31
+        }
+    ],
+    "variables": [
+        "Precip. Wettest Month",
+        "Precip. Driest Month",
+        "Precip. Seasonality",
+        "Precip. Wettest Quarter",
+        "Precip. Warmest Quarter",
+        "Precip. Coldest Quarter",
+        "Mean Diurnal Range",
+        "Temp. Seasonality",
+        "Min Temp Coldest Month",
+        "Distance to Rivers",
+        "Soil Type"
+    ],
+    "species": [
+        "Acacia Galpinii",
+        "Acacia Polycantha",
+        "Acacia Siebriana",
+        "Fidebhia Abida",
+        "Kigelia Africana",
+        "Munyii",
+        "Pilostigma",
+        "Red Mahogany",
+        "Trichilia Emetica",
+        "Waterberry"
+    ]
+}
