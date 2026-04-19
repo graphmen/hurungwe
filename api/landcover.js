@@ -66,20 +66,14 @@ module.exports = async (req, res) => {
         const wc = ee.ImageCollection(collectionPath).first().clip(boundary);
 
         // 2. Reclassify: map ESA codes → 6 simplified classes
-        // Our classes: 1=Forest, 2=Grass/Shrub/Wetland, 3=Cropland, 4=Built-up, 5=Bare/Sparse, 6=Open Water
         const lulc = wc.remap(
             [10, 20, 30, 40, 50, 60, 80, 90],
             [1,  2,  2,  3,  4,  5,  6,  2],
             0
-        ).rename('LULC').updateMask(wc.remap([10,20,30,40,50,60,80,90],[1,2,2,3,4,5,6,2],0).gt(0));
+        ).rename('LULC').updateMask(wc.gt(0));
 
         // 3. Visualization palette
-        const lulcVis = {
-            min: 1,
-            max: 6,
-            palette: ['1a9641', 'a6d96a', 'ffffbf', 'd7191c', 'fdae61', '2c7fb8']
-        };
-
+        const lulcVis = { min: 1, max: 6, palette: ['1a9641', 'a6d96a', 'ffffbf', 'd7191c', 'fdae61', '2c7fb8'] };
         const mapInfo = await new Promise((resolve, reject) => {
             lulc.getMap(lulcVis, (info, err) => {
                 if (err) reject(err);
@@ -87,27 +81,24 @@ module.exports = async (req, res) => {
             });
         });
 
-        // 4. Area statistics per class (Optimized: Single Grouped Reduction)
+        // 4. Area statistics per class (Optimized Grouped Reduction)
         const pixelAreaHa = ee.Image.pixelArea().divide(10000);
         const lulcWithArea = lulc.addBands(pixelAreaHa);
         
         const areaStats = await new Promise((resolve, reject) => {
             lulcWithArea.reduceRegion({
-                reducer: ee.Reducer.sum().group({
-                    groupField: 0,
-                    groupName: 'classId',
-                }),
+                reducer: ee.Reducer.sum().group({ groupField: 0, groupName: 'classId' }),
                 geometry: boundary,
-                scale: 100, // Balanced resolution for speed/accuracy
+                scale: 250, // 250m scale ensures fast completion within Vercel timeout
                 maxPixels: 1e13
             }).evaluate((result, err) => {
-                if (err) reject(err);
+                if (err) reject(err || new Error("GEE evaluate timed out or returned null."));
                 else resolve(result);
             });
         });
 
         const classNames = ['Forest', 'Grass/Shrub/Wetland', 'Cropland', 'Built-up', 'Bare/Sparse', 'Open Water'];
-        const areaResults = (areaStats.groups || []).map(g => ({
+        const areaResults = (areaStats && areaStats.groups ? areaStats.groups : []).map(g => ({
             id: g.classId,
             name: classNames[g.classId - 1] || 'Unknown',
             areaHa: Math.round(g.sum || 0)
