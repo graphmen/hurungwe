@@ -72,7 +72,7 @@ module.exports = async (req, res) => {
             0
         ).rename('LULC').updateMask(wc.gt(0));
 
-        // 3. Visualization palette
+        // 3. Visualization palette & Tile Retrieval (Priority 1)
         const lulcVis = { min: 1, max: 6, palette: ['1a9641', 'a6d96a', 'ffffbf', 'd7191c', 'fdae61', '2c7fb8'] };
         const mapInfo = await new Promise((resolve, reject) => {
             lulc.getMap(lulcVis, (info, err) => {
@@ -81,28 +81,37 @@ module.exports = async (req, res) => {
             });
         });
 
-        // 4. Area statistics per class (Optimized Grouped Reduction)
-        const pixelAreaHa = ee.Image.pixelArea().divide(10000);
-        const lulcWithArea = lulc.addBands(pixelAreaHa);
-        
-        const areaStats = await new Promise((resolve, reject) => {
-            lulcWithArea.reduceRegion({
-                reducer: ee.Reducer.sum().group({ groupField: 0, groupName: 'classId' }),
-                geometry: boundary,
-                scale: 250, // 250m scale ensures fast completion within Vercel timeout
-                maxPixels: 1e13
-            }).evaluate((result, err) => {
-                if (err) reject(err || new Error("GEE evaluate timed out or returned null."));
-                else resolve(result);
-            });
-        });
+        // 4. Area statistics per class (Priority 2 - with Timeout Fallback)
+        let areaResults = [];
+        try {
+            const pixelAreaHa = ee.Image.pixelArea().divide(10000);
+            const lulcWithArea = lulc.addBands(pixelAreaHa);
+            
+            const areaStats = await Promise.race([
+                new Promise((resolve, reject) => {
+                    lulcWithArea.reduceRegion({
+                        reducer: ee.Reducer.sum().group({ groupField: 0, groupName: 'classId' }),
+                        geometry: boundary,
+                        scale: 500, // Coarser scale for guaranteed speed (stats only)
+                        maxPixels: 1e13
+                    }).evaluate((result, err) => {
+                        if (err) reject(err);
+                        else resolve(result);
+                    });
+                }),
+                new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 6000)) // 6s threshold
+            ]);
 
-        const classNames = ['Forest', 'Grass/Shrub/Wetland', 'Cropland', 'Built-up', 'Bare/Sparse', 'Open Water'];
-        const areaResults = (areaStats && areaStats.groups ? areaStats.groups : []).map(g => ({
-            id: g.classId,
-            name: classNames[g.classId - 1] || 'Unknown',
-            areaHa: Math.round(g.sum || 0)
-        }));
+            const classNames = ['Forest', 'Grass/Shrub/Wetland', 'Cropland', 'Built-up', 'Bare/Sparse', 'Open Water'];
+            areaResults = (areaStats && areaStats.groups ? areaStats.groups : []).map(g => ({
+                id: g.classId,
+                name: classNames[g.classId - 1] || 'Unknown',
+                areaHa: Math.round(g.sum || 0)
+            }));
+        } catch (e) {
+            console.warn("LULC Area Stats Fallback triggered:", e.message);
+            // Non-blocking failure: areaResults remains []
+        }
 
         res.status(200).json({
             success: true,

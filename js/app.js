@@ -873,46 +873,40 @@ function updateMapLegend(type) {
 
     if (type === 'ndvi') {
         leg.innerHTML = `
-            <div class="legend-card">
-                <div class="legend-title">🌿 Vegetation Health (NDVI)</div>
-                <div class="legend-items">
-                    <div class="legend-row"><span class="legend-box" style="background:darkgreen"></span> Very High (>0.5)</div>
-                    <div class="legend-row"><span class="legend-box" style="background:green"></span> High (0.3 - 0.5)</div>
-                    <div class="legend-row"><span class="legend-box" style="background:lightgreen"></span> Moderate (0.1 - 0.3)</div>
-                    <div class="legend-row"><span class="legend-box" style="background:yellow"></span> Low (-0.1 - 0.1)</div>
-                    <div class="legend-row"><span class="legend-box" style="background:brown"></span> Very Low (<-0.1)</div>
-                </div>
-                <div class="legend-meta" id="ndvi-legend-meta">Source: Sentinel-2 SR | Live Query</div>
+            <div class="legend-title">🌿 Vegetation Health (NDVI)</div>
+            <div class="legend-items">
+                <div class="legend-row"><span class="legend-box" style="background:darkgreen"></span> Very High (>0.5)</div>
+                <div class="legend-row"><span class="legend-box" style="background:green"></span> High (0.3 - 0.5)</div>
+                <div class="legend-row"><span class="legend-box" style="background:lightgreen"></span> Moderate (0.1 - 0.3)</div>
+                <div class="legend-row"><span class="legend-box" style="background:yellow"></span> Low (-0.1 - 0.1)</div>
+                <div class="legend-row"><span class="legend-box" style="background:brown"></span> Very Low (<-0.1)</div>
             </div>
+            <div class="legend-meta" id="ndvi-legend-meta">Source: Sentinel-2 SR | Live Query</div>
         `;
     } else if (type === 'carbon') {
         leg.innerHTML = `
-            <div class="legend-card">
-                <div class="legend-title">🌳 Carbon Stock (Mg C/ha)</div>
-                <div class="legend-items">
-                    <div class="legend-row"><span class="legend-box" style="background:#081d58"></span> 35-45+ Mg C/ha</div>
-                    <div class="legend-row"><span class="legend-box" style="background:#225ea8"></span> 25-35 Mg C/ha</div>
-                    <div class="legend-row"><span class="legend-box" style="background:#41b6c4"></span> 15-25 Mg C/ha</div>
-                    <div class="legend-row"><span class="legend-box" style="background:#a1d99b"></span> 5-15 Mg C/ha</div>
-                    <div class="legend-row"><span class="legend-box" style="background:#f5f5f5"></span> 0-5 Mg C/ha</div>
-                </div>
-                <div class="legend-meta" id="carbon-legend-meta">Source: IPCC Tier 1 Empirical</div>
+            <div class="legend-title">🌳 Carbon Stock (Mg C/ha)</div>
+            <div class="legend-items">
+                <div class="legend-row"><span class="legend-box" style="background:#081d58"></span> 35-45+ Mg C/ha</div>
+                <div class="legend-row"><span class="legend-box" style="background:#225ea8"></span> 25-35 Mg C/ha</div>
+                <div class="legend-row"><span class="legend-box" style="background:#41b6c4"></span> 15-25 Mg C/ha</div>
+                <div class="legend-row"><span class="legend-box" style="background:#a1d99b"></span> 5-15 Mg C/ha</div>
+                <div class="legend-row"><span class="legend-box" style="background:#f5f5f5"></span> 0-5 Mg C/ha</div>
             </div>
+            <div class="legend-meta" id="carbon-legend-meta">Source: IPCC Tier 1 Empirical</div>
         `;
     } else if (type === 'landcover') {
         leg.innerHTML = `
-            <div class="legend-card">
-                <div class="legend-title">🗺️ Land Cover Mapping</div>
-                <div class="legend-items">
-                    <div class="legend-row"><span class="legend-box" style="background:#1a9641"></span> Forest</div>
-                    <div class="legend-row"><span class="legend-box" style="background:#a6d96a"></span> Grass / Shrub / Wetland</div>
-                    <div class="legend-row"><span class="legend-box" style="background:#ffffbf"></span> Cropland</div>
-                    <div class="legend-row"><span class="legend-box" style="background:#d7191c"></span> Built-up</div>
-                    <div class="legend-row"><span class="legend-box" style="background:#fdae61"></span> Bare / Sparse</div>
-                    <div class="legend-row"><span class="legend-box" style="background:#2c7fb8"></span> Open Water</div>
-                </div>
-                <div class="legend-meta">Source: ESA WorldCover v200 · 10m</div>
+            <div class="legend-title">🗺️ Land Cover Mapping</div>
+            <div class="legend-items">
+                <div class="legend-row"><span class="legend-box" style="background:#1a9641"></span> Forest</div>
+                <div class="legend-row"><span class="legend-box" style="background:#a6d96a"></span> Grass / Shrub / Wetland</div>
+                <div class="legend-row"><span class="legend-box" style="background:#ffffbf"></span> Cropland</div>
+                <div class="legend-row"><span class="legend-box" style="background:#d7191c"></span> Built-up</div>
+                <div class="legend-row"><span class="legend-box" style="background:#fdae61"></span> Bare / Sparse</div>
+                <div class="legend-row"><span class="legend-box" style="background:#2c7fb8"></span> Open Water</div>
             </div>
+            <div class="legend-meta">Source: ESA WorldCover v200 · 10m</div>
         `;
     }
 }
