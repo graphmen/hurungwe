@@ -30,7 +30,8 @@ window.GisAppState = {
     landCoverLayer: null,
     sdmCharts: { auc: null, importance: null },
     variableImportance: null,
-    activeLayerToken: 0
+    activeLayerToken: 0,
+    isClimateMode: false
 };
 
 let map = null;
@@ -426,6 +427,11 @@ function initMap() {
             const selMarker = L.marker(e.latlng, { icon: selectIcon }).addTo(map);
             setTimeout(() => { if (map) map.removeLayer(selMarker); }, 3000);
             predictAtLocation(e.latlng.lat, e.latlng.lng);
+        } else if (window.GisAppState.isClimateMode) {
+            const selectIcon = L.divIcon({ html: '🔍', className: 'select-icon', iconSize: [24, 24], iconAnchor: [12, 12] });
+            const selMarker = L.marker(e.latlng, { icon: selectIcon }).addTo(map);
+            setTimeout(() => { if (map) map.removeLayer(selMarker); }, 3000);
+            inspectClimateAtLocation(e.latlng.lat, e.latlng.lng);
         }
     });
 
@@ -812,6 +818,7 @@ function downloadSdmMap() {
 function clearAllModes(leaveBanner = false) {
     console.log("Global Mode Reset Initiated...");
     window.GisAppState.isPredictiveMode = false;
+    window.GisAppState.isClimateMode = false;
 
     // 1. Remove Specialized Layers
     if (heatLayer) { map.removeLayer(heatLayer); heatLayer = null; }
@@ -1548,6 +1555,8 @@ async function runVulnerabilityQuery() {
         if (!data.success || !data.tileUrl) throw new Error(data.error || 'Failed to generate vulnerability projection.');
 
         console.log("FUTURE_CAST_TILE_RECEIVED:", data.tileUrl);
+        window.GisAppState.isClimateMode = true;
+        showClimateLegend();
         
         // Pane-Safe Rendering: Ensure layer is above all others
         if (!map.getPane('vulnPane')) {
