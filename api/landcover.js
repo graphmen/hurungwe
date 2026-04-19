@@ -87,31 +87,31 @@ module.exports = async (req, res) => {
             });
         });
 
-        // 4. Area statistics per class
+        // 4. Area statistics per class (Optimized: Single Grouped Reduction)
         const pixelAreaHa = ee.Image.pixelArea().divide(10000);
-        const classIds = [1, 2, 3, 4, 5, 6];
-        const classNames = ['Forest', 'Grass/Shrub/Wetland', 'Cropland', 'Built-up', 'Bare/Sparse', 'Open Water'];
+        const lulcWithArea = lulc.addBands(pixelAreaHa);
+        
+        const areaStats = await new Promise((resolve, reject) => {
+            lulcWithArea.reduceRegion({
+                reducer: ee.Reducer.sum().group({
+                    groupField: 0,
+                    groupName: 'classId',
+                }),
+                geometry: boundary,
+                scale: 100, // Balanced resolution for speed/accuracy
+                maxPixels: 1e13
+            }).evaluate((result, err) => {
+                if (err) reject(err);
+                else resolve(result);
+            });
+        });
 
-        const areaResults = await Promise.all(
-            classIds.map((id) =>
-                new Promise((resolve, reject) => {
-                    lulc.eq(id).multiply(pixelAreaHa)
-                        .reduceRegion({
-                            reducer: ee.Reducer.sum(),
-                            geometry: boundary,
-                            scale: 250, 
-                            maxPixels: 1e13
-                        })
-                        .evaluate((val, err) => {
-                            if (err) reject(err);
-                            else {
-                                const areaHa = val ? Math.round(Object.values(val)[0] || 0) : 0;
-                                resolve({ id, name: classNames[id - 1], areaHa });
-                            }
-                        });
-                })
-            )
-        );
+        const classNames = ['Forest', 'Grass/Shrub/Wetland', 'Cropland', 'Built-up', 'Bare/Sparse', 'Open Water'];
+        const areaResults = (areaStats.groups || []).map(g => ({
+            id: g.classId,
+            name: classNames[g.classId - 1] || 'Unknown',
+            areaHa: Math.round(g.sum || 0)
+        }));
 
         res.status(200).json({
             success: true,

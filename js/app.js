@@ -876,11 +876,11 @@ function updateMapLegend(type) {
             <div class="legend-card">
                 <div class="legend-title">🌿 Vegetation Health (NDVI)</div>
                 <div class="legend-items">
-                    <div class="legend-item"><span class="swatch" style="background:darkgreen"></span> Very High (>0.5)</div>
-                    <div class="legend-item"><span class="swatch" style="background:green"></span> High (0.3 - 0.5)</div>
-                    <div class="legend-item"><span class="swatch" style="background:lightgreen"></span> Moderate (0.1 - 0.3)</div>
-                    <div class="legend-item"><span class="swatch" style="background:yellow"></span> Low (-0.1 - 0.1)</div>
-                    <div class="legend-item"><span class="swatch" style="background:brown"></span> Very Low (<-0.1)</div>
+                    <div class="legend-row"><span class="legend-box" style="background:darkgreen"></span> Very High (>0.5)</div>
+                    <div class="legend-row"><span class="legend-box" style="background:green"></span> High (0.3 - 0.5)</div>
+                    <div class="legend-row"><span class="legend-box" style="background:lightgreen"></span> Moderate (0.1 - 0.3)</div>
+                    <div class="legend-row"><span class="legend-box" style="background:yellow"></span> Low (-0.1 - 0.1)</div>
+                    <div class="legend-row"><span class="legend-box" style="background:brown"></span> Very Low (<-0.1)</div>
                 </div>
                 <div class="legend-meta" id="ndvi-legend-meta">Source: Sentinel-2 SR | Live Query</div>
             </div>
@@ -890,11 +890,11 @@ function updateMapLegend(type) {
             <div class="legend-card">
                 <div class="legend-title">🌳 Carbon Stock (Mg C/ha)</div>
                 <div class="legend-items">
-                    <div class="legend-item"><span class="swatch" style="background:#081d58"></span> 35-45+ Mg C/ha</div>
-                    <div class="legend-item"><span class="swatch" style="background:#225ea8"></span> 25-35 Mg C/ha</div>
-                    <div class="legend-item"><span class="swatch" style="background:#41b6c4"></span> 15-25 Mg C/ha</div>
-                    <div class="legend-item"><span class="swatch" style="background:#a1d99b"></span> 5-15 Mg C/ha</div>
-                    <div class="legend-item"><span class="swatch" style="background:#f5f5f5"></span> 0-5 Mg C/ha</div>
+                    <div class="legend-row"><span class="legend-box" style="background:#081d58"></span> 35-45+ Mg C/ha</div>
+                    <div class="legend-row"><span class="legend-box" style="background:#225ea8"></span> 25-35 Mg C/ha</div>
+                    <div class="legend-row"><span class="legend-box" style="background:#41b6c4"></span> 15-25 Mg C/ha</div>
+                    <div class="legend-row"><span class="legend-box" style="background:#a1d99b"></span> 5-15 Mg C/ha</div>
+                    <div class="legend-row"><span class="legend-box" style="background:#f5f5f5"></span> 0-5 Mg C/ha</div>
                 </div>
                 <div class="legend-meta" id="carbon-legend-meta">Source: IPCC Tier 1 Empirical</div>
             </div>
@@ -904,12 +904,12 @@ function updateMapLegend(type) {
             <div class="legend-card">
                 <div class="legend-title">🗺️ Land Cover Mapping</div>
                 <div class="legend-items">
-                    <div class="legend-item"><span class="swatch" style="background:#1a9641"></span> Forest</div>
-                    <div class="legend-item"><span class="swatch" style="background:#a6d96a"></span> Grass / Shrub / Wetland</div>
-                    <div class="legend-item"><span class="swatch" style="background:#ffffbf"></span> Cropland</div>
-                    <div class="legend-item"><span class="swatch" style="background:#d7191c"></span> Built-up</div>
-                    <div class="legend-item"><span class="swatch" style="background:#fdae61"></span> Bare / Sparse</div>
-                    <div class="legend-item"><span class="swatch" style="background:#2c7fb8"></span> Open Water</div>
+                    <div class="legend-row"><span class="legend-box" style="background:#1a9641"></span> Forest</div>
+                    <div class="legend-row"><span class="legend-box" style="background:#a6d96a"></span> Grass / Shrub / Wetland</div>
+                    <div class="legend-row"><span class="legend-box" style="background:#ffffbf"></span> Cropland</div>
+                    <div class="legend-row"><span class="legend-box" style="background:#d7191c"></span> Built-up</div>
+                    <div class="legend-row"><span class="legend-box" style="background:#fdae61"></span> Bare / Sparse</div>
+                    <div class="legend-row"><span class="legend-box" style="background:#2c7fb8"></span> Open Water</div>
                 </div>
                 <div class="legend-meta">Source: ESA WorldCover v200 · 10m</div>
             </div>
@@ -1635,11 +1635,13 @@ function showClimateLegend() {
     
     legend.innerHTML = `
         <div class="legend-title">Temp Increase (°C)</div>
-        <div class="legend-row"><span class="legend-box" style="background:#fee5d9"></span> 1.0 - 1.5 (Low)</div>
-        <div class="legend-row"><span class="legend-box" style="background:#fcae91"></span> 1.5 - 2.0 (Mod)</div>
-        <div class="legend-row"><span class="legend-box" style="background:#fb6a4a"></span> 2.0 - 2.5 (High)</div>
-        <div class="legend-row"><span class="legend-box" style="background:#de2d26"></span> 2.5 - 3.0 (V. High)</div>
-        <div class="legend-row"><span class="legend-box" style="background:#a50f15"></span> 3.0+ (Extreme)</div>
+        <div class="legend-items">
+            <div class="legend-row"><span class="legend-box" style="background:#fee5d9"></span> 1.0 - 1.5 (Low)</div>
+            <div class="legend-row"><span class="legend-box" style="background:#fcae91"></span> 1.5 - 2.0 (Mod)</div>
+            <div class="legend-row"><span class="legend-box" style="background:#fb6a4a"></span> 2.0 - 2.5 (High)</div>
+            <div class="legend-row"><span class="legend-box" style="background:#de2d26"></span> 2.5 - 3.0 (V. High)</div>
+            <div class="legend-row"><span class="legend-box" style="background:#a50f15"></span> 3.0+ (Extreme)</div>
+        </div>
     `;
     legend.classList.remove('hidden');
 }
