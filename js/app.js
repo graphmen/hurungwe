@@ -1620,3 +1620,39 @@ async function runVulnerabilityQuery() {
         }
     }
 }
+
+function showClimateLegend() {
+    const legend = document.getElementById('map-legend');
+    if (!legend) return;
+    
+    legend.innerHTML = `
+        <div class="legend-title">Temp Increase (°C)</div>
+        <div class="legend-row"><span class="legend-box" style="background:#fee5d9"></span> 1.0 - 1.5 (Low)</div>
+        <div class="legend-row"><span class="legend-box" style="background:#fcae91"></span> 1.5 - 2.0 (Mod)</div>
+        <div class="legend-row"><span class="legend-box" style="background:#fb6a4a"></span> 2.0 - 2.5 (High)</div>
+        <div class="legend-row"><span class="legend-box" style="background:#de2d26"></span> 2.5 - 3.0 (V. High)</div>
+        <div class="legend-row"><span class="legend-box" style="background:#a50f15"></span> 3.0+ (Extreme)</div>
+    `;
+    legend.classList.remove('hidden');
+}
+
+async function inspectClimateAtLocation(lat, lon) {
+    const insightText = document.getElementById('vulnerability-text');
+    if (insightText) insightText.innerHTML = '<div class="spinning">⏳</div> Inspecting point climate shift...';
+
+    try {
+        const scenario = 'ssp585';
+        const response = await fetch(`/api/inspect-climate?lat=${lat}&lon=${lon}&scenario=${scenario}`);
+        const data = await response.json();
+
+        if (data.success && insightText) {
+            insightText.innerHTML += `
+                <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border-color); font-weight: 700; color: var(--accent);">
+                    📍 Selected Location: +${data.delta}°C Change
+                </div>
+            `;
+        }
+    } catch (err) {
+        console.error("Inspect Error:", err);
+    }
+}
