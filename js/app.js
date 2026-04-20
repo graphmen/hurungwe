@@ -1162,7 +1162,11 @@ async function runLandCoverQuery() {
                     'Bare/Sparse': '#fdae61',
                     'Open Water': '#2c7fb8'
                 };
-                statsEl.innerHTML = data.areaStats.map(cls => `
+                statsEl.innerHTML = (data.isStaticFallback ? `
+                    <div style="font-size:9px; color:#E53E3E; margin-bottom:8px; padding:4px; background:#FFF5F5; border-radius:4px; font-weight:700;">
+                        ⚠️ Analysis depth exceeded. Showing regional baseline.
+                    </div>
+                ` : '') + data.areaStats.map(cls => `
                     <div class="stats-row" style="display:flex; align-items:center; gap:8px; margin-bottom:8px; padding-bottom:8px; border-bottom:1px solid #edf2f7;">
                         <span style="width:14px; height:14px; border-radius:3px; background:${colors[cls.name] || '#CBD5E0'}; flex-shrink:0;"></span>
                         <span style="flex:1; font-weight:600; font-size:11px; color:#2D3748">${cls.name}</span>
