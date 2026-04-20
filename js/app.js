@@ -979,7 +979,7 @@ async function runNdviQuery() {
         
         updateMapLegend('ndvi');
         const metaLeg = document.getElementById('ndvi-legend-meta');
-        if (metaLeg) metaLeg.innerText = `Source: Sentinel-2 SR | Dates: ${startStr} to ${endStr}`;
+        if (metaLeg) metaLeg.innerHTML = `Source: Sentinel-2 SR<br>Dates: ${startStr} to ${endStr}`;
         
         if (bannerText) bannerText.innerText = "NDVI Active: Live Classified Vegetation Density (Sentinel-2).";
         console.log("NDVI Live Layer Successfully Rendered.");
@@ -1065,7 +1065,7 @@ async function runCarbonQuery() {
         
         updateMapLegend('carbon');
         const metaLeg = document.getElementById('carbon-legend-meta');
-        if (metaLeg) metaLeg.innerText = `Source: Sentinel-2 SR | Dates: ${startStr} to ${endStr}`;
+        if (metaLeg) metaLeg.innerHTML = `Source: Sentinel-2 SR<br>Dates: ${startStr} to ${endStr}`;
         if (bannerText) bannerText.innerText = "Carbon Active: Live Sentinel-2 Estimated Biomass.";
 
     } catch (err) {
@@ -1119,7 +1119,7 @@ async function runLandCoverQuery() {
         // Show legend immediately
         updateMapLegend('landcover');
         const metaLeg = document.getElementById('map-legend')?.querySelector('.legend-meta');
-        if (metaLeg) metaLeg.innerText = `Source: ESA WorldCover · Baseline: ${startStr} to ${endStr}`;
+        if (metaLeg) metaLeg.innerHTML = `Source: ESA WorldCover<br>Baseline: ${startStr} to ${endStr}`;
 
         const response = await fetch(`/api/landcover?start=${startStr}&end=${endStr}`);
         const data = await response.json();
