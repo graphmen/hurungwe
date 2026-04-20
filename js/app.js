@@ -1148,24 +1148,35 @@ async function runLandCoverQuery() {
         if (bannerText) bannerText.innerText = `LULC Active: ESA WorldCover — Baseline: ${new Date(startStr).getFullYear()}.`;
         if (badge) badge.innerText = 'Live';
 
-        // Render area statistics
-        if (data.areaStats && statsEl) {
-            const colors = { 
-                'Forest': '#1a9641', 
-                'Shrubland': '#a6d96a', 
-                'Herbaceous wetland': '#ffffbf', 
-                'Cropland': '#d7191c', 
-                'Built-up': '#fdae61', 
-                'Bare / Sparse vegetation': '#fdae61', 
-                'Open water': '#2c7fb8' 
-            };
-            statsEl.innerHTML = data.areaStats.map(cls => `
-                <div class="stats-row" style="display:flex; align-items:center; gap:8px; margin-bottom:8px; padding-bottom:8px; border-bottom:1px solid #edf2f7;">
-                    <span style="width:14px; height:14px; border-radius:3px; background:${colors[cls.name] || '#CBD5E0'}; flex-shrink:0;"></span>
-                    <span style="flex:1; font-weight:600; font-size:11px; color:#2D3748">${cls.name}</span>
-                    <span style="font-weight:700; color:var(--accent); font-size:12px;">${(cls.areaHa || 0).toLocaleString()} ha</span>
-                </div>
-            `).join('');
+        if (statsEl) {
+            if (data.areaStats && data.areaStats.length > 0) {
+                const colors = { 
+                    'Forest': '#1a9641', 
+                    'Shrubland': '#a6d96a', 
+                    'Herbaceous wetland': '#ffffbf', 
+                    'Cropland': '#d7191c', 
+                    'Built-up': '#fdae61', 
+                    'Bare / Sparse vegetation': '#fdae61', 
+                    'Open water': '#2c7fb8',
+                    'Grass/Shrub/Wetland': '#a6d96a',
+                    'Bare/Sparse': '#fdae61',
+                    'Open Water': '#2c7fb8'
+                };
+                statsEl.innerHTML = data.areaStats.map(cls => `
+                    <div class="stats-row" style="display:flex; align-items:center; gap:8px; margin-bottom:8px; padding-bottom:8px; border-bottom:1px solid #edf2f7;">
+                        <span style="width:14px; height:14px; border-radius:3px; background:${colors[cls.name] || '#CBD5E0'}; flex-shrink:0;"></span>
+                        <span style="flex:1; font-weight:600; font-size:11px; color:#2D3748">${cls.name}</span>
+                        <span style="font-weight:700; color:var(--accent); font-size:12px;">${(cls.areaHa || 0).toLocaleString()} ha</span>
+                    </div>
+                `).join('');
+            } else {
+                statsEl.innerHTML = `
+                    <div class="empty-state" style="padding: 10px; font-size: 10px;">
+                        ⏳ Finalizing district coverage metrics... <br>
+                        <span style="color:var(--text-secondary);">(Backend processing depth exceeded 8s limit)</span>
+                    </div>
+                `;
+            }
         }
 
     } catch (err) {

@@ -81,36 +81,38 @@ module.exports = async (req, res) => {
             });
         });
 
-        // 4. Area statistics per class (Priority 2 - with Timeout Fallback)
+        // 4. Area statistics per class (Priority 2 - High Speed 1km Reduction)
         let areaResults = [];
         try {
             const pixelAreaHa = ee.Image.pixelArea().divide(10000);
-            const lulcWithArea = lulc.addBands(pixelAreaHa);
+            const lulcWithArea = lulc.select(['LULC']).addBands(pixelAreaHa.rename('area'));
             
             const areaStats = await Promise.race([
                 new Promise((resolve, reject) => {
                     lulcWithArea.reduceRegion({
                         reducer: ee.Reducer.sum().group({ groupField: 0, groupName: 'classId' }),
                         geometry: boundary,
-                        scale: 500, // Coarser scale for guaranteed speed (stats only)
+                        scale: 1000, // 1km scale is extremely fast and sufficient for district-wide area ha stats
                         maxPixels: 1e13
                     }).evaluate((result, err) => {
                         if (err) reject(err);
                         else resolve(result);
                     });
                 }),
-                new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 6000)) // 6s threshold
+                new Promise((_, reject) => setTimeout(() => reject(new Error("GEE Latency Timeout")), 8000)) // 8s cap
             ]);
 
             const classNames = ['Forest', 'Grass/Shrub/Wetland', 'Cropland', 'Built-up', 'Bare/Sparse', 'Open Water'];
-            areaResults = (areaStats && areaStats.groups ? areaStats.groups : []).map(g => ({
-                id: g.classId,
-                name: classNames[g.classId - 1] || 'Unknown',
-                areaHa: Math.round(g.sum || 0)
-            }));
+            if (areaStats && areaStats.groups) {
+                areaResults = areaStats.groups.map(g => ({
+                    id: g.classId,
+                    name: classNames[g.classId - 1] || 'Unknown',
+                    areaHa: Math.round(g.sum || 0)
+                }));
+            }
         } catch (e) {
-            console.warn("LULC Area Stats Fallback triggered:", e.message);
-            // Non-blocking failure: areaResults remains []
+            console.error("LULC Area Stats Error:", e.message);
+            // Fallback: areaResults remains [] enabling frontend pending state
         }
 
         res.status(200).json({
