@@ -1142,6 +1142,13 @@ async function runNdviQuery() {
                 loader.classList.add('hidden');
                 console.log("NDVI Tiles Loaded: Hiding Loader.");
             });
+
+            ndviLayer.on('tileerror', (error) => {
+                clearTimeout(safetyTimeout);
+                loader.classList.add('hidden');
+                console.error("NDVI Tile Error:", error);
+                // Optionally show a less intrusive notification here
+            });
         }
         
         // (True GeoJSON polygon clip is now processed natively in backend API)
@@ -1228,6 +1235,12 @@ async function runCarbonQuery() {
                 loader.classList.add('hidden');
                 console.log("Carbon Tiles Loaded: Hiding Loader.");
             });
+
+            carbonLayer.on('tileerror', (error) => {
+                clearTimeout(safetyTimeout);
+                loader.classList.add('hidden');
+                console.error("Carbon Tile Error:", error);
+            });
         }
         
         if (badge) badge.innerText = `${data.totalCarbonMg} Mg C`;
@@ -1312,6 +1325,12 @@ async function runLandCoverQuery() {
                 loader.classList.add('hidden');
                 console.log('Land Cover Tiles Loaded.');
             });
+
+            lcLayer.on('tileerror', (error) => {
+                clearTimeout(safetyTimeout);
+                loader.classList.add('hidden');
+                console.error("LULC Tile Error:", error);
+            });
         }
 
         if (bannerText) bannerText.innerText = `LULC Active: ESA WorldCover — Baseline: ${new Date(startStr).getFullYear()}.`;
@@ -1384,27 +1403,20 @@ function bindEventListeners() {
                     toggleHeatmap();
                 } else if (id === 'nav-ndvi') {
                     clearAllModes();
-                    switchView('nav-dashboard'); // Ensure core UI is visible
+                    switchView('nav-dashboard');
                     switchPanel('panel-ndvi');
-                    
-                    const btn = document.getElementById('btn-run-ndvi');
-                    if (btn && !btn.disabled) runNdviQuery();
                 } else if (id === 'nav-carbon') {
                     clearAllModes();
-                    switchView('nav-dashboard'); // Ensure core UI is visible
+                    switchView('nav-dashboard');
                     switchPanel('panel-carbon');
-                    const btn = document.getElementById('btn-run-carbon');
-                    if (btn && !btn.disabled) runCarbonQuery();
                 } else if (id === 'nav-vulnerability') {
                     clearAllModes();
-                    switchView('nav-dashboard'); // Ensure core UI is visible
+                    switchView('nav-dashboard');
                     switchPanel('panel-vulnerability');
                 } else if (id === 'nav-landcover') {
                     clearAllModes();
-                    switchView('nav-dashboard'); // Ensure core UI is visible
+                    switchView('nav-dashboard');
                     switchPanel('panel-landcover');
-                    const btn = document.getElementById('btn-run-landcover');
-                    if (btn && !btn.disabled) runLandCoverQuery();
                 } else {
                     clearAllModes();
                     switchView(id);
