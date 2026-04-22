@@ -114,42 +114,79 @@ h1, h2, h3, .nav-item-text {
 }
 
 .logo-area {
-    padding: 32px 24px;
+    padding: 36px 24px;
     border-bottom: 1px solid var(--glass-border);
-    background: linear-gradient(135deg, rgba(82, 183, 136, 0.1), transparent);
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    background: linear-gradient(135deg, rgba(45, 106, 79, 0.05) 0%, transparent 100%);
 }
 
-.logo-area::after {
-    display: none;
+.brand-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }
 
-.logo-icon {
-    font-size: 26px;
-    background: linear-gradient(135deg, var(--accent), var(--accent-hover));
-    color: #fff;
-    width: 48px;
-    height: 48px;
+.brand-icon {
+    font-size: 28px;
+    filter: drop-shadow(0 4px 10px rgba(45, 106, 79, 0.2));
+    animation: growPulse 3s ease-in-out infinite;
+}
+
+@keyframes growPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+.brand-main {
+    font-size: 22px;
+    font-weight: 900;
+    line-height: 1;
+    background: linear-gradient(135deg, var(--premium-green), #1B4332);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-family: 'Outfit', sans-serif;
+    letter-spacing: -1px;
+}
+
+body.dark-mode .brand-main {
+    background: linear-gradient(135deg, #52B788, #D8F3DC);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.brand-sub {
+    font-size: 9px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+.btn-theme-toggle {
+    background: var(--bg-main);
+    border: 1px solid var(--glass-border);
+    color: var(--text-primary);
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 14px;
-    box-shadow: 0 8px 16px rgba(45, 106, 79, 0.15);
-    flex-shrink: 0;
-    transition: var(--transition);
+    cursor: pointer;
+    transition: var(--transition-premium);
+    box-shadow: var(--shadow-soft);
 }
 
-.logo-text h1 { 
-    font-size: 16px; 
-    color: var(--text-primary); 
-    line-height: 1.1;
-    font-weight: 800;
-}
-.logo-text span { 
-    font-size: 9px; 
-    color: var(--text-muted);
-    text-transform: uppercase; 
-    font-weight: 700; 
-    letter-spacing: 1px; 
+.btn-theme-toggle:hover {
+    transform: rotate(15deg) scale(1.1);
+    border-color: var(--premium-green);
+    color: var(--premium-green);
 }
 
 /* Sidebar Nav Container */
