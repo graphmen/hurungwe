@@ -1,18 +1,19 @@
 :root {
-    --field-bg: #0A0F0D;
-    --field-card: #1A1F1D;
-    --field-accent: #52B788;
+    --field-bg: #F1F5F9;
+    --field-card: #FFFFFF;
+    --field-accent: #2D6A4F;
     --field-danger: #E53E3E;
-    --field-text: #F8FAFC;
-    --field-text-muted: #94A3B8;
+    --field-text: #0F172A;
+    --field-text-muted: #64748B;
     --radius: 12px;
 }
 
-body.light-mode {
-    --field-bg: #F1F5F9;
-    --field-card: #FFFFFF;
-    --field-text: #0F172A;
-    --field-text-muted: #64748B;
+body.dark-mode {
+    --field-bg: #0A0F0D;
+    --field-card: #1A1F1D;
+    --field-text: #F8FAFC;
+    --field-text-muted: #94A3B8;
+    --field-accent: #52B788;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }

@@ -34,7 +34,7 @@ window.GisAppState = {
     sideBySideControl: null,
     comparisonLayers: { left: null, right: null },
     liveLayer: null,
-    theme: localStorage.getItem('hurungwe-theme') || 'dark'
+    theme: localStorage.getItem('hurungwe-theme') || 'light'
 };
 
 // Firebase for Dashboard (Placeholder - Use same config as field app)
@@ -118,25 +118,29 @@ document.addEventListener('DOMContentLoaded', async () => {
 // 3. PREMIUM UI & WOW FACTORS
 // ─────────────────────────────────────────────
 function initTheme() {
-    if (window.GisAppState.theme === 'light') {
-        document.body.classList.add('light-mode');
+    if (window.GisAppState.theme === 'dark') {
+        document.body.classList.add('dark-mode');
         const icon = document.querySelector('#theme-toggle i');
         if (icon) icon.className = 'fas fa-sun';
+    } else {
+        const icon = document.querySelector('#theme-toggle i');
+        if (icon) icon.className = 'fas fa-moon';
     }
 }
 
 function toggleTheme() {
-    const isLight = document.body.classList.toggle('light-mode');
-    window.GisAppState.theme = isLight ? 'light' : 'dark';
+    const isDark = document.body.classList.toggle('dark-mode');
+    window.GisAppState.theme = isDark ? 'dark' : 'light';
     localStorage.setItem('hurungwe-theme', window.GisAppState.theme);
 
     const icon = document.querySelector('#theme-toggle i');
-    if (icon) icon.className = isLight ? 'fas fa-sun' : 'fas fa-moon';
+    if (icon) icon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
 
     console.log(`Theme Intelligence: Switching to ${window.GisAppState.theme.toUpperCase()} mode.`);
     
     // Refresh charts to adapt to new coordinate colors if needed
-    if (typeof donutChart !== 'undefined' && donutChart) donutChart.updateOptions({ chart: { foreColor: isLight ? '#1E293B' : '#F8FAFC' } });
+    const foreColor = isDark ? '#F8FAFC' : '#1E293B';
+    if (typeof donutChart !== 'undefined' && donutChart) donutChart.updateOptions({ chart: { foreColor: foreColor } });
 }
 
 function initPremiumAesthetics() {

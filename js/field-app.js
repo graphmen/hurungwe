@@ -30,23 +30,26 @@ db.enablePersistence({ synchronizeTabs: true })
 // 3. GLOBAL STATE
 let currentCoords = null;
 let pendingCount = 0;
-let currentTheme = localStorage.getItem('hurungwe-theme') || 'dark';
+let currentTheme = localStorage.getItem('hurungwe-theme') || 'light';
 
 // 4. THEME ENGINE
 function initTheme() {
-    if (currentTheme === 'light') {
-        document.body.classList.add('light-mode');
+    if (currentTheme === 'dark') {
+        document.body.classList.add('dark-mode');
         const icon = document.querySelector('#theme-toggle i');
         if (icon) icon.className = 'fas fa-sun';
+    } else {
+        const icon = document.querySelector('#theme-toggle i');
+        if (icon) icon.className = 'fas fa-moon';
     }
 }
 
 function toggleTheme() {
-    const isLight = document.body.classList.toggle('light-mode');
-    currentTheme = isLight ? 'light' : 'dark';
+    const isDark = document.body.classList.toggle('dark-mode');
+    currentTheme = isDark ? 'dark' : 'light';
     localStorage.setItem('hurungwe-theme', currentTheme);
     const icon = document.querySelector('#theme-toggle i');
-    if (icon) icon.className = isLight ? 'fas fa-sun' : 'fas fa-moon';
+    if (icon) icon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
     console.log(`Theme Intelligence: Field app switching to ${currentTheme.toUpperCase()} mode.`);
 }
 
