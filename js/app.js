@@ -21,13 +21,11 @@ const SPECIES_COLORS = {
 };
 
 window.GisAppState = {
-    isPredictiveMode: false,
-    activeSuitabilityLayer: null,
-    researchResults: null,
+    allData: [],
+    filteredData: [],
+    speciesSummary: {},
     suitabilityGrid: null,
-    ndviLayer: null,
-    carbonLayer: null,
-    landCoverLayer: null,
+    isPredictiveMode: false,
     sdmCharts: { auc: null, importance: null },
     variableImportance: null,
     activeLayerToken: 0,
@@ -35,7 +33,8 @@ window.GisAppState = {
     isComparisonMode: false,
     sideBySideControl: null,
     comparisonLayers: { left: null, right: null },
-    liveLayer: null
+    liveLayer: null,
+    theme: localStorage.getItem('hurungwe-theme') || 'dark'
 };
 
 // Firebase for Dashboard (Placeholder - Use same config as field app)
@@ -86,6 +85,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         initMap();
         initCharts();
         renderHabitatProgress();
+        initTheme(); // Apply saved theme
         renderActivityLog();
         initTimeSlider();
         bindEventListeners();
@@ -117,6 +117,28 @@ document.addEventListener('DOMContentLoaded', async () => {
 // ─────────────────────────────────────────────
 // 3. PREMIUM UI & WOW FACTORS
 // ─────────────────────────────────────────────
+function initTheme() {
+    if (window.GisAppState.theme === 'light') {
+        document.body.classList.add('light-mode');
+        const icon = document.querySelector('#theme-toggle i');
+        if (icon) icon.className = 'fas fa-sun';
+    }
+}
+
+function toggleTheme() {
+    const isLight = document.body.classList.toggle('light-mode');
+    window.GisAppState.theme = isLight ? 'light' : 'dark';
+    localStorage.setItem('hurungwe-theme', window.GisAppState.theme);
+
+    const icon = document.querySelector('#theme-toggle i');
+    if (icon) icon.className = isLight ? 'fas fa-sun' : 'fas fa-moon';
+
+    console.log(`Theme Intelligence: Switching to ${window.GisAppState.theme.toUpperCase()} mode.`);
+    
+    // Refresh charts to adapt to new coordinate colors if needed
+    if (typeof donutChart !== 'undefined' && donutChart) donutChart.updateOptions({ chart: { foreColor: isLight ? '#1E293B' : '#F8FAFC' } });
+}
+
 function initPremiumAesthetics() {
     console.log("Aesthetic Pulse: Synchronizing Premium UI...");
     
@@ -1397,6 +1419,9 @@ function bindEventListeners() {
 
     const btnCompare = document.getElementById('toggle-comparison');
     if (btnCompare) btnCompare.addEventListener('click', toggleComparisonMode);
+
+    const btnTheme = document.getElementById('theme-toggle');
+    if (btnTheme) btnTheme.addEventListener('click', toggleTheme);
 
     // Geographic Utilities
     document.getElementById('btn-fullscreen')?.addEventListener('click', (e) => {

@@ -30,8 +30,27 @@ db.enablePersistence({ synchronizeTabs: true })
 // 3. GLOBAL STATE
 let currentCoords = null;
 let pendingCount = 0;
+let currentTheme = localStorage.getItem('hurungwe-theme') || 'dark';
 
-// 4. GEOLOCATION ENGINE
+// 4. THEME ENGINE
+function initTheme() {
+    if (currentTheme === 'light') {
+        document.body.classList.add('light-mode');
+        const icon = document.querySelector('#theme-toggle i');
+        if (icon) icon.className = 'fas fa-sun';
+    }
+}
+
+function toggleTheme() {
+    const isLight = document.body.classList.toggle('light-mode');
+    currentTheme = isLight ? 'light' : 'dark';
+    localStorage.setItem('hurungwe-theme', currentTheme);
+    const icon = document.querySelector('#theme-toggle i');
+    if (icon) icon.className = isLight ? 'fas fa-sun' : 'fas fa-moon';
+    console.log(`Theme Intelligence: Field app switching to ${currentTheme.toUpperCase()} mode.`);
+}
+
+// 5. GEOLOCATION ENGINE
 function initGeolocation() {
     const banner = document.getElementById('gps-banner');
     const coordEl = document.getElementById('gps-coords');
@@ -175,8 +194,11 @@ async function updateQueueUI() {
 
 // INITIALIZE
 document.addEventListener('DOMContentLoaded', () => {
+    initTheme();
     initGeolocation();
     initConnectivityMonitor();
     initForm();
     updateQueueUI();
+    
+    document.getElementById('theme-toggle')?.addEventListener('click', toggleTheme);
 });

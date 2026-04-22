@@ -1,15 +1,14 @@
 :root {
-    --bg-main: #0A0F0D;      /* Deep Modern Backdrop */
+    --bg-main: #0A0F0D;      
     --bg-sidebar: rgba(255, 255, 255, 0.03); 
     --bg-card: rgba(255, 255, 255, 0.05);
     
-    /* Semantic Palette - High-Efficiency Modern Tones */
-    --premium-green: #52B788;  /* Vivid Sage */
-    --premium-indigo: #4361EE; /* Electric Professional */
+    --premium-green: #52B788;  
+    --premium-indigo: #4361EE; 
     --accent: var(--premium-green);
     
-    --text-primary: #F8FAFC;   /* Crisp Off-White */
-    --text-secondary: #94A3B8; /* Slate Gray */
+    --text-primary: #F8FAFC;   
+    --text-secondary: #94A3B8; 
     --text-muted: #64748B;
     
     --glass: rgba(15, 23, 42, 0.6);
@@ -22,6 +21,21 @@
     
     --shadow-soft: 0 10px 40px rgba(0,0,0,0.4);
     --transition-premium: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Light Mode Overrides */
+body.light-mode {
+    --bg-main: #F1F5F9;      
+    --bg-sidebar: #FFFFFF; 
+    --bg-card: #FFFFFF;
+    
+    --text-primary: #0F172A;   
+    --text-secondary: #475569; 
+    --text-muted: #94A3B8;
+    
+    --glass: rgba(255, 255, 255, 0.9);
+    --glass-border: rgba(0, 0, 0, 0.08);
+    --shadow-soft: 0 4px 20px rgba(0,0,0,0.05);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
