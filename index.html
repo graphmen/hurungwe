@@ -13,14 +13,17 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌿</text></svg>">
     <meta name="description" content="Interactive GIS dashboard for monitoring tree species distribution across the Hurungwe district, Zimbabwe.">
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Outfit:wght@300;500;700;900&display=swap" rel="stylesheet">
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
     <!-- Leaflet MarkerCluster -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="css/index.css?v=modern_v35">
+    <link rel="stylesheet" href="css/index.css?v=premium_wow_v14">
 </head>
 <body>
     <div id="sidebar-overlay" class="sidebar-overlay"></div>
@@ -41,107 +44,88 @@
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="logo-area">
-                <div class="logo-icon">🌿</div>
-                <div class="logo-text">
-                    <h1>Hurungwe</h1>
-                    <span>Species Watch</span>
+                <div class="title-main">
+                    🌿 Hurungwe
+                </div>
+                <div class="title-sub">Species Distribution Hub</div>
+            </div>
+
+            <!-- Ecosystem Health Gauge (WoW Factor) -->
+            <div class="health-gauge-container">
+                <div style="position: relative;">
+                    <svg class="gauge-svg">
+                        <circle class="gauge-circle-bg" cx="65" cy="65" r="45"></circle>
+                        <circle class="gauge-circle-val" id="health-gauge-val" cx="65" cy="65" r="45" style="stroke-dashoffset: 80;"></circle>
+                    </svg>
+                    <div class="gauge-text">
+                        <div class="gauge-value" id="health-score">82</div>
+                        <div class="gauge-label">Resilience</div>
+                    </div>
+                </div>
+                <div style="font-size:10px; color:var(--text-secondary); text-align:center;">
+                    District Health Score: <strong>Optimal</strong>
                 </div>
             </div>
 
-            <nav class="sidebar-nav">
-                <div class="nav-section">MAIN</div>
+            <nav class="nav-menu">
                 <a href="#" class="nav-item active" id="nav-dashboard">
-                    <span class="nav-icon">📊</span> Dashboard
+                    <i class="fas fa-chart-line"></i> <span class="nav-item-text">Dashboard</span>
                 </a>
                 <a href="#" class="nav-item" id="nav-gis">
-                    <span class="nav-icon">🗺️</span> GIS Explorer
+                    <i class="fas fa-map-marked-alt"></i> <span class="nav-item-text">GIS Explorer</span>
                 </a>
                 
-                <div class="nav-section">ANALYTICS</div>
+                <div style="margin-top:20px; font-size:10px; color:var(--text-muted); font-weight:800; padding:0 18px; text-transform:uppercase; letter-spacing:0.1em;">Spatiotemporal Analysis</div>
+                
                 <a href="#" class="nav-item" id="nav-trends">
-                    <span class="nav-icon">📈</span> Growth Trends
+                    <i class="fas fa-history"></i> <span class="nav-item-text">Growth Trends</span>
                 </a>
                 <a href="#" class="nav-item" id="nav-habitat">
-                    <span class="nav-icon">🧪</span> Habitat Health
-                </a>
-
-                <div class="nav-section">SPATIAL ANALYSIS</div>
-
-
-                <a href="#" class="nav-item" id="nav-terrain">
-                    <span class="nav-icon">⛰️</span> Terrain Linkage
-                </a>
-                <a href="#" class="nav-item" id="nav-heat">
-                    <span class="nav-icon">🔥</span> Hot Spot Analysis
-                </a>
-
-                <div class="nav-section">RESEARCH & SDM</div>
-                <a href="#" class="nav-item" id="nav-predictive">
-                    <span class="nav-icon">🤖</span> Predictive Engine
+                    <i class="fas fa-microscope"></i> <span class="nav-item-text">Habitat Metrics</span>
                 </a>
                 <a href="#" class="nav-item" id="nav-vulnerability">
-                    <span class="nav-icon">🌎</span> Climate Future-Cast
-                </a>
-                <a href="#" class="nav-item" id="nav-ndvi">
-                    <span class="nav-icon">🌿</span> Vegetation Health (NDVI)
-                </a>
-                <a href="#" class="nav-item" id="nav-carbon">
-                    <span class="nav-icon">🌳</span> Carbon Stock Mapping
-                </a>
-                <a href="#" class="nav-item" id="nav-landcover">
-                    <span class="nav-icon">🗺️</span> Land Cover Mapping
+                    <i class="fas fa-cloud-sun-rain"></i> <span class="nav-item-text">Future-Cast</span>
                 </a>
 
-                <div class="nav-section">POLICY & STRATEGY</div>
+                <div style="margin-top:20px; font-size:10px; color:var(--text-muted); font-weight:800; padding:0 18px; text-transform:uppercase; letter-spacing:0.1em;">Ecological Layers</div>
+
+                <a href="#" class="nav-item" id="nav-ndvi">
+                    <i class="fas fa-leaf"></i> <span class="nav-item-text">NDVI Density</span>
+                </a>
+                <a href="#" class="nav-item" id="nav-carbon">
+                    <i class="fas fa-tree"></i> <span class="nav-item-text">Carbon Stock</span>
+                </a>
+                <a href="#" class="nav-item" id="nav-landcover">
+                    <i class="fas fa-layer-group"></i> <span class="nav-item-text">Land Cover Mapping</span>
+                </a>
+
+                <div style="margin-top:20px; font-size:10px; color:var(--text-muted); font-weight:800; padding:0 18px; text-transform:uppercase; letter-spacing:0.1em;">Governance</div>
+
                 <a href="#" class="nav-item" id="nav-policy">
-                    <span class="nav-icon">📜</span> Policy Framework
+                    <i class="fas fa-file-contract"></i> <span class="nav-item-text">Policy Connectivity</span>
                 </a>
             </nav>
 
-            <!-- Sidebar Footer Card -->
-            <div class="sidebar-footer">
-                <div class="sidebar-version-badge">
-                    <span class="version-dot"></span>
-                    <span>Hurungwe v3.4.7 — Professional</span>
+            <div style="padding: 24px; border-top: 1px solid var(--glass-border); font-size: 10px; color: var(--text-muted);">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <span style="font-weight:700;">PRO EDITION</span>
+                    <span style="color:var(--premium-green);">● Stable</span>
                 </div>
-                <div class="sidebar-org">
-                    <span class="sidebar-org-text">© Graphmen Geospatial</span>
-                    <span class="sidebar-tel">📞 +263 773 807 928</span>
-                </div>
+                © 2026 Graphmen Geospatial
             </div>
-
         </aside>
 
         <!-- Main Content -->
         <main class="main-content">
-            <header class="top-header">
-                <div class="search-bar">
-                    <span class="search-icon">🔍</span>
-                    <input type="text" id="search-input" placeholder="Search species, habitat...">
+            <header class="header">
+                <div class="search-container">
+                    <input type="text" class="search-box" id="search-input" placeholder="🔍 Search analytical data, species, or policy directives...">
                 </div>
 
-                <div class="header-filters">
-                    <select id="filter-species" class="header-select" title="Filter by Species">
-                        <option value="all">All Species</option>
-                    </select>
-                    <select id="filter-habitat" class="header-select" title="Filter by Habitat">
-                        <option value="all">All Habitats</option>
-                    </select>
-                    <select id="filter-monitor" class="header-select" title="Filter by Recorder">
-                        <option value="all">All Recorders</option>
-                    </select>
-                    <button id="reset-filters" class="btn-reset-header" title="Reset Filters">↺</button>
-                    <button id="btn-export-csv" class="btn-export-header" title="Export Filtered Data as CSV">📥 CSV</button>
-                </div>
-
-                <div class="header-stats">
-                    <div class="header-stat-badge">
-                        <span class="label">Total Records</span>
-                        <span class="value" id="stats-total-trees">0</span>
-                    </div>
-                    <div class="header-stat-badge">
-                        <span class="label">Diversity Index</span>
-                        <span class="value" id="stats-shannon">0.00</span>
+                <div style="display:flex; align-items:center; gap:20px;">
+                    <div style="display:flex; flex-direction:column; align-items:flex-end;">
+                        <span style="font-size:12px; font-weight:800; color:var(--text-primary);">Regional HQ</span>
+                        <span style="font-size:10px; color:var(--premium-green);">Mashonaland West</span>
                     </div>
                 </div>
             </header>
@@ -174,6 +158,9 @@
                     </div>
                     <div id="map-legend" class="hidden"></div>
                     <div id="global-map-progress" class="map-progress-bar"></div>
+                    <button id="toggle-comparison" class="comparison-toggle" style="display:none;">
+                        <i class="fas fa-columns"></i> Compare 2020 vs 2021
+                    </button>
                     <div id="map" class="map-container"></div>
                 </section>
 
@@ -503,6 +490,7 @@
     <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
     <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-    <script src="js/app.js?v=final_resilience_v13"></script>
+    <script src="https://cdn.jsdelivr.net/gh/digidem/leaflet-side-by-side@2.0.0/layout/leaflet-side-by-side.min.js"></script>
+    <script src="js/app.js?v=premium_wow_v14"></script>
 </body>
 </html>

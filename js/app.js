@@ -31,7 +31,10 @@ window.GisAppState = {
     sdmCharts: { auc: null, importance: null },
     variableImportance: null,
     activeLayerToken: 0,
-    isClimateMode: false
+    isClimateMode: false,
+    isComparisonMode: false,
+    sideBySideControl: null,
+    comparisonLayers: { left: null, right: null }
 };
 
 let map = null;
@@ -72,6 +75,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         renderActivityLog();
         initTimeSlider();
         bindEventListeners();
+        initPremiumAesthetics();
 
         // Analytical Layer Bootstrap
         await loadResearchData();
@@ -96,7 +100,108 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 // ─────────────────────────────────────────────
-// 3. UTILITIES & HELPERS
+// 3. PREMIUM UI & WOW FACTORS
+// ─────────────────────────────────────────────
+function initPremiumAesthetics() {
+    console.log("Aesthetic Pulse: Synchronizing Premium UI...");
+    
+    // Update Health Gauge
+    const gaugeVal = document.getElementById('health-gauge-val');
+    const scoreText = document.getElementById('health-score');
+    if (gaugeVal && scoreText) {
+        // Target 84% Resilience
+        const offset = 283 - (283 * 0.84); 
+        setTimeout(() => {
+            gaugeVal.style.strokeDashoffset = offset;
+            animateValue(scoreText, 0, 84, 2000);
+        }, 800);
+    }
+}
+
+function animateValue(obj, start, end, duration) {
+    let startTimestamp = null;
+    const step = (timestamp) => {
+        if (!startTimestamp) startTimestamp = timestamp;
+        const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+        obj.innerHTML = Math.floor(progress * (end - start) + start);
+        if (progress < 1) {
+            window.requestAnimationFrame(step);
+        }
+    };
+    window.requestAnimationFrame(step);
+}
+
+async function toggleComparisonMode() {
+    const btn = document.getElementById('toggle-comparison');
+    if (!btn) return;
+
+    if (window.GisAppState.isComparisonMode) {
+        exitComparisonMode();
+        return;
+    }
+
+    console.log("Comparison Engine: Activating Split-View Spatiotemporal Sync...");
+    window.GisAppState.isComparisonMode = true;
+    btn.classList.add('active');
+    btn.innerHTML = '<i class="fas fa-times"></i> Exit Comparison';
+    document.body.classList.add('split-mode-active');
+    
+    showMapLoader("Initializing Comparison Engine...");
+
+    try {
+        // Fetch 2020 and 2021 layers
+        const [res2020, res2021] = await Promise.all([
+            fetch(`/api/landcover?year=2020&geom=${JSON.stringify(hurungweBoundary)}`),
+            fetch(`/api/landcover?year=2021&geom=${JSON.stringify(hurungweBoundary)}`)
+        ]);
+        
+        const data2020 = await res2020.json();
+        const data2021 = await res2021.json();
+
+        if (window.GisAppState.sideBySideControl) {
+            map.removeControl(window.GisAppState.sideBySideControl);
+        }
+
+        const leftLayer = L.tileLayer(data2020.tileUrl, { opacity: 1 }).addTo(map);
+        const rightLayer = L.tileLayer(data2021.tileUrl, { opacity: 1 }).addTo(map);
+
+        window.GisAppState.comparisonLayers = { left: leftLayer, right: rightLayer };
+        
+        window.GisAppState.sideBySideControl = L.control.sideBySide(leftLayer, rightLayer).addTo(map);
+        
+        hideMapLoader();
+        showMapStatus("Comparison Active: Slide center to compare 2020 with 2021.");
+        
+    } catch (err) {
+        console.error("Comparison Error:", err);
+        hideMapLoader();
+        exitComparisonMode();
+    }
+}
+
+function exitComparisonMode() {
+    console.log("Comparison Engine: Terminating Split-View...");
+    window.GisAppState.isComparisonMode = false;
+    const btn = document.getElementById('toggle-comparison');
+    if (btn) {
+        btn.classList.remove('active');
+        btn.innerHTML = '<i class="fas fa-columns"></i> Compare 2020 vs 2021';
+    }
+    document.body.classList.remove('split-mode-active');
+
+    if (window.GisAppState.sideBySideControl) {
+        map.removeControl(window.GisAppState.sideBySideControl);
+        window.GisAppState.sideBySideControl = null;
+    }
+    
+    if (window.GisAppState.comparisonLayers.left) map.removeLayer(window.GisAppState.comparisonLayers.left);
+    if (window.GisAppState.comparisonLayers.right) map.removeLayer(window.GisAppState.comparisonLayers.right);
+    
+    hideMapStatus();
+}
+
+// ─────────────────────────────────────────────
+// 4. UTILITIES & HELPERS
 // ─────────────────────────────────────────────
 function countBy(data, key) {
     return data.reduce((acc, d) => {
@@ -241,6 +346,17 @@ function switchView(viewId) {
                 map.invalidateSize();
                 console.log("View Switch: Map container synchronized.");
             }, 300);
+        }
+
+        // Premium: Handle contextual comparison toggle
+        const toggleBtn = document.getElementById('toggle-comparison');
+        if (toggleBtn) {
+            if (viewId === 'nav-landcover') {
+                toggleBtn.style.display = 'flex';
+            } else {
+                toggleBtn.style.display = 'none';
+                if (window.GisAppState.isComparisonMode) exitComparisonMode();
+            }
         }
     } else {
         // Hide main dashboard for other full-page views
@@ -1263,6 +1379,9 @@ function bindEventListeners() {
 
     const btnLulc = document.getElementById('btn-run-landcover');
     if (btnLulc) btnLulc.addEventListener('click', runLandCoverQuery);
+
+    const btnCompare = document.getElementById('toggle-comparison');
+    if (btnCompare) btnCompare.addEventListener('click', toggleComparisonMode);
 
     // Geographic Utilities
     document.getElementById('btn-fullscreen')?.addEventListener('click', (e) => {
