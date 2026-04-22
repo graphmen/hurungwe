@@ -357,7 +357,12 @@ function switchView(viewId) {
 
     console.log("Navigating to view:", viewId);
     const dashboardView = document.getElementById('view-dashboard');
-    if (viewId === 'nav-dashboard' || viewId === 'nav-gis' || viewId === 'nav-predictive' || viewId === 'nav-terrain' || viewId === 'nav-policy') {
+    const dashboardResidentIds = [
+        'nav-dashboard', 'nav-gis', 'nav-predictive', 'nav-terrain', 'nav-policy', 
+        'nav-ndvi', 'nav-carbon', 'nav-vulnerability', 'nav-landcover', 'nav-heat'
+    ];
+
+    if (dashboardResidentIds.includes(viewId)) {
         const viewTitle = document.getElementById('view-title');
         const debugVal = document.getElementById('debug-mode-val');
 
@@ -1379,25 +1384,24 @@ function bindEventListeners() {
                     toggleHeatmap();
                 } else if (id === 'nav-ndvi') {
                     clearAllModes();
+                    switchView('nav-dashboard'); // Ensure core UI is visible
                     switchPanel('panel-ndvi');
                     
                     const btn = document.getElementById('btn-run-ndvi');
-                    if (btn && !btn.disabled) {
-                        runNdviQuery();
-                    }
+                    if (btn && !btn.disabled) runNdviQuery();
                 } else if (id === 'nav-carbon') {
                     clearAllModes();
+                    switchView('nav-dashboard'); // Ensure core UI is visible
                     switchPanel('panel-carbon');
                     const btn = document.getElementById('btn-run-carbon');
                     if (btn && !btn.disabled) runCarbonQuery();
                 } else if (id === 'nav-vulnerability') {
                     clearAllModes();
+                    switchView('nav-dashboard'); // Ensure core UI is visible
                     switchPanel('panel-vulnerability');
-                } else if (id === 'nav-policy') {
-                    clearAllModes();
-                    switchView(id);
                 } else if (id === 'nav-landcover') {
                     clearAllModes();
+                    switchView('nav-dashboard'); // Ensure core UI is visible
                     switchPanel('panel-landcover');
                     const btn = document.getElementById('btn-run-landcover');
                     if (btn && !btn.disabled) runLandCoverQuery();
