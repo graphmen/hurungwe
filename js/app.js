@@ -344,6 +344,9 @@ function updateStats() {
 }
 
 function switchView(viewId) {
+    // Global UI Reset
+    document.getElementById('analytic-modal')?.classList.add('hidden');
+    
     document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
     document.getElementById(viewId)?.classList.add('active');
     document.querySelectorAll('.view-section').forEach(sec => sec.style.display = 'none');
