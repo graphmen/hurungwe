@@ -1293,64 +1293,6 @@ body.dark-mode .nav-item:hover {
     box-shadow: 0 0 15px rgba(82, 183, 136, 0.2);
 }
 
-/* Ecosystem Health Gauge UI */
-.health-gauge-container {
-    margin: 12px 14px;
-    padding: 16px;
-    border-radius: var(--radius-md);
-    background: linear-gradient(135deg, rgba(82, 183, 136, 0.08), rgba(67, 97, 238, 0.03));
-    border: 1px solid rgba(82, 183, 136, 0.15);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-}
-
-.gauge-svg {
-    width: 90px;
-    height: 90px;
-    transform: rotate(-90deg);
-}
-
-.gauge-circle-bg {
-    fill: none;
-    stroke: rgba(255, 255, 255, 0.05);
-    stroke-width: 10;
-}
-
-.gauge-circle-val {
-    fill: none;
-    stroke: var(--premium-green);
-    stroke-width: 10;
-    stroke-linecap: round;
-    stroke-dasharray: 283;
-    stroke-dashoffset: 283;
-    transition: stroke-dashoffset 2s cubic-bezier(0.16, 1, 0.3, 1);
-    filter: drop-shadow(0 0 5px var(--premium-green));
-}
-
-.gauge-text {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-family: 'Outfit', sans-serif;
-    text-align: center;
-}
-
-.gauge-value {
-    font-size: 22px;
-    font-weight: 900;
-    color: var(--text-primary);
-    line-height: 1;
-}
-
-.gauge-label {
-    font-size: 8px;
-    color: var(--text-secondary);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
 
 .modal-header {
     padding: 20px 24px;
