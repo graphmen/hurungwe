@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Hurungwe Field Collector | Species Mapping</title>
+    
+    <!-- Premium Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Outfit:wght@700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <link rel="stylesheet" href="css/field-app.css">
+</head>
+<body>
+    <div class="field-app-container">
+        <header class="field-header">
+            <div class="brand">
+                <span class="icon">🌿</span>
+                <div>
+                    <h1>Field Collector</h1>
+                    <p>Hurungwe Species Watch</p>
+                </div>
+            </div>
+            <div id="sync-status" class="sync-badge offline">
+                <i class="fas fa-satellite-dish"></i>
+                <span id="status-text">OFFLINE</span>
+            </div>
+        </header>
+
+        <main class="field-form-container">
+            <div id="gps-banner" class="gps-banner waiting">
+                <i class="fas fa-location-arrow"></i>
+                <span id="gps-coords">Waiting for GPS lock...</span>
+            </div>
+
+            <form id="collector-form" class="field-form">
+                <div class="input-group">
+                    <label><i class="fas fa-tree"></i> Species Name</label>
+                    <select id="field-species" required>
+                        <option value="" disabled selected>Select Species...</option>
+                        <option value="Acacia Polycantha">White Thorn (A. Polycantha)</option>
+                        <option value="Acacia Siebriana">Paperbark (A. Siebriana)</option>
+                        <option value="Fidebhia Abida">Msangu (F. Albida)</option>
+                        <option value="Kigelia Africana">Sausage Tree (K. Africana)</option>
+                        <option value="Terminalia Sericea">Silver Terminalia</option>
+                        <option value="Other">Other Species...</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label><i class="fas fa-mountain-sun"></i> Habitat Type</label>
+                    <select id="field-habitat" required>
+                        <option value="Savanna">Savanna Woodland</option>
+                        <option value="Riparian">Riparian / Riverine</option>
+                        <option value="Rocky">Rocky Outcrop</option>
+                        <option value="Planted">Community Woodlot</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label><i class="fas fa-notes-medical"></i> Tree Condition</label>
+                    <div class="condition-toggles">
+                        <input type="radio" name="condition" value="Healthy" id="cond-healthy" checked>
+                        <label for="cond-healthy">Healthy</label>
+                        
+                        <input type="radio" name="condition" value="Stressed" id="cond-stressed">
+                        <label for="cond-stressed">Stressed</label>
+
+                        <input type="radio" name="condition" value="Dormant" id="cond-dormant">
+                        <label for="cond-dormant">Dormant</label>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label><i class="fas fa-user-edit"></i> Recorder Name</label>
+                    <input type="text" id="field-recorder" placeholder="Your Name" required>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" id="btn-submit" class="btn-submit-field">
+                        <i class="fas fa-cloud-upload-alt"></i> SAVE OBSERVATION
+                    </button>
+                </div>
+            </form>
+        </main>
+
+        <section class="queue-monitor">
+            <h3><i class="fas fa-list-ul"></i> Pending Sync</h3>
+            <div id="pending-list" class="pending-list">
+                <!-- Locally saved items appear here -->
+            </div>
+        </section>
+
+        <footer class="field-footer">
+            <a href="index.html" class="btn-back-dash"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+        </footer>
+    </div>
+
+    <!-- Firebase App (the core Firebase SDK) is always required and must be listed first -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    
+    <script src="js/field-app.js"></script>
+</body>
+</html>

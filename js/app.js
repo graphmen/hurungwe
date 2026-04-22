@@ -34,8 +34,22 @@ window.GisAppState = {
     isClimateMode: false,
     isComparisonMode: false,
     sideBySideControl: null,
-    comparisonLayers: { left: null, right: null }
+    comparisonLayers: { left: null, right: null },
+    liveLayer: null
 };
+
+// Firebase for Dashboard (Placeholder - Use same config as field app)
+const fbConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "hurungwe-species.firebaseapp.com",
+    projectId: "hurungwe-species",
+    storageBucket: "hurungwe-species.appspot.com",
+    messagingSenderId: "123456789",
+    appId: "1:123456789:web:abcdef12345"
+};
+if (typeof firebase !== 'undefined') {
+    firebase.initializeApp(fbConfig);
+}
 
 let map = null;
 let allData = [];
@@ -76,6 +90,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         initTimeSlider();
         bindEventListeners();
         initPremiumAesthetics();
+        initLiveFieldData();
 
         // Analytical Layer Bootstrap
         await loadResearchData();
@@ -1860,4 +1875,53 @@ function populatePolicyPanel() {
 
     if (priority) priority.innerText = priorityZone;
     if (adaptation) adaptation.innerText = adaptationNeed;
+}
+
+// ─────────────────────────────────────────────
+// 9. LIVE FIELD DATA INTEGRATION
+// ─────────────────────────────────────────────
+function initLiveFieldData() {
+    if (typeof firebase === 'undefined') return;
+    
+    console.log("Firebase Engine: Synchronizing Live Field Data...");
+    const db = firebase.firestore();
+    
+    window.GisAppState.liveLayer = L.layerGroup().addTo(map);
+
+    db.collection('observations').orderBy('timestamp', 'desc').limit(50)
+        .onSnapshot((snapshot) => {
+            window.GisAppState.liveLayer.clearLayers();
+            
+            snapshot.forEach((doc) => {
+                const data = doc.data();
+                if (!data.lat || !data.lon) return;
+
+                // Create pulse icon
+                const pulseIcon = L.divIcon({
+                    className: 'field-pulse-container',
+                    html: `
+                        <div class="field-pulse"></div>
+                        <div class="field-marker">🌿</div>
+                    `,
+                    iconSize: [24, 24],
+                    iconAnchor: [12, 12]
+                });
+
+                const marker = L.marker([data.lat, data.lon], { icon: pulseIcon });
+                marker.bindPopup(`
+                    <div class="field-popup-premium">
+                        <div class="popup-tag">Live Field Obs</div>
+                        <h3>${data.species}</h3>
+                        <p><strong>Recorder:</strong> ${data.recorder}</p>
+                        <p><strong>Habitat:</strong> ${data.habitat}</p>
+                        <p><strong>Condition:</strong> ${data.condition || 'Unknown'}</p>
+                        <small>${new Date(data.timestamp?.toDate()).toLocaleString()}</small>
+                    </div>
+                `);
+
+                window.GisAppState.liveLayer.addLayer(marker);
+            });
+            
+            console.log("Field Feed Update: " + snapshot.size + " live points mapped.");
+        });
 }

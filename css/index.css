@@ -1740,3 +1740,85 @@ h1, h2, h3, .nav-item-text {
     .mobile-logo .text { display: none; }
     .logo-text h1 { font-size: 16px; }
 }
+
+/* ============================================================
+   Live Field Data Visuals
+   ============================================================ */
+
+.field-pulse-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.field-pulse {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    background: rgba(82, 183, 136, 0.4);
+    border-radius: 50%;
+    animation: field-ping 1.5s infinite;
+}
+
+@keyframes field-ping {
+    0% { transform: scale(0.5); opacity: 1; }
+    100% { transform: scale(2.5); opacity: 0; }
+}
+
+.field-marker {
+    z-index: 2;
+    font-size: 20px;
+    filter: drop-shadow(0 0 10px var(--accent));
+}
+
+.field-popup-premium {
+    padding: 12px;
+    min-width: 180px;
+}
+
+.field-popup-premium h3 {
+    margin: 8px 0 4px;
+    font-size: 14px;
+    color: var(--accent);
+    font-family: 'Outfit', sans-serif;
+}
+
+.field-popup-premium p {
+    margin: 4px 0;
+    font-size: 11px;
+    color: var(--text-sidebar);
+}
+
+.field-popup-premium small {
+    display: block;
+    margin-top: 8px;
+    font-size: 9px;
+    color: var(--text-muted);
+    font-weight: 700;
+}
+
+.popup-tag {
+    display: inline-block;
+    background: var(--accent);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 8px;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+.badge-pulse {
+    background: var(--accent);
+    color: white;
+    font-size: 8px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-left: 8px;
+    animation: fadePulse 1s infinite alternate;
+}
+
+@keyframes fadePulse {
+    from { opacity: 0.4; }
+    to { opacity: 1; }
+}
