@@ -344,8 +344,12 @@ function updateStats() {
 }
 
 function switchView(viewId) {
-    // Global UI Reset
+    // Global UI Reset (Clear all overlays/modals)
     document.getElementById('analytic-modal')?.classList.add('hidden');
+    document.getElementById('sidebar-overlay')?.classList.remove('active');
+    document.querySelector('.sidebar')?.classList.remove('mobile-active');
+    document.getElementById('map-status-banner')?.classList.add('hidden');
+    document.getElementById('map-status-banner').style.display = 'none';
     
     document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
     document.getElementById(viewId)?.classList.add('active');
