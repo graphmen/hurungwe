@@ -1,5 +1,5 @@
 :root {
-    --bg-main: #F1F5F9;      
+    --bg-main: #F8FAFC;      
     --bg-sidebar: #FFFFFF; 
     --bg-card: #FFFFFF;
     
@@ -8,11 +8,11 @@
     --accent: var(--premium-green);
     
     --text-primary: #0F172A;   
-    --text-secondary: #475569; 
+    --text-secondary: #64748B; 
     --text-muted: #94A3B8;
     
     --glass: rgba(255, 255, 255, 0.9);
-    --glass-border: rgba(0, 0, 0, 0.08);
+    --glass-border: rgba(0, 0, 0, 0.1);
     --glow: rgba(45, 106, 79, 0.1);
     
     --sidebar-width: 320px;
@@ -104,8 +104,8 @@ h1, h2, h3, .nav-item-text {
     -webkit-backdrop-filter: blur(20px);
     display: flex;
     flex-direction: column;
-    padding: 0;
-    border-right: 1px solid var(--glass-border);
+    border-right: 2px solid var(--glass-border);
+    box-shadow: 10px 0 40px rgba(0,0,0,0.04);
     flex-shrink: 0;
     overflow-y: auto;
     overflow-x: hidden;
@@ -166,7 +166,7 @@ h1, h2, h3, .nav-item-text {
 .nav-section {
     font-size: 10px;
     font-weight: 800;
-    color: #94A3B8;
+    color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 1.5px;
     padding: 24px 20px 10px 24px;
@@ -200,9 +200,13 @@ h1, h2, h3, .nav-item-text {
 }
 
 .nav-item:hover {
-    background: var(--accent-soft);
+    background: rgba(45, 106, 79, 0.05);
     color: var(--accent);
     transform: translateX(4px);
+}
+
+body.dark-mode .nav-item:hover {
+    background: rgba(255, 255, 255, 0.03);
 }
 
 .nav-item.active {
@@ -226,8 +230,8 @@ h1, h2, h3, .nav-item-text {
 /* Sidebar Footer */
 .sidebar-footer {
     padding: 24px 20px;
-    border-top: 2px solid var(--border-color); /* Thicker divider */
-    background: #F8FAFC; /* Subtle light background tint */
+    border-top: 2px solid var(--glass-border); 
+    background: var(--bg-main); 
     margin-top: auto;
 }
 
