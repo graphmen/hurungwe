@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">HurungweCollector</string>
+    <string name="title_activity_main">HurungweCollector</string>
+    <string name="package_name">com.hurungwe.collector</string>
+    <string name="custom_url_scheme">com.hurungwe.collector</string>
+</resources>

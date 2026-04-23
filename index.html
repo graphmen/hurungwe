@@ -92,6 +92,11 @@
 
                 <div class="nav-divider"></div>
 
+                <a href="#" class="nav-item" id="nav-data">
+                    <i class="fas fa-table"></i>
+                    <span>Field Data Viewer</span>
+                </a>
+
                 <a href="field-app.html" class="nav-item field-link" target="_blank">
                     <i class="fas fa-mobile-alt"></i>
                     <span>Field Collector</span>
@@ -279,6 +284,40 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- PANEL: Field Data Viewer -->
+                    <div id="panel-data" class="content-panel hidden">
+                        <div class="analytics-card">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                                <div>
+                                    <h3><span style="font-size:16px;">📊</span> Field Collection Data</h3>
+                                    <p class="card-subtitle">Live sync from Surveyor Mobile App</p>
+                                </div>
+                                <button id="btn-download-csv" class="btn-primary" style="font-size: 11px; padding: 6px 12px; background: var(--premium-green); display: flex; align-items: center; gap: 5px;">
+                                    <i class="fas fa-download" style="margin-right:0;"></i> Export CSV
+                                </button>
+                            </div>
+                            
+                            <div style="max-height: 500px; overflow-y: auto; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 8px;">
+                                <table id="field-data-table" style="width: 100%; border-collapse: collapse; text-align: left; font-size: 11px;">
+                                    <thead style="background: rgba(0,0,0,0.4); position: sticky; top: 0; z-index: 5;">
+                                        <tr>
+                                            <th style="padding: 10px; border-bottom: 1px solid var(--glass-border);">Date</th>
+                                            <th style="padding: 10px; border-bottom: 1px solid var(--glass-border);">Species</th>
+                                            <th style="padding: 10px; border-bottom: 1px solid var(--glass-border);">Habitat</th>
+                                            <th style="padding: 10px; border-bottom: 1px solid var(--glass-border);">Land Use</th>
+                                            <th style="padding: 10px; border-bottom: 1px solid var(--glass-border);">Condition</th>
+                                            <th style="padding: 10px; border-bottom: 1px solid var(--glass-border);">Recorder</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="field-data-body">
+                                        <tr><td colspan="5" style="padding: 15px; text-align: center; color: var(--text-muted);">Fetching live data from Firebase...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
 
                     <!-- PANEL: NDVI Analysis -->
                     <div id="panel-ndvi" class="content-panel hidden">

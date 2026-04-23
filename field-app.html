@@ -39,28 +39,43 @@
             </div>
 
             <form id="collector-form" class="field-form">
-                <div class="input-group">
-                    <label><i class="fas fa-tree"></i> Species Name</label>
-                    <select id="field-species" required>
-                        <option value="" disabled selected>Select Species...</option>
-                        <option value="Acacia Polycantha">White Thorn (A. Polycantha)</option>
-                        <option value="Acacia Siebriana">Paperbark (A. Siebriana)</option>
-                        <option value="Fidebhia Abida">Msangu (F. Albida)</option>
-                        <option value="Kigelia Africana">Sausage Tree (K. Africana)</option>
-                        <option value="Terminalia Sericea">Silver Terminalia</option>
-                        <option value="Other">Other Species...</option>
-                    </select>
-                </div>
+          <div class="input-group">
+              <label><i class="fas fa-tree"></i> Species Name</label>
+              <select id="field-species" required>
+                  <option value="" disabled selected>Select Species...</option>
+                  <option value="Acacia Galpinii">Acacia Galpinii (Monkey Thorn)</option>
+                  <option value="Acacia Polycantha">Acacia Polycantha (White Thorn)</option>
+                  <option value="Acacia Siebriana">Acacia Siebriana (Paperbark)</option>
+                  <option value="Fidebhia Abida">Fidebhia Abida (Msangu)</option>
+                  <option value="Kigelia Africana">Kigelia Africana (Sausage Tree)</option>
+                  <option value="Munyii/Bechemia discolor">Munyii / Bechemia discolor (Bird Plum)</option>
+                  <option value="Pilostigma Thonigilii/Monkey Bread">Pilostigma Thonigilii / Monkey Bread</option>
+                  <option value="Red Mahogany">Red Mahogany</option>
+                  <option value="Trichilia Emetica">Trichilia Emetica (Natal Mahogany)</option>
+                  <option value="Waterberry">Waterberry</option>
+                  <option value="Other">Other Species...</option>
+              </select>
+          </div>
 
-                <div class="input-group">
-                    <label><i class="fas fa-mountain-sun"></i> Habitat Type</label>
-                    <select id="field-habitat" required>
-                        <option value="Savanna">Savanna Woodland</option>
-                        <option value="Riparian">Riparian / Riverine</option>
-                        <option value="Rocky">Rocky Outcrop</option>
-                        <option value="Planted">Community Woodlot</option>
-                    </select>
-                </div>
+          <div class="input-group">
+              <label><i class="fas fa-tree"></i> Habitat Type</label>
+              <select id="field-habitat" required>
+                  <option value="" disabled selected>Select Habitat...</option>
+                  <option value="Inland">Inland</option>
+                  <option value="Mountanious">Mountanious</option>
+                  <option value="Riverine/Riparian">Riverine / Riparian</option>
+              </select>
+          </div>
+
+          <div class="input-group">
+              <label><i class="fas fa-mountain-sun"></i> Land Use</label>
+              <select id="field-landuse" required>
+                  <option value="" disabled selected>Select Land Use...</option>
+                  <option value="Natural Forest">Natural Forest</option>
+                  <option value="Urban area">Urban area</option>
+                  <option value="Farming/Agric">Farming/Agric</option>
+              </select>
+          </div>
 
                 <div class="input-group">
                     <label><i class="fas fa-notes-medical"></i> Tree Condition</label>
@@ -73,6 +88,12 @@
 
                         <input type="radio" name="condition" value="Dormant" id="cond-dormant">
                         <label for="cond-dormant">Dormant</label>
+
+                        <input type="radio" name="condition" value="Damaged" id="cond-damaged">
+                        <label for="cond-damaged">Damaged</label>
+
+                        <input type="radio" name="condition" value="Dead" id="cond-dead">
+                        <label for="cond-dead">Dead</label>
                     </div>
                 </div>
 

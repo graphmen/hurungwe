@@ -37,14 +37,15 @@ window.GisAppState = {
     theme: localStorage.getItem('hurungwe-theme') || 'light'
 };
 
-// Firebase for Dashboard (Placeholder - Use same config as field app)
+// Firebase for Dashboard (Real Config attached)
 const fbConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "hurungwe-species.firebaseapp.com",
-    projectId: "hurungwe-species",
-    storageBucket: "hurungwe-species.appspot.com",
-    messagingSenderId: "123456789",
-    appId: "1:123456789:web:abcdef12345"
+    apiKey: "AIzaSyD0sDQNDfAH2AYrxJhwNa4r77uu98Gz4f8",
+    authDomain: "hurungwe-gis-f8099.firebaseapp.com",
+    projectId: "hurungwe-gis-f8099",
+    storageBucket: "hurungwe-gis-f8099.firebasestorage.app",
+    messagingSenderId: "315238946268",
+    appId: "1:315238946268:web:9ca8edd76fff065001ab19",
+    measurementId: "G-V7D6EK2VDM"
 };
 if (typeof firebase !== 'undefined') {
     firebase.initializeApp(fbConfig);
@@ -359,7 +360,7 @@ function switchView(viewId) {
     const dashboardView = document.getElementById('view-dashboard');
     const dashboardResidentIds = [
         'nav-dashboard', 'nav-gis', 'nav-predictive', 'nav-terrain', 'nav-policy', 
-        'nav-ndvi', 'nav-carbon', 'nav-vulnerability', 'nav-landcover', 'nav-heat'
+        'nav-ndvi', 'nav-carbon', 'nav-vulnerability', 'nav-landcover', 'nav-heat', 'nav-data'
     ];
 
     if (dashboardResidentIds.includes(viewId)) {
@@ -382,6 +383,7 @@ function switchView(viewId) {
         let targetPanel = 'panel-dashboard';
         if (viewId === 'nav-predictive') targetPanel = 'panel-predictive';
         if (viewId === 'nav-policy') targetPanel = 'panel-policy';
+        if (viewId === 'nav-data') targetPanel = 'panel-data';
         
         switchPanel(targetPanel);
         if (viewId === 'nav-policy') populatePolicyPanel();
@@ -489,7 +491,7 @@ function switchPanel(panelId) {
     const debugBox = document.getElementById('gis-debug-state');
     if (debugBox) debugBox.style.display = 'block';
 
-    const allPanels = ['panel-dashboard', 'panel-predictive', 'panel-ndvi', 'panel-carbon', 'panel-landcover', 'panel-vulnerability', 'panel-policy'];
+    const allPanels = ['panel-dashboard', 'panel-predictive', 'panel-ndvi', 'panel-carbon', 'panel-landcover', 'panel-vulnerability', 'panel-policy', 'panel-data'];
     allPanels.forEach(id => {
         const el = document.getElementById(id);
         if (el) {
@@ -528,6 +530,11 @@ function switchPanel(panelId) {
     } else if (panelId === 'panel-landcover') {
         if (viewTitle) viewTitle.innerText = '🗺️ Land Cover / Land Use Mapping';
         if (debugVal) debugVal.innerText = 'LULC QUERY';
+        window.GisAppState.isPredictiveMode = false;
+        clearMapLegend();
+    } else if (panelId === 'panel-data') {
+        if (viewTitle) viewTitle.innerText = '📊 Live Field Data Integrator';
+        if (debugVal) debugVal.innerText = 'LIVE DATA';
         window.GisAppState.isPredictiveMode = false;
         clearMapLegend();
     } else {
@@ -1390,7 +1397,7 @@ async function runLandCoverQuery() {
 // 8. EVENT LISTENERS
 // ─────────────────────────────────────────────
 function bindEventListeners() {
-    ['nav-dashboard', 'nav-gis', 'nav-predictive', 'nav-vulnerability', 'nav-trends', 'nav-habitat', 'nav-terrain', 'nav-heat', 'nav-ndvi', 'nav-carbon', 'nav-landcover', 'nav-policy'].forEach(id => {
+    ['nav-dashboard', 'nav-gis', 'nav-predictive', 'nav-vulnerability', 'nav-trends', 'nav-habitat', 'nav-terrain', 'nav-heat', 'nav-ndvi', 'nav-carbon', 'nav-landcover', 'nav-policy', 'nav-data'].forEach(id => {
         const el = document.getElementById(id);
         if (el) {
             el.addEventListener('click', (e) => {
@@ -1939,14 +1946,41 @@ function initLiveFieldData() {
     const db = firebase.firestore();
     
     window.GisAppState.liveLayer = L.layerGroup().addTo(map);
+    window.GisAppState.liveDataArray = [];
 
-    db.collection('observations').orderBy('timestamp', 'desc').limit(50)
+    db.collection('observations').orderBy('timestamp', 'desc').limit(200)
         .onSnapshot((snapshot) => {
             window.GisAppState.liveLayer.clearLayers();
+            window.GisAppState.liveDataArray = [];
+            const tbody = document.getElementById('field-data-body');
+            let tableHTML = '';
             
+            if (snapshot.empty) {
+                if (tbody) tbody.innerHTML = '<tr><td colspan="5" style="padding: 15px; text-align: center; color: var(--text-muted);">No field records found.</td></tr>';
+                return;
+            }
+
             snapshot.forEach((doc) => {
                 const data = doc.data();
-                if (!data.lat || !data.lon) return;
+                window.GisAppState.liveDataArray.push(data);
+                
+                const timeStr = data.timestamp ? new Date(data.timestamp).toLocaleString() : 'Unknown';
+                
+                // Construct Table Row
+                tableHTML += `
+                    <tr>
+                        <td style="padding: 10px; border-bottom: 1px solid var(--glass-border);">${timeStr}</td>
+                        <td style="padding: 10px; border-bottom: 1px solid var(--glass-border); font-weight:600; color: var(--premium-green);">${data.species || '-'}</td>
+                        <td style="padding: 10px; border-bottom: 1px solid var(--glass-border);">${data.habitat || '-'}</td>
+                        <td style="padding: 10px; border-bottom: 1px solid var(--glass-border);">${data.landuse || '-'}</td>
+                        <td style="padding: 10px; border-bottom: 1px solid var(--glass-border);">${data.condition || '-'}</td>
+                        <td style="padding: 10px; border-bottom: 1px solid var(--glass-border);">${data.recorder || '-'}</td>
+                    </tr>
+                `;
+
+                if (!data.lat || !data.lon && !data.lng) return;
+                const lat = data.lat;
+                const lng = data.lon || data.lng;
 
                 // Create pulse icon
                 const pulseIcon = L.divIcon({
@@ -1959,21 +1993,55 @@ function initLiveFieldData() {
                     iconAnchor: [12, 12]
                 });
 
-                const marker = L.marker([data.lat, data.lon], { icon: pulseIcon });
+                const marker = L.marker([lat, lng], { icon: pulseIcon });
                 marker.bindPopup(`
                     <div class="field-popup-premium">
                         <div class="popup-tag">Live Field Obs</div>
                         <h3>${data.species}</h3>
                         <p><strong>Recorder:</strong> ${data.recorder}</p>
-                        <p><strong>Habitat:</strong> ${data.habitat}</p>
-                        <p><strong>Condition:</strong> ${data.condition || 'Unknown'}</p>
-                        <small>${new Date(data.timestamp?.toDate()).toLocaleString()}</small>
+                        <p><strong>Habitat:</strong> ${data.habitat || '-'}</p>
+                        <p><strong>Land Use:</strong> ${data.landuse || '-'}</p>
+                        <small>${timeStr}</small>
                     </div>
                 `);
 
                 window.GisAppState.liveLayer.addLayer(marker);
             });
             
-            console.log("Field Feed Update: " + snapshot.size + " live points mapped.");
+            if (tbody) tbody.innerHTML = tableHTML;
+            console.log("Field Feed Update: " + snapshot.size + " live points mapped & tabulated.");
         });
+
+    // Handle CSV Download
+    const downloadBtn = document.getElementById('btn-download-csv');
+    if (downloadBtn) {
+        downloadBtn.addEventListener('click', () => {
+            const data = window.GisAppState.liveDataArray;
+            if (!data || data.length === 0) {
+                alert("No data available to download.");
+                return;
+            }
+            let csvContent = "data:text/csv;charset=utf-8,Date,Species,Habitat,Land Use,Condition,Latitude,Longitude,Recorder\\n";
+            data.forEach(d => {
+                const row = [
+                    d.timestamp || '',
+                    `"${d.species || ''}"`,
+                    `"${d.habitat || ''}"`,
+                    `"${d.landuse || ''}"`,
+                    `"${d.condition || ''}"`,
+                    d.lat || '',
+                    d.lon || d.lng || '',
+                    `"${d.recorder || ''}"`
+                ];
+                csvContent += row.join(",") + "\\n";
+            });
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "hurungwe_field_data_export.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+    }
 }

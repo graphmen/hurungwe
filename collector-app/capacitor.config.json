@@ -1,0 +1,6 @@
+{
+  "appId": "com.hurungwe.collector",
+  "appName": "HurungweCollector",
+  "webDir": "dist",
+  "bundledWebRuntime": false
+}

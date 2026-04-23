@@ -1,0 +1,312 @@
+:root {
+  /* Cinematic Tech-Organic Palette */
+  --premium-green: #2ecc71;
+  --premium-emerald: #06d6a0;
+  --dark-forest: #0b1a14;
+  --bg-color: #f0fdf4;
+  --text-primary: #064e3b;
+  --text-muted: #64748b;
+  
+  --glass-bg: rgba(255, 255, 255, 0.65);
+  --glass-border: rgba(255, 255, 255, 0.4);
+  --glass-highlight: rgba(255, 255, 255, 0.8);
+  
+  --radius-xl: 32px;
+  --radius-lg: 24px;
+  --radius-md: 16px;
+  --pill-height: 70px;
+}
+
+body.dark-mode {
+  --bg-color: #020617;
+  --text-primary: #f8fafc;
+  --text-muted: #94a3b8;
+  --glass-bg: rgba(15, 23, 42, 0.5);
+  --glass-border: rgba(255, 255, 255, 0.05);
+  --glass-highlight: rgba(255, 255, 255, 0.1);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+  padding-bottom: calc(var(--pill-height) + 40px);
+  transition: background-color 0.5s ease;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* =========================================
+   Aurora Animated Background Layer
+   ========================================= */
+.aurora-bg {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: -1;
+  overflow: hidden;
+  background: var(--bg-color);
+}
+
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.5;
+  animation: float 20s infinite ease-in-out alternate;
+}
+
+.orb-1 {
+  width: 300px; height: 300px;
+  background: var(--premium-emerald);
+  top: -100px; left: -100px;
+}
+
+.orb-2 {
+  width: 400px; height: 400px;
+  background: var(--premium-green);
+  bottom: -150px; right: -150px;
+  animation-delay: -5s;
+}
+
+.orb-3 {
+  width: 200px; height: 200px;
+  background: #38bdf8;
+  top: 40%; left: 60%;
+  animation-delay: -10s;
+}
+
+body.dark-mode .orb {
+  opacity: 0.3;
+}
+
+@keyframes float {
+  0% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(30px, -50px) scale(1.1); }
+  66% { transform: translate(-20px, 20px) scale(0.9); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+
+/* =========================================
+   App Shell & Header
+   ========================================= */
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  padding: calc(min(40px, env(safe-area-inset-top, 40px))) 24px 20px;
+  background: linear-gradient(180deg, var(--bg-color) 0%, transparent 100%);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.brand-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-wrapper h1 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 900;
+  background: linear-gradient(135deg, var(--premium-green), #0ea5e9);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: -0.5px;
+}
+
+.brand-icon {
+  font-size: 1.8rem;
+  filter: drop-shadow(0 4px 10px rgba(46, 204, 113, 0.4));
+  animation: pulse 3s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+/* =========================================
+   Floating Pill Navigation
+   ========================================= */
+.bottom-nav {
+  position: fixed;
+  bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+  left: 50%;
+  transform: translateX(-50%);
+  width: 85%;
+  max-width: 380px;
+  height: var(--pill-height);
+  background: var(--glass-bg);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border: 1px solid var(--glass-border);
+  border-top: 1px solid var(--glass-highlight);
+  border-radius: 40px;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+  z-index: 999;
+}
+
+body.dark-mode .bottom-nav {
+  box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+}
+
+.nav-item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 70px;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.nav-item.active {
+  color: var(--premium-green);
+  transform: translateY(-5px);
+}
+
+.nav-item i {
+  font-size: 1.4rem;
+  margin-bottom: 4px;
+}
+
+.nav-item span {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.nav-item.active::after {
+  content: '';
+  position: absolute;
+  bottom: 8px;
+  width: 4px;
+  height: 4px;
+  background: var(--premium-green);
+  border-radius: 50%;
+  box-shadow: 0 0 8px var(--premium-green);
+}
+
+/* =========================================
+   Glassmorphic Cards & Pages
+   ========================================= */
+.page {
+  display: none;
+  padding: 0 24px;
+  animation: slideUpFade 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.page.active {
+  display: block;
+}
+
+@keyframes slideUpFade {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.form-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  border: 1px solid var(--glass-border);
+  border-top: 1px solid var(--glass-highlight);
+  border-radius: var(--radius-xl);
+  padding: 24px;
+  box-shadow: 0 25px 50px rgba(0,0,0,0.05);
+}
+
+body.dark-mode .form-card {
+  box-shadow: 0 25px 50px rgba(0,0,0,0.2);
+}
+
+/* =========================================
+   Tactile Inputs
+   ========================================= */
+.input-group {
+  margin-bottom: 24px;
+}
+
+.input-group label {
+  display: block;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.input-group input, .input-group select {
+  width: 100%;
+  padding: 16px 20px;
+  border-radius: var(--radius-lg);
+  border: 2px solid transparent;
+  background: rgba(255, 255, 255, 0.4);
+  font-size: 16px;
+  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  color: var(--text-primary);
+  transition: all 0.3s ease;
+  box-shadow: inset 0 2px 5px rgba(0,0,0,0.02);
+  appearance: none;
+}
+
+body.dark-mode .input-group input, 
+body.dark-mode .input-group select {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.input-group input:focus, .input-group select:focus {
+  outline: none;
+  border-color: var(--premium-green);
+  background: var(--bg-color);
+  box-shadow: 0 10px 25px rgba(46, 204, 113, 0.15);
+  transform: translateY(-2px);
+}
+
+/* =========================================
+   Cinematic Buttons
+   ========================================= */
+.btn-primary {
+  width: 100%;
+  padding: 18px;
+  background: linear-gradient(135deg, var(--premium-emerald), var(--premium-green));
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-lg);
+  font-size: 15px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 10px 30px rgba(46, 204, 113, 0.4);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  cursor: pointer;
+}
+
+.btn-primary:active {
+  transform: scale(0.96);
+  box-shadow: 0 5px 15px rgba(46, 204, 113, 0.4);
+}

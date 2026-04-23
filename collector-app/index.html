@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title>Hurungwe Collector</title>
+    
+    <!-- Premium Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Outfit:wght@700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Firebase SDK (Required for Sync & Auth) -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  </head>
+  <body>
+    <!-- Animated Aurora Background -->
+    <div class="aurora-bg">
+      <div class="orb orb-1"></div>
+      <div class="orb orb-2"></div>
+      <div class="orb orb-3"></div>
+    </div>
+
+    <!-- App Header (Hidden until authenticated) -->
+    <header class="app-header" id="main-header" style="display: none;">
+      <div class="brand-wrapper">
+        <span class="brand-icon">🌿</span>
+        <h1>Hurungwe</h1>
+      </div>
+      <div class="header-actions">
+        <!-- Display logged-in user email -->
+        <span id="user-email-display" style="font-size:10px; font-weight:700; color:var(--premium-green); margin-right:10px;"></span>
+        <button id="theme-toggle" style="background:none; border:none; color:var(--text-muted); font-size:20px; transition:color 0.2s;">
+          <i class="fas fa-moon"></i>
+        </button>
+        <button id="btn-logout" style="background:none; border:none; color:#ef233c; font-size:20px; transition:color 0.2s;">
+          <i class="fas fa-sign-out-alt"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- App Content Pages -->
+    <div id="app-content">
+      <!-- 0. Login Page -->
+      <main id="page-login" class="page active" style="padding-top: 20vh;">
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+          <div style="text-align:center; margin-bottom: 30px;">
+            <span class="brand-icon" style="font-size: 50px; margin-bottom: 10px; display: inline-block;">🌿</span>
+            <h1 style="font-family:'Outfit'; font-size:32px; background:linear-gradient(135deg, var(--premium-green), #0ea5e9); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;">Collector Auth</h1>
+            <p style="color:var(--text-muted); font-size:12px; font-weight:600; margin-top:5px; text-transform:uppercase; letter-spacing:1px;">Authorized Personnel Only</p>
+          </div>
+          
+          <form id="auth-form" class="form-card" style="width: 100%;">
+            <div class="input-group">
+              <label><i class="fas fa-envelope"></i> Email Address</label>
+              <input type="email" id="auth-email" placeholder="field.agent@hurungwe.org" required>
+            </div>
+            <div class="input-group">
+              <label><i class="fas fa-lock"></i> Master Password</label>
+              <input type="password" id="auth-password" placeholder="••••••••" required>
+            </div>
+            <div style="display: flex; gap: 10px;">
+              <button type="submit" id="btn-login" class="btn-primary" style="flex: 1;">
+                <i class="fas fa-sign-in-alt"></i> Login
+              </button>
+              <button type="button" id="btn-signup" class="btn-primary" style="flex: 1; background: var(--glass-bg); color: var(--premium-green); border: 1px solid var(--premium-green); box-shadow: none;">
+                <i class="fas fa-user-plus"></i> Sign Up
+              </button>
+            </div>
+            
+            <div id="auth-error" style="color:#ef233c; font-size:11px; font-weight:600; text-align:center; margin-top:15px; display:none;"></div>
+          </form>
+        </div>
+      </main>
+
+      <!-- 1. Collect Page -->
+      <main id="page-collect" class="page">
+        <div id="gps-banner" style="display:flex; align-items:center; gap:10px; background:rgba(67, 97, 238, 0.1); color:#4361ee; padding:12px; border-radius:12px; margin-bottom:20px; font-size:12px; font-weight:600;">
+            <i class="fas fa-location-arrow"></i>
+            <span id="gps-coords">Fetching GPS location...</span>
+        </div>
+
+        <form id="collector-form" class="form-card">
+          <div class="input-group">
+              <label><i class="fas fa-tree"></i> Species Name</label>
+              <select id="field-species" required>
+                  <option value="" disabled selected>Select Species...</option>
+                  <option value="Acacia Galpinii">Acacia Galpinii (Monkey Thorn)</option>
+                  <option value="Acacia Polycantha">Acacia Polycantha (White Thorn)</option>
+                  <option value="Acacia Siebriana">Acacia Siebriana (Paperbark)</option>
+                  <option value="Fidebhia Abida">Fidebhia Abida (Msangu)</option>
+                  <option value="Kigelia Africana">Kigelia Africana (Sausage Tree)</option>
+                  <option value="Munyii/Bechemia discolor">Munyii / Bechemia discolor (Bird Plum)</option>
+                  <option value="Pilostigma Thonigilii/Monkey Bread">Pilostigma Thonigilii / Monkey Bread</option>
+                  <option value="Red Mahogany">Red Mahogany</option>
+                  <option value="Trichilia Emetica">Trichilia Emetica (Natal Mahogany)</option>
+                  <option value="Waterberry">Waterberry</option>
+                  <option value="Other">Other Species...</option>
+              </select>
+          </div>
+
+          <div class="input-group">
+            <label><i class="fas fa-tree"></i> Habitat Type</label>
+            <select id="field-habitat" required>
+                <option value="" disabled selected>Select Habitat...</option>
+                <option value="Inland">Inland</option>
+                <option value="Mountanious">Mountanious</option>
+                <option value="Riverine/Riparian">Riverine / Riparian</option>
+            </select>
+          </div>
+
+          <div class="input-group">
+            <label><i class="fas fa-mountain-sun"></i> Land Use</label>
+            <select id="field-landuse" required>
+                <option value="" disabled selected>Select Land Use...</option>
+                <option value="Natural Forest">Natural Forest</option>
+                <option value="Urban area">Urban area</option>
+                <option value="Farming/Agric">Farming/Agric</option>
+            </select>
+          </div>
+
+          <div class="input-group">
+            <label><i class="fas fa-heartbeat"></i> Tree Condition</label>
+            <select id="field-condition" required>
+                <option value="" disabled selected>Select Condition...</option>
+                <option value="Healthy">Healthy / Thriving</option>
+                <option value="Stressed">Stressed / Diseased</option>
+                <option value="Damaged">Damaged (Physical)</option>
+                <option value="Dead">Dead / Snag</option>
+            </select>
+          </div>
+
+          <!-- Recorder Name is now auto-attached via Firebase Auth -->
+
+          <button type="button" id="btn-camera" class="btn-primary" style="background:var(--glass-bg); color:var(--premium-green); border:1px solid var(--premium-green); margin-bottom:15px; box-shadow:none;">
+            <i class="fas fa-camera"></i> Take Photo
+          </button>
+          <!-- Hidden image preview -->
+          <img id="photo-preview" src="" style="display:none; width:100%; border-radius:12px; margin-bottom:15px;" />
+
+          <button type="submit" id="btn-submit" class="btn-primary">
+              <i class="fas fa-cloud-upload-alt"></i> SAVE OBSERVATION
+          </button>
+        </form>
+      </main>
+
+      <!-- 2. Sync / Queue Page -->
+      <main id="page-sync" class="page">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+          <h2 style="font-family:'Outfit'; font-size:22px; color:var(--text-primary);">Sync Hub</h2>
+          <div id="sync-status-badge" style="background:rgba(239, 35, 60, 0.1); color:#ef233c; padding:6px 12px; border-radius:20px; font-size:12px; font-weight:600; display:flex; align-items:center; gap:6px;">
+            <i class="fas fa-wifi"></i> Offline
+          </div>
+        </div>
+
+        <div class="form-card" style="padding:0; overflow:hidden;">
+          <div style="padding:15px; background:rgba(0,0,0,0.02); border-bottom:1px solid var(--glass-border); font-size:14px; font-weight:600; color:var(--text-muted);">
+            Pending Records (<span id="queue-count">0</span>)
+          </div>
+          <div id="pending-list" style="padding:15px; min-height:150px; display:flex; flex-direction:column; gap:10px;">
+            <div style="text-align:center; color:var(--text-muted); font-size:12px; margin-top:20px;">No pending records.</div>
+          </div>
+          <div style="padding:15px; border-top:1px solid var(--glass-border);">
+            <button id="btn-force-sync" class="btn-primary" style="background:#4361ee; box-shadow:0 4px 15px rgba(67, 97, 238, 0.3);">
+              <i class="fas fa-sync-alt"></i> Sync Now
+            </button>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- Bottom Navigation (Hidden until authenticated) -->
+    <nav class="bottom-nav" id="main-nav" style="display: none;">
+      <a href="#" class="nav-item active" data-target="page-collect">
+        <i class="fas fa-map-marker-alt"></i>
+        <span>Collect</span>
+      </a>
+      <a href="#" class="nav-item" data-target="page-sync">
+        <i class="fas fa-cloud-sync"></i>
+        <span>Sync</span>
+      </a>
+    </nav>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
