@@ -211,3 +211,63 @@ body {
     font-size: 12px;
     font-weight: 600;
 }
+/* APK Download Card */
+.download-card {
+    background: var(--field-card);
+    border: 1px solid rgba(82, 183, 136, 0.2);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 25px;
+    text-align: center;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    background: linear-gradient(135deg, rgba(82, 183, 136, 0.08), rgba(45, 106, 79, 0.08));
+    position: relative;
+    overflow: hidden;
+}
+
+.download-content {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.download-icon {
+    font-size: 32px;
+    color: var(--field-accent);
+}
+
+.download-text h3 {
+    font-family: 'Outfit', sans-serif;
+    font-size: 16px;
+    margin-bottom: 4px;
+}
+
+.download-text p {
+    font-size: 11px;
+    color: var(--field-text-muted);
+}
+
+.btn-download {
+    display: block;
+    width: 100%;
+    background: #52B788;
+    color: white;
+    text-decoration: none;
+    padding: 14px;
+    border-radius: 10px;
+    font-weight: 800;
+    font-size: 14px;
+    transition: all 0.2s;
+    box-shadow: 0 4px 15px rgba(82, 183, 136, 0.3);
+}
+
+.btn-download:active { transform: scale(0.98); }
+
+.download-note {
+    margin-top: 15px;
+    font-size: 10px;
+    color: var(--field-text-muted);
+    font-style: italic;
+}
