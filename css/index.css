@@ -605,11 +605,11 @@ body.dark-mode .nav-item:hover {
 .content-grid {
     flex: 1;
     display: grid;
-    grid-template-columns: 380px 1fr; /* Controls on LEFT, Map on RIGHT */
-    gap: 24px;
-    padding: 24px;
-    height: calc(100vh - var(--header-height));
+    grid-template-columns: 1fr 380px; /* Map on Left, Dock on Right */
+    gap: 0;
     overflow: hidden;
+    background: #f8f9fa;
+    height: calc(100vh - var(--header-height));
     position: relative;
     width: 100%;
 }
@@ -861,15 +861,16 @@ body.dark-mode .nav-item:hover {
 /* Suitability Analysis Layout - UNIFIED GRID */
 .suitability-layout {
     display: grid;
-    grid-template-columns: 380px 1fr; /* Unified with dashboard layout */
+    grid-template-columns: 1fr 450px; /* Map on Left, Controls on Right */
     gap: 30px;
     margin-top: 20px;
-    align-items: stretch;
-    height: calc(100vh - 180px); /* Account for padding/header */
+    height: calc(100vh - 200px); /* Slightly shorter for better fit */
+    min-height: 500px;
+    padding-bottom: 40px; /* Fixed bottom-cutting breathing room */
 }
 
 .suitability-map-side {
-    grid-column: 2; /* Map on Right */
+    grid-column: 1; /* Map on Left */
     background: var(--bg-main);
     padding: 12px;
     border-radius: 12px;
@@ -881,7 +882,7 @@ body.dark-mode .nav-item:hover {
 }
 
 .suitability-info-side {
-    grid-column: 1; /* Controls on Left */
+    grid-column: 2; /* Controls on Right */
     grid-row: 1;
     background: #fff;
     padding: 24px;
@@ -890,6 +891,7 @@ body.dark-mode .nav-item:hover {
     border: 1px solid var(--glass-border);
     overflow-y: auto;
     max-height: 100%;
+    padding-bottom: 50px; /* Ensure content is never cut off */
 }
 
 .suitability-info-side h3 {
