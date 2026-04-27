@@ -105,10 +105,11 @@ h1, h2, h3, .nav-item-text {
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     display: flex;
-    flex-direction: column;
+    flex-direction: column; /* Robust verticality */
     border-right: 2px solid var(--glass-border);
     box-shadow: 10px 0 40px rgba(0,0,0,0.04);
     flex-shrink: 0;
+    height: 100vh; /* Ensure full height */
     overflow-y: auto;
     overflow-x: hidden;
     z-index: 10010;
@@ -592,8 +593,9 @@ body.dark-mode .nav-item:hover {
     flex-direction: column;
     padding: 24px;
     gap: 24px;
-    overflow-y: auto;
+    overflow: hidden; /* Fix: Prevent outer scroll to stabilize internal map heights */
     min-width: 0;
+    height: 100vh;
 }
 
 .user-profile { display: none; }
@@ -603,7 +605,7 @@ body.dark-mode .nav-item:hover {
 .content-grid {
     flex: 1;
     display: grid;
-    grid-template-columns: 1fr 360px; /* Slight increase for professional spacing */
+    grid-template-columns: 380px 1fr; /* Controls on LEFT, Map on RIGHT */
     gap: 24px;
     padding: 24px;
     height: calc(100vh - var(--header-height));
@@ -856,30 +858,38 @@ body.dark-mode .nav-item:hover {
     overflow-y: auto;
 }
 
-/* Suitability Analysis Side-by-Side Layout */
+/* Suitability Analysis Layout - UNIFIED GRID */
 .suitability-layout {
-    display: flex;
+    display: grid;
+    grid-template-columns: 380px 1fr; /* Unified with dashboard layout */
     gap: 30px;
     margin-top: 20px;
-    align-items: flex-start;
+    align-items: stretch;
+    height: calc(100vh - 180px); /* Account for padding/header */
 }
 
 .suitability-map-side {
-    flex: 1.2;
+    grid-column: 2; /* Map on Right */
     background: var(--bg-main);
-    padding: 24px;
+    padding: 12px;
     border-radius: 12px;
-    border: 1px dashed var(--border-color);
-    text-align: center;
+    border: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
 }
 
 .suitability-info-side {
-    flex: 0.8;
+    grid-column: 1; /* Controls on Left */
+    grid-row: 1;
     background: #fff;
     padding: 24px;
-    border-radius: 12px;
-    border: 1px solid var(--border-color);
-    box-shadow: var(--shadow-sm);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-soft);
+    border: 1px solid var(--glass-border);
+    overflow-y: auto;
+    max-height: 100%;
 }
 
 .suitability-info-side h3 {

@@ -129,40 +129,7 @@
             </header>
 
             <div id="view-dashboard" class="content-grid">
-                <!-- STATIC MAP PANEL (Always Visible) -->
-                <section class="map-panel">
-                    <div class="panel-header">
-                        <h2 id="view-title">Hurungwe Spatial Interface</h2>
-                        <div class="map-controls">
-                            <button id="btn-locate" class="btn-secondary" title="Find my GPS location">
-                                <span class="btn-icon">📍</span> Locate Me
-                            </button>
-                            <button id="reset-view" class="btn-secondary" title="Zoom to District Bounds">
-                                <span class="btn-icon">🎯</span> Reset View
-                            </button>
-                            <button id="btn-fullscreen" class="btn-secondary" title="Expand to Fullscreen">
-                                <span class="btn-icon">⛶</span> Fullscreen
-                            </button>
-                        </div>
-                    </div>
-                    <div id="map-loader" class="map-loader hidden">
-                        <span class="spinning">⏳</span>
-                        <span>Satellite Analysis Mapping...</span>
-                    </div>
-                    <div id="map-status-banner" class="map-status-banner hidden">
-                        <span class="banner-icon">🎯</span>
-                        <span id="banner-text">Identify Mode Active: Click map to analyze 5km buffer.</span>
-                        <button id="btn-exit-mode" class="btn-exit-banner">Exit</button>
-                    </div>
-                    <div id="map-legend" class="hidden"></div>
-                    <div id="global-map-progress" class="map-progress-bar"></div>
-                    <button id="toggle-comparison" class="comparison-toggle" style="display:none;">
-                        <i class="fas fa-columns"></i> Compare 2020 vs 2021
-                    </button>
-                    <div id="map" class="map-container"></div>
-                </section>
-
-                <!-- RIGHT SIDEBAR: Toggling Panels -->
+                <!-- LEFT SIDEBAR: Toggling Panels -->
                 <aside class="analysis-dock">
                     
                     <!-- PANEL: Dashboard Stats -->
@@ -297,8 +264,6 @@
                                     <i class="fas fa-download" style="margin-right:0;"></i> Export CSV
                                 </button>
                             </div>
-
-                            </div>
                             
                             <div style="max-height: 500px; overflow-y: auto; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 8px;">
                                 <table id="field-data-table" style="width: 100%; border-collapse: collapse; text-align: left; font-size: 11px;">
@@ -422,12 +387,41 @@
                             </div>
                         </div>
                     </div>
-
-        <!-- Removed Legacy Export Panel -->
-
                 </aside>
-            </div>
 
+                <!-- STATIC MAP PANEL (Now on the Right) -->
+                <section class="map-panel">
+                    <div class="panel-header">
+                        <h2 id="view-title">Hurungwe Spatial Interface</h2>
+                        <div class="map-controls">
+                            <button id="btn-locate" class="btn-secondary" title="Find my GPS location">
+                                <span class="btn-icon">📍</span> Locate Me
+                            </button>
+                            <button id="reset-view" class="btn-secondary" title="Zoom to District Bounds">
+                                <span class="btn-icon">🎯</span> Reset View
+                            </button>
+                            <button id="btn-fullscreen" class="btn-secondary" title="Expand to Fullscreen">
+                                <span class="btn-icon">⛶</span> Fullscreen
+                            </button>
+                        </div>
+                    </div>
+                    <div id="map-loader" class="map-loader hidden">
+                        <span class="spinning">⏳</span>
+                        <span>Satellite Analysis Mapping...</span>
+                    </div>
+                    <div id="map-status-banner" class="map-status-banner hidden">
+                        <span class="banner-icon">🎯</span>
+                        <span id="banner-text">Identify Mode Active: Click map to analyze 5km buffer.</span>
+                        <button id="btn-exit-mode" class="btn-exit-banner">Exit</button>
+                    </div>
+                    <div id="map-legend" class="hidden"></div>
+                    <div id="global-map-progress" class="map-progress-bar"></div>
+                    <button id="toggle-comparison" class="comparison-toggle" style="display:none;">
+                        <i class="fas fa-columns"></i> Compare 2020 vs 2021
+                    </button>
+                    <div id="map" class="map-container"></div>
+                </section>
+            </div>
             <!-- View: Data Export (Migrated to Header) -->
 
             <!-- View: Growth Trends -->
@@ -459,10 +453,11 @@
                     </p>
                     
                     <div class="suitability-layout">
-                        <!-- Left Side: Map and Controls -->
-                        <div class="suitability-map-side">
-                            <div style="margin-bottom: 20px; display: flex; gap: 12px; align-items: center; justify-content: center;">
-                                <select id="sdm-species-select" class="header-select" style="max-width: 300px;">
+                        <!-- Left Side: Ecological Insights & Controls -->
+                        <div class="suitability-info-side" id="sdm-insights-panel">
+                            <div style="margin-bottom: 20px; display: flex; flex-direction: column; gap: 12px;">
+                                <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Select Target Species</label>
+                                <select id="sdm-species-select" class="header-select" style="width: 100%;">
                                     <option value="species_suitability_grid">All Species Composite</option>
                                     <option value="Acacia_Galpinii_suitability">Acacia Galpinii</option>
                                     <option value="Acacia_Polycantha_suitability">Acacia Polycantha</option>
@@ -475,21 +470,22 @@
                                     <option value="Trichilia_Emetica_suitability">Trichilia Emetica</option>
                                     <option value="Waterberry_suitability">Waterberry</option>
                                 </select>
-                                <button id="btn-download-sdm" class="btn-primary" style="white-space: nowrap; padding: 10px 20px;">
-                                    📥 Export
+                                <button id="btn-download-sdm" class="btn-primary" style="width: 100%; padding: 10px;">
+                                    📥 Export Research Raster
                                 </button>
                             </div>
-                            <img id="sdm-map-image" src="data/models/species_suitability_grid.png" alt="SDM Map Image" style="max-width: 100%; max-height: 60vh; border-radius: 4px; box-shadow: var(--shadow);">
-                        </div>
 
-                        <!-- Right Side: Ecological Insights -->
-                        <div class="suitability-info-side" id="sdm-insights-panel">
                             <h3>Ecological Insights</h3>
                             <div id="sdm-insights-content">
                                 <div class="empty-state">
                                     <p>Select a species to view detailed ecological drivers and strategic forecasts.</p>
                                 </div>
                             </div>
+                        </div>
+
+                        <!-- Right Side: Spatial Forecast Map -->
+                        <div class="suitability-map-side">
+                            <img id="sdm-map-image" src="data/models/species_suitability_grid.png" alt="SDM Map Image" style="max-width: 100%; max-height: 70vh; border-radius: 12px; box-shadow: var(--shadow-soft); border: 1px solid var(--glass-border);">
                         </div>
                     </div>
                 </div>
