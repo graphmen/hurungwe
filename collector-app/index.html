@@ -5,18 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>Hurungwe Collector</title>
     
-    <!-- Premium Fonts & Icons -->
+    <!-- Fonts & Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Outfit:wght@700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    
-    <!-- Firebase SDK (Required for Sync & Auth) -->
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
   </head>
   <body>
+  <body>
+    <!-- Fast Loading Splash (hides Firebase init delay) -->
+    <div id="app-loader" style="position:fixed; top:0; left:0; right:0; bottom:0; background:var(--bg-color,#f8fffe); z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:16px;">
+      <span style="font-size:3rem;">🌿</span>
+      <div style="font-family:'Outfit',sans-serif; font-size:22px; font-weight:900; color:#2ecc71;">Hurungwe</div>
+      <div style="width:40px; height:4px; border-radius:2px; background:rgba(46,204,113,0.2); overflow:hidden;"><div style="height:100%; width:40%; background:#2ecc71; border-radius:2px; animation:loadbar 1s ease-in-out infinite alternate;"></div></div>
+      <style>@keyframes loadbar{0%{transform:translateX(0)}100%{transform:translateX(150%)}}</style>
+    </div>
     <!-- Animated Aurora Background -->
     <div class="aurora-bg">
       <div class="orb orb-1"></div>
@@ -42,8 +45,8 @@
       </div>
     </header>
 
-    <!-- App Content Pages -->
-    <div id="app-content">
+    <!-- App Content Pages (padded below fixed header) -->
+    <div id="app-content" style="padding-top: 80px;">
       <!-- 0. Login Page -->
       <main id="page-login" class="page active" style="padding-top: 20vh;">
         <div style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
@@ -54,6 +57,10 @@
           </div>
           
           <form id="auth-form" class="form-card" style="width: 100%;">
+            <div class="input-group" id="group-name" style="display:none;">
+              <label><i class="fas fa-user"></i> Full Name (For Sign Up)</label>
+              <input type="text" id="auth-name" placeholder="John Doe">
+            </div>
             <div class="input-group">
               <label><i class="fas fa-envelope"></i> Email Address</label>
               <input type="email" id="auth-email" placeholder="field.agent@hurungwe.org" required>
@@ -76,11 +83,56 @@
         </div>
       </main>
 
+      <!-- 0.5. Home Landing Page -->
+      <main id="page-home" class="page" style="padding-top: 15vh;">
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px;">
+          
+          <div style="text-align:center; margin-bottom: 20px;">
+            <h2 style="font-family:'Outfit'; font-size:28px; color:var(--text-primary);">Welcome Back</h2>
+            <p style="color:var(--text-muted); font-size:12px; font-weight:600;">What would you like to do today?</p>
+          </div>
+
+          <button id="btn-home-collect" class="btn-primary" style="height: 120px; font-size: 18px; flex-direction: column; gap: 10px;">
+            <i class="fas fa-leaf" style="font-size: 32px;"></i>
+            Collect Observation
+          </button>
+          
+          <button id="btn-home-sync" class="btn-primary" style="height: 120px; font-size: 18px; flex-direction: column; gap: 10px; background: var(--glass-bg); color: var(--premium-green); border: 2px solid var(--premium-green); box-shadow: none;">
+            <i class="fas fa-cloud-upload-alt" style="font-size: 32px;"></i>
+            Sync Records
+          </button>
+
+          <!-- Home Sync Status Badge -->
+          <div id="home-sync-status" class="sync-status-badge-home" style="margin-top: 10px; font-size: 11px; font-weight: 700; display: flex; align-items: center; gap: 8px;"></div>
+          
+        </div>
+      </main>
+
       <!-- 1. Collect Page -->
       <main id="page-collect" class="page">
-        <div id="gps-banner" style="display:flex; align-items:center; gap:10px; background:rgba(67, 97, 238, 0.1); color:#4361ee; padding:12px; border-radius:12px; margin-bottom:20px; font-size:12px; font-weight:600;">
-            <i class="fas fa-location-arrow"></i>
-            <span id="gps-coords">Fetching GPS location...</span>
+        <!-- Pro Telemetry Dashboard -->
+        <div id="gps-pro-container" class="gps-card pulse-waiting">
+            <div class="gps-header">
+               <div class="gps-title">
+                   <i class="fas fa-satellite"></i> 
+                   <span>Satellite Telemetry</span>
+               </div>
+               <span id="gps-status-badge" class="badge">Locating...</span>
+            </div>
+            <div class="gps-metrics">
+                <div class="metric-box">
+                    <span class="m-label">LATITUDE</span>
+                    <span class="m-val" id="gps-lat">--.-----</span>
+                </div>
+                <div class="metric-box">
+                    <span class="m-label">LONGITUDE</span>
+                    <span class="m-val" id="gps-lng">--.-----</span>
+                </div>
+                <div class="metric-box">
+                    <span class="m-label">ACCURACY</span>
+                    <span class="m-val" id="gps-acc">-- m</span>
+                </div>
+            </div>
         </div>
 
         <form id="collector-form" class="form-card">
@@ -135,12 +187,6 @@
 
           <!-- Recorder Name is now auto-attached via Firebase Auth -->
 
-          <button type="button" id="btn-camera" class="btn-primary" style="background:var(--glass-bg); color:var(--premium-green); border:1px solid var(--premium-green); margin-bottom:15px; box-shadow:none;">
-            <i class="fas fa-camera"></i> Take Photo
-          </button>
-          <!-- Hidden image preview -->
-          <img id="photo-preview" src="" style="display:none; width:100%; border-radius:12px; margin-bottom:15px;" />
-
           <button type="submit" id="btn-submit" class="btn-primary">
               <i class="fas fa-cloud-upload-alt"></i> SAVE OBSERVATION
           </button>
@@ -149,6 +195,11 @@
 
       <!-- 2. Sync / Queue Page -->
       <main id="page-sync" class="page">
+        <!-- Localized Sync Progress Bar -->
+        <div id="sync-status-bar" style="border-radius:12px; margin-bottom:15px; position:static; box-shadow:none;">
+            <span id="sync-status-text"><i class="fas fa-check-circle"></i> Cloud Sync: All data safe</span>
+        </div>
+
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
           <h2 style="font-family:'Outfit'; font-size:22px; color:var(--text-primary);">Sync Hub</h2>
           <div id="sync-status-badge" style="background:rgba(239, 35, 60, 0.1); color:#ef233c; padding:6px 12px; border-radius:20px; font-size:12px; font-weight:600; display:flex; align-items:center; gap:6px;">
@@ -174,7 +225,11 @@
 
     <!-- Bottom Navigation (Hidden until authenticated) -->
     <nav class="bottom-nav" id="main-nav" style="display: none;">
-      <a href="#" class="nav-item active" data-target="page-collect">
+      <a href="#" class="nav-item active" data-target="page-home" id="nav-home">
+        <i class="fas fa-home"></i>
+        <span>Home</span>
+      </a>
+      <a href="#" class="nav-item" data-target="page-collect">
         <i class="fas fa-map-marker-alt"></i>
         <span>Collect</span>
       </a>

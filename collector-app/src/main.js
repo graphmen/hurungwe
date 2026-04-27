@@ -1,10 +1,14 @@
 import './style.css';
 import { Geolocation } from '@capacitor/geolocation';
-import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Network } from '@capacitor/network';
 import localforage from 'localforage';
 
-// Firebase configuration (Placeholder from previous structure)
+// Firebase — bundled via npm (no CDN, no network download on startup)
+import firebase from 'firebase/compat/app';
+import 'firebase/compat/auth';
+import 'firebase/compat/firestore';
+import 'firebase/compat/storage';
+
 const firebaseConfig = {
     apiKey: "AIzaSyD0sDQNDfAH2AYrxJhwNa4r77uu98Gz4f8",
     authDomain: "hurungwe-gis-f8099.firebaseapp.com",
@@ -14,18 +18,17 @@ const firebaseConfig = {
     appId: "1:315238946268:web:9ca8edd76fff065001ab19",
     measurementId: "G-V7D6EK2VDM"
 };
-// Initialize Firebase
-if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-}
+
+// Initialize Firebase synchronously — instant startup, no polling needed
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
+const storage = firebase.storage();
 
 // App State
 const state = {
     currentLat: null,
     currentLng: null,
-    currentPhotoUrl: null,
     isOnline: true,
     currentUser: null
 };
@@ -36,16 +39,20 @@ localforage.config({
     storeName: 'observations_queue'
 });
 
-// Initialize UI
-document.addEventListener('DOMContentLoaded', async () => {
+// Initialize UI immediately — Firebase is ready at module load time
+document.addEventListener('DOMContentLoaded', () => {
     setupAuth();
     setupNavigation();
     setupThemeToggle();
-    await checkNetworkState();
-    startGpsTracking();
+    checkNetworkState();
     setupForm();
-    setupCamera();
     updateQueueUI();
+    updateSyncStatusUI(); // Initial check
+    // Dismiss splash once DOM is ready (Firebase is already initialized)
+    setTimeout(() => {
+        const loader = document.getElementById('app-loader');
+        if (loader) { loader.style.opacity = '0'; loader.style.transition = 'opacity 0.3s'; setTimeout(() => loader.remove(), 320); }
+    }, 300);
 });
 
 // Authentication Logic
@@ -60,27 +67,41 @@ function setupAuth() {
     const emailDisplay = document.getElementById('user-email-display');
 
     // Listen to Auth State
+    let gpsStarted = false;
     auth.onAuthStateChanged(user => {
+        // Always dismiss the loading splash
+        const loader = document.getElementById('app-loader');
+        if (loader) { loader.style.transition = 'opacity 0.4s'; loader.style.opacity = '0'; setTimeout(() => loader.remove(), 420); }
+
         if (user) {
             state.currentUser = user;
-            emailDisplay.innerText = user.email;
+            emailDisplay.innerHTML = `<i class="fas fa-user-circle" style="margin-right: 4px;"></i> ${user.displayName || user.email}`;
 
             // Switch UI to logged-in state
             header.style.display = 'flex';
             nav.style.display = 'flex';
             pageLogin.classList.remove('active');
-            pageCollect.classList.add('active'); // Default landing page
-            pageSync.classList.remove('active');
+            
+            // Route to home instead of collect
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            const homePage = document.getElementById('page-home');
+            if (homePage) homePage.classList.add('active');
 
             // Re-sync UI state for nav
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            document.querySelector('.nav-item[data-target="page-collect"]').classList.add('active');
+            const navHome = document.querySelector('.nav-item[data-target="page-home"]');
+            if (navHome) navHome.classList.add('active');
 
-            if (state.isOnline) {
-                processQueue();
+            // TRIGGER GPS – only once per session
+            if (!gpsStarted) {
+                gpsStarted = true;
+                startGpsTracking();
             }
+
+            // Background sync removed for battery preservation
         } else {
             state.currentUser = null;
+            gpsStarted = false;
 
             // Switch UI to logged-out state
             header.style.display = 'none';
@@ -121,11 +142,24 @@ function setupAuth() {
     // Handle Sign Up
     const bSignup = document.getElementById('btn-signup');
     bSignup.addEventListener('click', async () => {
+        const nameGroup = document.getElementById('group-name');
+        
+        // Show Name field if it's hidden
+        if (nameGroup.style.display === 'none') {
+            nameGroup.style.display = 'block';
+            document.getElementById('auth-name').required = true;
+            bSignup.innerHTML = '<i class="fas fa-check"></i> Confirm Sign Up';
+            bSignup.style.background = 'var(--premium-green)';
+            bSignup.style.color = '#fff';
+            return;
+        }
+
         const email = document.getElementById('auth-email').value;
         const password = document.getElementById('auth-password').value;
+        const name = document.getElementById('auth-name').value;
 
-        if (!email || !password) {
-            errorMsg.innerText = "Please fill in an email and password to sign up.";
+        if (!email || !password || !name) {
+            errorMsg.innerText = "Please fill in all fields (Name, Email, Password).";
             errorMsg.style.display = 'block';
             return;
         }
@@ -135,7 +169,12 @@ function setupAuth() {
         errorMsg.style.display = 'none';
 
         try {
-            await auth.createUserWithEmailAndPassword(email, password);
+            const userCred = await auth.createUserWithEmailAndPassword(email, password);
+            await userCred.user.updateProfile({ displayName: name });
+            
+            // Reload user to ensure profile state is updated globally
+            await firebase.auth().currentUser.reload();
+            
             loginForm.reset();
             alert("Account successfully created and logged in!");
         } catch (error) {
@@ -145,6 +184,7 @@ function setupAuth() {
         } finally {
             bSignup.disabled = false;
             bSignup.innerHTML = '<i class="fas fa-user-plus"></i> Sign Up';
+            nameGroup.style.display = 'none';
         }
     });
 
@@ -178,6 +218,24 @@ function setupNavigation() {
             });
         });
     });
+
+    // Home Landing Page Shortcuts
+    const btnHomeCollect = document.getElementById('btn-home-collect');
+    const btnHomeSync = document.getElementById('btn-home-sync');
+    
+    if (btnHomeCollect) {
+        btnHomeCollect.addEventListener('click', () => {
+            const navCollect = document.querySelector('.nav-item[data-target="page-collect"]');
+            if (navCollect) navCollect.click();
+        });
+    }
+    
+    if (btnHomeSync) {
+        btnHomeSync.addEventListener('click', () => {
+            const navSync = document.querySelector('.nav-item[data-target="page-sync"]');
+            if (navSync) navSync.click();
+        });
+    }
 }
 
 // Theme Logic
@@ -197,13 +255,12 @@ async function checkNetworkState() {
     const status = await Network.getStatus();
     state.isOnline = status.connected;
     updateNetworkUI();
+    updateSyncStatusUI();
 
     Network.addListener('networkStatusChange', status => {
         state.isOnline = status.connected;
         updateNetworkUI();
-        if (state.isOnline) {
-            processQueue();
-        }
+        updateSyncStatusUI();
     });
 }
 
@@ -220,56 +277,72 @@ function updateNetworkUI() {
     }
 }
 
-// Native GPS
+// GPS Tracking — environment-aware (Native Capacitor vs Web Browser)
 async function startGpsTracking() {
-    try {
-        const hasPermission = await Geolocation.checkPermissions();
-        if (hasPermission.location !== 'granted') {
-            await Geolocation.requestPermissions();
-        }
+    const statusBadge = document.getElementById('gps-status-badge');
+    const proContainer = document.getElementById('gps-pro-container');
+    if (!statusBadge || !proContainer) return; // guard: elements may not be visible yet
 
-        Geolocation.watchPosition({ enableHighAccuracy: true }, (position, err) => {
-            if (position) {
-                state.currentLat = position.coords.latitude;
-                state.currentLng = position.coords.longitude;
-                document.getElementById('gps-coords').innerHTML = `
-                    Lat: ${state.currentLat.toFixed(5)} <br>
-                    Lng: ${state.currentLng.toFixed(5)} <br>
-                    Acc: ±${Math.round(position.coords.accuracy)}m
-                `;
-                document.getElementById('gps-banner').style.background = 'rgba(82, 183, 136, 0.1)';
-                document.getElementById('gps-banner').style.color = 'var(--premium-green)';
+    statusBadge.innerText = 'Locating...';
+
+    function onPosition(lat, lng, accuracy) {
+        state.currentLat = lat;
+        state.currentLng = lng;
+        document.getElementById('gps-lat').innerText = lat.toFixed(5);
+        document.getElementById('gps-lng').innerText = lng.toFixed(5);
+        document.getElementById('gps-acc').innerText = `\u00b1${Math.round(accuracy)}m`;
+        statusBadge.innerText = 'LOCKED';
+        statusBadge.style.background = 'rgba(82, 183, 136, 0.1)';
+        statusBadge.style.color = 'var(--premium-green)';
+        proContainer.classList.remove('pulse-waiting');
+        proContainer.classList.add('pulse-locked');
+    }
+
+    function onError(msg) {
+        console.error('GPS Error:', msg);
+        statusBadge.innerText = 'ERROR';
+        statusBadge.style.color = '#ef233c';
+        statusBadge.style.background = 'rgba(239,35,60,0.1)';
+    }
+
+    // Detect if running inside a real native Capacitor app
+    const isNative = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+
+    if (isNative) {
+        // NATIVE ANDROID — use Capacitor Geolocation plugin
+        try {
+            let perm = await Geolocation.checkPermissions();
+            if (perm.location !== 'granted') {
+                perm = await Geolocation.requestPermissions();
             }
-        });
-    } catch (e) {
-        console.error("GPS Error:", e);
-        document.getElementById('gps-coords').innerText = "GPS Access Denied";
+            if (perm.location !== 'granted') {
+                onError('Permission denied');
+                return;
+            }
+            Geolocation.watchPosition(
+                { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
+                (pos, err) => {
+                    if (pos) onPosition(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy);
+                    else if (err) onError(err.message);
+                }
+            );
+        } catch (e) {
+            onError(e.message);
+        }
+    } else {
+        // WEB BROWSER — use standard navigator.geolocation directly
+        if (!navigator.geolocation) {
+            onError('Geolocation not supported');
+            return;
+        }
+        navigator.geolocation.watchPosition(
+            (pos) => onPosition(pos.coords.latitude, pos.coords.longitude, pos.coords.accuracy),
+            (err) => onError(err.message),
+            { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+        );
     }
 }
 
-// Native Camera
-function setupCamera() {
-    const btnParam = document.getElementById('btn-camera');
-    const preview = document.getElementById('photo-preview');
-
-    btnParam.addEventListener('click', async () => {
-        try {
-            const image = await Camera.getPhoto({
-                quality: 80,
-                allowEditing: false,
-                resultType: CameraResultType.DataUrl,
-                source: CameraSource.Camera
-            });
-
-            state.currentPhotoUrl = image.dataUrl;
-            preview.src = image.dataUrl;
-            preview.style.display = 'block';
-            btnParam.innerHTML = '<i class="fas fa-check"></i> Photo Captured';
-        } catch (e) {
-            console.error("Camera error:", e);
-        }
-    });
-}
 
 // Form Submission & Sync
 function setupForm() {
@@ -287,10 +360,9 @@ function setupForm() {
             habitat: document.getElementById('field-habitat').value,
             landuse: document.getElementById('field-landuse').value,
             condition: document.getElementById('field-condition').value,
-            recorder: state.currentUser ? state.currentUser.email : 'Unknown Agent',
+            recorder: state.currentUser ? (state.currentUser.displayName || state.currentUser.email) : 'Unknown Agent',
             lat: state.currentLat,
             lng: state.currentLng,
-            photo: state.currentPhotoUrl, // Warning: Large data URL for MVP
             timestamp: new Date().toISOString(),
             status: 'pending'
         };
@@ -300,21 +372,15 @@ function setupForm() {
 
         // Reset Form
         e.target.reset();
-        document.getElementById('photo-preview').style.display = 'none';
-        document.getElementById('btn-camera').innerHTML = '<i class="fas fa-camera"></i> Take Photo';
-        state.currentPhotoUrl = null;
 
         alert("Observation Saved!");
 
-        // Try sync
-        if (state.isOnline) {
-            processQueue();
-        }
+        // Auto-sync DISABLED - User must click 'Sync Now' in Sync Hub manually
     });
 
     document.getElementById('btn-force-sync').addEventListener('click', () => {
         if (!state.isOnline) {
-            alert("You are currently offline. Please connect to a network.");
+            alert("Connection required: Please connect to WiFi or mobile data to upload your records.");
             return;
         }
         processQueue();
@@ -327,12 +393,15 @@ async function saveToQueue(record) {
     queue.push(record);
     await localforage.setItem('queue', queue);
     updateQueueUI();
+    updateSyncStatusUI();
 }
 
 async function updateQueueUI() {
     let queue = (await localforage.getItem('queue')) || [];
     const list = document.getElementById('pending-list');
-    document.getElementById('queue-count').innerText = queue.length;
+    const badge = document.getElementById('queue-count');
+    if (badge) badge.innerText = queue.length;
+    updateSyncStatusUI();
 
     if (queue.length === 0) {
         list.innerHTML = '<div style="text-align:center; color:var(--text-muted); font-size:12px; margin-top:20px;">No pending records. Completely synced!</div>';
@@ -350,40 +419,129 @@ async function updateQueueUI() {
     `).join('');
 }
 
-async function processQueue() {
-    if (!state.isOnline) return;
 
-    let queue = (await localforage.getItem('queue')) || [];
-    if (queue.length === 0) return;
 
-    const btn = document.getElementById('btn-force-sync');
-    btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Syncing...';
-    btn.disabled = true;
+// Update the non-intrusive status bar
+async function updateSyncStatusUI(statusOverride = null) {
+    const bar = document.getElementById('sync-status-bar');
+    const text = document.getElementById('sync-status-text');
+    const homeStatus = document.getElementById('home-sync-status');
+    if (!bar || !text) return;
 
-    try {
-        const batch = db.batch();
-        const syncedIds = [];
+    const queue = (await localforage.getItem('queue')) || [];
+    const isOffline = !state.isOnline;
+    const hasQueue = queue.length > 0;
 
-        queue.forEach(record => {
-            const docRef = db.collection('observations').doc(record.id);
-            const { id, status, ...dbData } = record;
-            batch.set(docRef, dbData);
-            syncedIds.push(record.id);
-        });
+    let statusHtml = '';
+    let statusClass = '';
+    let homeColor = 'var(--premium-green)';
 
-        await batch.commit();
+    if (statusOverride) {
+        statusHtml = statusOverride;
+    } else if (isOffline) {
+        statusClass = 'offline';
+        statusHtml = `<i class="fas fa-wifi-slash"></i> Offline • ${queue.length} pending`;
+        homeColor = '#ef233c';
+    } else if (hasQueue) {
+        statusClass = 'syncing';
+        statusHtml = `<i class="fas fa-sync fa-spin"></i> ${queue.length} records waiting to sync`;
+        homeColor = '#f6aa1c';
+    } else {
+        statusHtml = `<i class="fas fa-check-circle"></i> Cloud Sync: All data safe`;
+        homeColor = 'var(--premium-green)';
+    }
 
-        // Clear synced items
-        queue = queue.filter(r => !syncedIds.includes(r.id));
-        await localforage.setItem('queue', queue);
-        updateQueueUI();
-        alert(`Successfully synced ${syncedIds.length} records!`);
+    bar.className = statusClass;
+    text.innerHTML = statusHtml;
 
-    } catch (e) {
-        console.error("Sync failed:", e);
-        alert("Sync failed. Are your Firebase credentials correct?");
-    } finally {
-        btn.innerHTML = '<i class="fas fa-sync-alt"></i> Sync Now';
-        btn.disabled = false;
+    if (homeStatus) {
+        homeStatus.innerHTML = statusHtml;
+        homeStatus.style.color = homeColor;
     }
 }
+
+async function processQueue(silent = false) {
+    // Check network - strictly manual trigger now
+    if (!state.isOnline) {
+        updateSyncStatusUI();
+        if (!silent) alert('Connection required: Please connect to WiFi or mobile data to upload your records.'); 
+        return;
+    }
+
+    let queue = (await localforage.getItem('queue')) || [];
+    if (queue.length === 0) {
+        updateSyncStatusUI();
+        if (!silent) alert('No pending records to sync.');
+        return;
+    }
+
+    const btn = document.getElementById('btn-force-sync');
+    if (btn) { btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Syncing...'; btn.disabled = true; }
+
+    // Ensure Auth
+    const currentUser = auth.currentUser;
+    if (!currentUser) {
+        if (btn) { btn.innerHTML = '<i class="fas fa-sync-alt"></i> Sync Now'; btn.disabled = false; }
+        if (!silent) alert('Please log in to sync.');
+        return;
+    }
+
+    const total = queue.length;
+    let completedCount = 0;
+    const syncedIds = [];
+    const batch = db.batch(); // High-performance single database write
+
+    // HIGH-OCTANE SYNC: Parallel Photos + Batched Firestore Docs
+    // Process in parallel chunks of 5 to avoid overloading mobile network stack
+    const chunkSize = 5;
+    for (let i = 0; i < queue.length; i += chunkSize) {
+        const chunk = queue.slice(i, i + chunkSize);
+        
+        await Promise.all(chunk.map(async (record) => {
+            try {
+                // eslint-disable-next-line no-unused-vars
+                const { id, status, ...dbData } = record;
+
+                // Add record to the Firestore Batch instead of direct write
+                const docRef = db.collection('observations').doc(record.id);
+                batch.set(docRef, dbData);
+                
+                syncedIds.push(record.id);
+                completedCount++;
+                
+                const percent = Math.round((completedCount / total) * 100);
+                updateSyncStatusUI(`<i class="fas fa-sync fa-spin"></i> Syncing: ${percent}% (${completedCount}/${total})...`);
+            } catch (e) {
+                console.error(`Record ${record.id} prepare failed:`, e.message);
+            }
+        }));
+    }
+
+    // FINAL BLAST: Commit all database records in ONE single request
+    try {
+        if (syncedIds.length > 0) {
+            updateSyncStatusUI(`<i class="fas fa-database fa-spin"></i> Finalizing Database...`);
+            await batch.commit();
+            
+            // Clean local storage
+            const currentQueue = await localforage.getItem('queue');
+            const remaining = currentQueue.filter(r => !syncedIds.includes(r.id));
+            await localforage.setItem('queue', remaining);
+            updateQueueUI();
+        }
+    } catch (finalErr) {
+        console.error("Batch commit failed:", finalErr.message);
+        if (!silent) alert("Database sync failed. Please try again.");
+    }
+
+    updateSyncStatusUI();
+    if (btn) { btn.innerHTML = '<i class="fas fa-sync-alt"></i> Sync Now'; btn.disabled = false; }
+
+    if (!silent) {
+        if (syncedIds.length === total && total > 0) alert(`🚀 SUCCESS! Synced all ${total} records in record time.`);
+        else if (syncedIds.length > 0) alert(`⚠️ Partially synced ${syncedIds.length}/${total}.`);
+        else alert('❌ Sync failed. Check internet connection.');
+    }
+}
+
+

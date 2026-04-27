@@ -49,19 +49,34 @@ const fbConfig = {
 };
 if (typeof firebase !== 'undefined') {
     firebase.initializeApp(fbConfig);
+    // ─── FIREBASE AUTH: Ensure session for Firestore rules ───
+    if (typeof firebase.auth === 'function') {
+        window.GisAppState.authPromise = firebase.auth().signInAnonymously()
+            .then((user) => {
+                console.log("Firebase Auth: Success. User ID:", user.user.uid);
+                return user;
+            })
+            .catch(err => {
+                console.error("Firebase Auth Failure:", err.message);
+                throw err;
+            });
+    } else {
+        console.warn("Firebase Auth: SDK not loaded.");
+        window.GisAppState.authPromise = Promise.reject(new Error("Auth SDK missing"));
+    }
 }
 
-let map = null;
-let allData = [];
-let filteredData = [];
-let hurungweBoundary = null;
-let markerCluster = null;
-let heatLayer = null;
-let donutChart = null;
-let terrainChart = null;
-let sortedDates = [];
-let activeFilters = { species: 'all', habitat: 'all', monitor: 'all', dateIndex: -1, search: '' };
-let boundaryMask = null;
+var map = null;
+var allData = [];
+var filteredData = [];
+var hurungweBoundary = null;
+var markerCluster = null;
+var heatLayer = null;
+var donutChart = null;
+var terrainChart = null;
+var sortedDates = [];
+var activeFilters = { species: 'all', habitat: 'all', monitor: 'all', dateIndex: -1, search: '' };
+var boundaryMask = null;
 
 // ─────────────────────────────────────────────
 // 2. CORE ENGINE INITIALIZATION
@@ -69,49 +84,65 @@ let boundaryMask = null;
 document.addEventListener('DOMContentLoaded', async () => {
     console.log("Hurungwe GIS Platform — Ultimate Boot Sequence Initiated...");
 
+    // ─────────────────────────────────────────────
+    // 0. ENVIRONMENT & SECURITY VALIDATION
+    // ─────────────────────────────────────────────
+    if (window.location.protocol === 'file:') {
+        alert("⚠️ SECURITY RESTRICITON:\n\nModern browsers block data loading via the 'file://' protocol for security.\n\nPlease run 'npm start' in the project directory to view the dashboard correctly.");
+        const viewTitle = document.getElementById('view-title');
+        if (viewTitle) viewTitle.innerHTML = '<span style="color:#ff5252;">⚠️ SECURITY BLOCK: Use a Local Server (npm start)</span>';
+        return;
+    }
+
+    // 1. PRIMARY BOOT: UI & Map (Immediate)
+    initMap();
+    initCharts();
+    initTheme();
+    bindEventListeners();
+    initPremiumAesthetics();
+    initLiveFieldData();
+    switchView('nav-dashboard');
+
+    // Final UI Polish
+    setTimeout(() => {
+        if (map) {
+            map.invalidateSize();
+            console.log("Startup: Layout synchronized.");
+        }
+    }, 1000);
+
+    // 2. DATA BOOT: Heavy Assets (Asynchronous)
     try {
+        console.log("Fetching static GIS assets...");
         const [speciesRes, geoRes] = await Promise.all([
             fetch('data/species.json'), fetch('data/Hurungwe.geojson')
         ]);
-        const rawData = await speciesRes.json();
-        hurungweBoundary = await geoRes.json();
+        
+        if (speciesRes.ok && geoRes.ok) {
+            const rawData = await speciesRes.json();
+            hurungweBoundary = await geoRes.json();
+            
+            allData = rawData.filter(d => d.lat && d.lon && d.species);
+            filteredData = [...allData];
 
-        allData = rawData.filter(d => d.lat && d.lon && d.species);
-        filteredData = [...allData];
+            populateSortedDates();
+            populateFilterDropdowns();
+            updateStats();
+            renderHabitatProgress();
+            renderActivityLog();
+            initTimeSlider();
 
-        // Component Bootstrap
-        populateSortedDates();
-        populateFilterDropdowns();
-        updateStats();
-        initMap();
-        initCharts();
-        renderHabitatProgress();
-        initTheme(); // Apply saved theme
-        renderActivityLog();
-        initTimeSlider();
-        bindEventListeners();
-        initPremiumAesthetics();
-        initLiveFieldData();
-
-        // Analytical Layer Bootstrap
-        await loadResearchData();
-
-        // ─────────────────────────────────────────────
-        // Sync Initial View & Labels
-        // ─────────────────────────────────────────────
-        switchView('nav-dashboard');
-
-        // Final UI Polish: Ensure map adapts to initial container size
-        setTimeout(() => {
-            if (map) {
-                map.invalidateSize();
-                console.log("Startup: Map size synchronized.");
+            if (map && hurungweBoundary) {
+                L.geoJSON(hurungweBoundary, { style: { color: '#E74C3C', weight: 3, fillOpacity: 0.05 } }).addTo(map);
             }
-        }, 1000);
-
-        console.log("ULTIMATE_GIS_LOAD_SUCCESS: Platform 100% Operational.");
+            if (typeof refreshMap === 'function') refreshMap();
+            console.log("ULTIMATE_GIS_LOAD_SUCCESS: Static data and filters ready.");
+        } else {
+            console.warn("Non-critical load failure: Static GIS files could not be fetched.");
+        }
+        if (typeof loadResearchData === 'function') await loadResearchData();
     } catch (err) {
-        console.error('CRITICAL_BOOT_FAILURE:', err);
+        console.warn('Non-critical load failure (Static Assets):', err.message);
     }
 });
 
@@ -508,6 +539,16 @@ function switchPanel(panelId) {
         target.classList.add('active-dock');
     }
 
+    // Toggle Map Field Filters Control
+    const mapFilters = document.getElementById('map-field-filters');
+    if (mapFilters) {
+        if (panelId === 'panel-data') {
+            mapFilters.classList.remove('hidden');
+        } else {
+            mapFilters.classList.add('hidden');
+        }
+    }
+
     const viewTitle = document.getElementById('view-title');
     if (panelId === 'panel-predictive') {
         if (viewTitle) viewTitle.innerText = '🤖 Research Modeling Interface';
@@ -546,19 +587,16 @@ function switchPanel(panelId) {
     }
 
     // Force map to recalculate its container size immediately after panel shift
-    if (map) {
-        setTimeout(() => {
-            map.invalidateSize({ animate: true });
-            console.log("Layout Sync: Map container recalculated.");
-            
-            // If returning to a view that should have the boundary visible
-            if (hurungweBoundary && !map.hasLayer(hurungweBoundary)) {
-                // Hurungwe boundary is actually a GeoJSON layer, handled in initMap
-            }
-        }, 100); 
-        
-        // Immediate call without timeout for responsiveness
-        map.invalidateSize();
+    if (typeof map !== 'undefined' && map !== null) {
+        try {
+            map.invalidateSize();
+            setTimeout(() => {
+                if (map) map.invalidateSize({ animate: true });
+                console.log("Layout Sync: Map container recalculated.");
+            }, 100);
+        } catch (e) {
+            console.warn("Map invalidateSize failed (map may not be ready):", e.message);
+        }
     }
 }
 
@@ -1940,108 +1978,398 @@ function populatePolicyPanel() {
 // 9. LIVE FIELD DATA INTEGRATION
 // ─────────────────────────────────────────────
 function initLiveFieldData() {
-    if (typeof firebase === 'undefined') return;
+    if (typeof firebase === 'undefined') {
+        console.warn("Firebase not loaded. Live data disabled.");
+        return;
+    }
+    if (!map) {
+        console.warn("Map not initialized. Live data layer aborted.");
+        return;
+    }
     
     console.log("Firebase Engine: Synchronizing Live Field Data...");
     const db = firebase.firestore();
     
     window.GisAppState.liveLayer = L.layerGroup().addTo(map);
-    window.GisAppState.liveDataArray = [];
+    window.GisAppState.allLiveData = [];
+    window.GisAppState.activeLiveFilters = { search: '', species: 'all', habitat: 'all', landuse: 'all', condition: 'all', recorder: 'all' };
 
-    db.collection('observations').orderBy('timestamp', 'desc').limit(200)
-        .onSnapshot((snapshot) => {
-            window.GisAppState.liveLayer.clearLayers();
-            window.GisAppState.liveDataArray = [];
-            const tbody = document.getElementById('field-data-body');
-            let tableHTML = '';
-            
-            if (snapshot.empty) {
-                if (tbody) tbody.innerHTML = '<tr><td colspan="5" style="padding: 15px; text-align: center; color: var(--text-muted);">No field records found.</td></tr>';
-                return;
-            }
-
-            snapshot.forEach((doc) => {
-                const data = doc.data();
-                window.GisAppState.liveDataArray.push(data);
-                
-                const timeStr = data.timestamp ? new Date(data.timestamp).toLocaleString() : 'Unknown';
-                
-                // Construct Table Row
-                tableHTML += `
-                    <tr>
-                        <td style="padding: 10px; border-bottom: 1px solid var(--glass-border);">${timeStr}</td>
-                        <td style="padding: 10px; border-bottom: 1px solid var(--glass-border); font-weight:600; color: var(--premium-green);">${data.species || '-'}</td>
-                        <td style="padding: 10px; border-bottom: 1px solid var(--glass-border);">${data.habitat || '-'}</td>
-                        <td style="padding: 10px; border-bottom: 1px solid var(--glass-border);">${data.landuse || '-'}</td>
-                        <td style="padding: 10px; border-bottom: 1px solid var(--glass-border);">${data.condition || '-'}</td>
-                        <td style="padding: 10px; border-bottom: 1px solid var(--glass-border);">${data.recorder || '-'}</td>
-                    </tr>
-                `;
-
-                if (!data.lat || !data.lon && !data.lng) return;
-                const lat = data.lat;
-                const lng = data.lon || data.lng;
-
-                // Create pulse icon
-                const pulseIcon = L.divIcon({
-                    className: 'field-pulse-container',
-                    html: `
-                        <div class="field-pulse"></div>
-                        <div class="field-marker">🌿</div>
-                    `,
-                    iconSize: [24, 24],
-                    iconAnchor: [12, 12]
-                });
-
-                const marker = L.marker([lat, lng], { icon: pulseIcon });
-                marker.bindPopup(`
-                    <div class="field-popup-premium">
-                        <div class="popup-tag">Live Field Obs</div>
-                        <h3>${data.species}</h3>
-                        <p><strong>Recorder:</strong> ${data.recorder}</p>
-                        <p><strong>Habitat:</strong> ${data.habitat || '-'}</p>
-                        <p><strong>Land Use:</strong> ${data.landuse || '-'}</p>
-                        <small>${timeStr}</small>
+    // ─── CUSTOM LEAFLET CONTROL: Field Filters ───
+    const FilterControl = L.Control.extend({
+        options: { position: 'topleft' },
+        onAdd: function() {
+            const div = L.DomUtil.create('div', 'leaflet-field-filters collapsible hidden');
+            div.id = 'map-field-filters';
+            div.innerHTML = `
+                <div class="map-filter-header" id="filter-toggle">
+                    <span class="filter-title"><i class="fas fa-filter"></i> Field Filters</span>
+                    <i class="fas fa-chevron-down toggle-icon"></i>
+                </div>
+                <div class="map-filter-content hidden" id="filter-content">
+                    <div class="map-filter-row">
+                        <div class="map-filter-group" style="flex:1.5">
+                            <label>Search</label>
+                            <input type="text" id="live-search" class="map-filter-input" placeholder="🔍 Find records...">
+                        </div>
+                        <div class="map-filter-group">
+                            <label>Species</label>
+                            <select id="live-filter-species" class="map-filter-select"><option value="all">All</option></select>
+                        </div>
+                        <div class="map-filter-group">
+                            <label>Habitat</label>
+                            <select id="live-filter-habitat" class="map-filter-select"><option value="all">All</option></select>
+                        </div>
+                        <div class="map-filter-group">
+                            <label>Recorder</label>
+                            <select id="live-filter-recorder" class="map-filter-select"><option value="all">All</option></select>
+                        </div>
+                        <div class="map-filter-group" style="flex:0.5; min-width: 120px;">
+                            <label>Export As</label>
+                            <select id="export-format" class="map-filter-select">
+                                <option value="csv">CSV (Excel)</option>
+                                <option value="geojson">GeoJSON (GIS)</option>
+                                <option value="kml">KML (G.Earth)</option>
+                            </select>
+                        </div>
+                        <div class="map-filter-group" style="flex:0.5; justify-content: flex-end; display: flex; gap: 8px;">
+                             <button id="btn-export-live-data" class="premium-export-btn"><i class="fas fa-file-export"></i> Export</button>
+                             <button id="btn-clear-live-filters" class="btn-clear-map-filters">Clear</button>
+                        </div>
                     </div>
-                `);
-
-                window.GisAppState.liveLayer.addLayer(marker);
-            });
+                </div>
+            `;
             
-            if (tbody) tbody.innerHTML = tableHTML;
-            console.log("Field Feed Update: " + snapshot.size + " live points mapped & tabulated.");
+            L.DomEvent.disableClickPropagation(div);
+            
+            // Add click listener for toggling
+            setTimeout(() => {
+                const header = div.querySelector('#filter-toggle');
+                const content = div.querySelector('#filter-content');
+                if (header && content) {
+                    header.onclick = (e) => {
+                        content.classList.toggle('hidden');
+                        div.classList.toggle('expanded');
+                        header.querySelector('.toggle-icon').classList.toggle('fa-chevron-up');
+                        header.querySelector('.toggle-icon').classList.toggle('fa-chevron-down');
+                    };
+                }
+                const exportBtn = div.querySelector('#btn-export-live-data');
+                if (exportBtn) exportBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    const format = div.querySelector('#export-format').value;
+                    exportLiveData(format);
+                };
+                const clearBtn = div.querySelector('#btn-clear-live-filters');
+                if (clearBtn) clearBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    clearLiveFilters();
+                };
+            }, 100);
+
+            return div;
+        }
+    });
+
+    window.GisAppState.mapFilterControl = new FilterControl();
+    map.addControl(window.GisAppState.mapFilterControl);
+
+    // ─── FIRESTORE SUBSCRIPTION: Wait for Auth ───
+    const waitAuth = window.GisAppState.authPromise || Promise.reject("Firebase not initialized");
+    
+    waitAuth.then(() => {
+        console.log("Firestore: Initiating sync...");
+        db.collection('observations').orderBy('timestamp', 'desc').limit(500)
+            .onSnapshot((snapshot) => {
+                console.log("Firestore Snapshot: " + snapshot.size + " records found.");
+                window.GisAppState.allLiveData = [];
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    data.lat = data.lat || data.latitude;
+                    data.lng = data.lng || data.longitude || data.lon;
+                    window.GisAppState.allLiveData.push(data);
+                });
+                
+                if (window.GisAppState.allLiveData.length === 0) {
+                    console.warn("Firestore: observations collection is empty.");
+                }
+
+                updateLiveFilterDropdowns();
+                applyLiveFilters();
+            }, (err) => {
+                console.error("Firestore Permission/Sync Error:", err.message);
+                const tbody = document.getElementById('field-data-body');
+                if (tbody) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="6" style="padding:40px; text-align:center;">
+                                <div style="color:#ff5252; margin-bottom:10px;"><i class="fas fa-lock" style="font-size:24px;"></i></div>
+                                <div style="font-weight:700; color:var(--text); margin-bottom:5px;">Access Denied</div>
+                                <div style="font-size:12px; color:var(--text-secondary); max-width:300px; margin:0 auto;">
+                                    ${err.message}. <br><br>
+                                    <span style="color:var(--premium-green); font-weight:600;">Action Required:</span><br>
+                                    Please ensure <b>Anonymous Auth</b> is enabled in your Firebase Console and Firestore rules allow public reads.
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }
+            });
+    }).catch(err => {
+        console.error("Firestore: Blocked by Auth failure.", err);
+        const tbody = document.getElementById('field-data-body');
+        if (tbody) tbody.innerHTML = `<tr><td colspan="6" style="color:#ff5252; text-align:center;">Auth Failure: ${err.message}</td></tr>`;
+    });
+
+    function updateLiveFilterDropdowns() {
+        const data = window.GisAppState.allLiveData;
+        const sets = { species: new Set(), habitat: new Set(), recorder: new Set() };
+        data.forEach(d => {
+            if (d.species) sets.species.add(d.species);
+            if (d.habitat) sets.habitat.add(d.habitat);
+            if (d.recorder) sets.recorder.add(d.recorder);
         });
+
+        Object.keys(sets).forEach(key => {
+            const select = document.getElementById(`live-filter-${key}`);
+            if (!select) return;
+            const currentVal = select.value;
+            select.innerHTML = `<option value="all">All ${key.charAt(0).toUpperCase() + key.slice(1)}s</option>` + 
+                Array.from(sets[key]).sort().map(v => `<option value="${v}">${v}</option>`).join('');
+            select.value = currentVal;
+        });
+    }
+
+    function applyLiveFilters() {
+        const filters = window.GisAppState.activeLiveFilters;
+        const filtered = window.GisAppState.allLiveData.filter(d => {
+            const matchSearch = !filters.search || 
+                (d.species?.toLowerCase().includes(filters.search) || 
+                 d.habitat?.toLowerCase().includes(filters.search) || 
+                 d.recorder?.toLowerCase().includes(filters.search));
+            const matchSpecies = filters.species === 'all' || d.species === filters.species;
+            const matchHabitat = filters.habitat === 'all' || d.habitat === filters.habitat;
+            const matchRecorder = filters.recorder === 'all' || d.recorder === filters.recorder;
+            return matchSearch && matchSpecies && matchHabitat && matchRecorder;
+        });
+
+        renderLiveMarkers(filtered);
+        renderLiveTable(filtered);
+        window.GisAppState.liveDataArray = filtered;
+    }
+
+    function renderLiveMarkers(data) {
+        if (!window.GisAppState.liveLayer) return;
+        window.GisAppState.liveLayer.clearLayers();
+
+        data.forEach(d => {
+            if (!d.lat || !d.lng) return;
+            const timeStr = d.timestamp ? new Date(d.timestamp).toLocaleString() : 'Unknown';
+            const pulseIcon = L.divIcon({
+                className: 'field-pulse-container',
+                html: `<div class="field-pulse"></div><div class="field-marker">🌿</div>`,
+                iconSize: [24, 24],
+                iconAnchor: [12, 12]
+            });
+
+            const marker = L.marker([d.lat, d.lng], { icon: pulseIcon });
+            marker.bindPopup(`
+                <div class="field-popup-premium">
+                    <div class="popup-tag">Live Field Obs</div>
+                    <h3>${d.species}</h3>
+                    <p><strong>Recorder:</strong> ${d.recorder}</p>
+                    <p><strong>Habitat:</strong> ${d.habitat || '-'}</p>
+                    <small>${timeStr}</small>
+                </div>
+            `);
+            window.GisAppState.liveLayer.addLayer(marker);
+        });
+    }
+
+    function renderLiveTable(data) {
+        const tbody = document.getElementById('field-data-body');
+        if (!tbody) return;
+        if (data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="padding: 15px; text-align: center; color: var(--text-muted);">No records match filters.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = data.map(d => {
+            const timeStr = d.timestamp ? new Date(d.timestamp).toLocaleString() : 'Unknown';
+            return `
+                <tr>
+                    <td style="padding: 10px; border-bottom: 1px solid var(--glass-border); text-align:center;">${timeStr}</td>
+                    <td style="padding: 10px; border-bottom: 1px solid var(--glass-border); font-weight:600; color: var(--premium-green); text-align:center;">${d.species || '-'}</td>
+                    <td style="padding: 10px; border-bottom: 1px solid var(--glass-border); text-align:center;">${d.habitat || '-'}</td>
+                    <td style="padding: 10px; border-bottom: 1px solid var(--glass-border); text-align:center;">${d.recorder || '-'}</td>
+                    <td style="padding: 10px; border-bottom: 1px solid var(--glass-border); color: #888; font-size:10px; text-align:center;">${d.lat ? d.lat.toFixed(6) : '-'}</td>
+                    <td style="padding: 10px; border-bottom: 1px solid var(--glass-border); color: #888; font-size:10px; text-align:center;">${d.lng ? d.lng.toFixed(6) : '-'}</td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    // ─── EVENT DELEGATION FOR MAP CONTROL ───
+    document.addEventListener('change', (e) => {
+        if (e.target.classList.contains('map-filter-select')) {
+            const key = e.target.id.replace('live-filter-', '');
+            window.GisAppState.activeLiveFilters[key] = e.target.value;
+            applyLiveFilters();
+        }
+    });
+
+    document.addEventListener('input', (e) => {
+        if (e.target.id === 'live-search') {
+            window.GisAppState.activeLiveFilters.search = e.target.value.toLowerCase();
+            applyLiveFilters();
+        }
+    });
+
+    function clearLiveFilters() {
+        window.GisAppState.activeLiveFilters = { search: '', species: 'all', habitat: 'all', landuse: 'all', condition: 'all', recorder: 'all' };
+        const searchInput = document.getElementById('live-search');
+        if (searchInput) searchInput.value = '';
+        ['species', 'habitat', 'recorder'].forEach(key => {
+            const select = document.getElementById(`live-filter-${key}`);
+            if (select) select.value = 'all';
+        });
+        applyLiveFilters();
+    }
+
+    // ─── MULTI-FORMAT EXPORT ENGINE ───
+    function exportLiveData(format) {
+        const data = window.GisAppState.liveDataArray || [];
+        if (data.length === 0) {
+            alert("No data available to export based on current filters.");
+            return;
+        }
+
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        const filename = `Hurungwe_Field_Data_${timestamp}`;
+
+        if (format === 'csv') {
+            exportToCSV(data, filename);
+        } else if (format === 'geojson') {
+            exportToGeoJSON(data, filename);
+        } else if (format === 'kml') {
+            exportToKML(data, filename);
+        }
+    }
+
+    function exportToCSV(data, filename) {
+        const headers = ["Timestamp", "Species", "Habitat", "Recorder", "Latitude", "Longitude", "LandUse", "Condition"];
+        const rows = data.map(d => [
+            new Date(d.timestamp).toLocaleString(),
+            d.species || '',
+            d.habitat || '',
+            d.recorder || '',
+            d.lat || '',
+            d.lng || '',
+            d.landuse || '',
+            d.condition || ''
+        ]);
+
+        // Excel-optimized CSV: Use BOM and semicolon/comma handling
+        let csvContent = "\ufeff"; // BOM for Excel
+        csvContent += "sep=,\n"; // Explicit separator instruction for Excel
+        csvContent += headers.join(",") + "\n";
+        
+        rows.forEach(row => {
+            const rowStr = row.map(val => {
+                const str = String(val).replace(/"/g, '""');
+                return str.includes(',') ? `"${str}"` : str;
+            }).join(",");
+            csvContent += rowStr + "\n";
+        });
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        downloadBlob(blob, `${filename}.csv`);
+    }
+
+    function exportToGeoJSON(data, filename) {
+        const geojson = {
+            type: "FeatureCollection",
+            features: data.map(d => ({
+                type: "Feature",
+                geometry: {
+                    type: "Point",
+                    coordinates: [d.lng, d.lat]
+                },
+                properties: {
+                    species: d.species,
+                    habitat: d.habitat,
+                    recorder: d.recorder,
+                    timestamp: d.timestamp,
+                    landuse: d.landuse,
+                    condition: d.condition
+                }
+            }))
+        };
+        const blob = new Blob([JSON.stringify(geojson, null, 2)], { type: 'application/json' });
+        downloadBlob(blob, `${filename}.geojson`);
+    }
+
+    function exportToKML(data, filename) {
+        let kml = `<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>Hurungwe Field Data</name>`;
+
+        data.forEach(d => {
+            kml += `
+    <Placemark>
+      <name>${d.species || 'Observation'}</name>
+      <description>Recorder: ${d.recorder}\nHabitat: ${d.habitat}</description>
+      <Point>
+        <coordinates>${d.lng},${d.lat},0</coordinates>
+      </Point>
+    </Placemark>`;
+        });
+
+        kml += `
+  </Document>
+</kml>`;
+        const blob = new Blob([kml], { type: 'application/vnd.google-earth.kml+xml' });
+        downloadBlob(blob, `${filename}.kml`);
+    }
+
+    function downloadBlob(blob, filename) {
+        const link = document.createElement("a");
+        if (link.download !== undefined) {
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", filename);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    }
+
+    document.addEventListener('click', (e) => {
+        if (e.target.id === 'btn-clear-live-filters') {
+            window.GisAppState.activeLiveFilters = { search: '', species: 'all', habitat: 'all', landuse: 'all', condition: 'all', recorder: 'all' };
+            ['species', 'habitat', 'recorder'].forEach(k => {
+                const el = document.getElementById(`live-filter-${k}`);
+                if (el) el.value = 'all';
+            });
+            const search = document.getElementById('live-search');
+            if (search) search.value = '';
+            applyLiveFilters();
+        }
+    });
 
     // Handle CSV Download
     const downloadBtn = document.getElementById('btn-download-csv');
     if (downloadBtn) {
         downloadBtn.addEventListener('click', () => {
             const data = window.GisAppState.liveDataArray;
-            if (!data || data.length === 0) {
-                alert("No data available to download.");
-                return;
-            }
-            let csvContent = "data:text/csv;charset=utf-8,Date,Species,Habitat,Land Use,Condition,Latitude,Longitude,Recorder\\n";
+            if (!data || data.length === 0) { alert("No data to download."); return; }
+            let csvContent = "data:text/csv;charset=utf-8,Date,Species,Habitat,Latitude,Longitude,Recorder\\n";
             data.forEach(d => {
-                const row = [
-                    d.timestamp || '',
-                    `"${d.species || ''}"`,
-                    `"${d.habitat || ''}"`,
-                    `"${d.landuse || ''}"`,
-                    `"${d.condition || ''}"`,
-                    d.lat || '',
-                    d.lon || d.lng || '',
-                    `"${d.recorder || ''}"`
-                ];
+                const row = [d.timestamp || '', `"${d.species || ''}"`, `"${d.habitat || ''}"`, d.lat || '', d.lng || '', `"${d.recorder || ''}"`];
                 csvContent += row.join(",") + "\\n";
             });
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", "hurungwe_field_data_export.csv");
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            window.open(encodeURI(csvContent));
         });
     }
 }
