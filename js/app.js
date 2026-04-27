@@ -128,6 +128,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             populateSortedDates();
             populateFilterDropdowns();
             updateStats();
+            updateCharts(); // Added explicit refresh after heavy data load
             renderHabitatProgress();
             renderActivityLog();
             initTimeSlider();

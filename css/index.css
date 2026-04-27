@@ -16,11 +16,13 @@
     --glow: rgba(45, 106, 79, 0.1);
     
     --sidebar-width: 320px;
+    --header-height: 72px; /* Restored missing variable */
     --radius-lg: 24px;
     --radius-md: 16px;
     
     --shadow-soft: 0 4px 20px rgba(0,0,0,0.05);
     --transition-premium: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    --accent-hover: #1B4332; /* Restored missing variable */
 }
 
 /* Premium Dark Mode Override */
@@ -601,11 +603,13 @@ body.dark-mode .nav-item:hover {
 .content-grid {
     flex: 1;
     display: grid;
-    grid-template-columns: 1fr 340px;
-    gap: 20px;
-    padding: 20px;
-    height: calc(100vh - 20px);
+    grid-template-columns: 1fr 360px; /* Slight increase for professional spacing */
+    gap: 24px;
+    padding: 24px;
+    height: calc(100vh - var(--header-height));
     overflow: hidden;
+    position: relative;
+    width: 100%;
 }
 
 @media (max-width: 1024px) {
