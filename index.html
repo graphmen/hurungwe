@@ -61,14 +61,17 @@
                 
                 <div style="margin-top:20px; font-size:10px; color:var(--text-muted); font-weight:800; padding:0 18px; text-transform:uppercase; letter-spacing:0.1em;">Spatiotemporal Analysis</div>
                 
-                <a href="#" class="nav-item" id="nav-trends">
-                    <i class="fas fa-history"></i> <span class="nav-item-text">Growth Trends</span>
-                </a>
-                <a href="#" class="nav-item" id="nav-habitat">
-                    <i class="fas fa-microscope"></i> <span class="nav-item-text">Habitat Metrics</span>
+                <a href="#" class="nav-item" id="nav-predictive">
+                    <i class="fas fa-microscope"></i> <span class="nav-item-text">Suitability Analysis</span>
                 </a>
                 <a href="#" class="nav-item" id="nav-vulnerability">
                     <i class="fas fa-cloud-sun-rain"></i> <span class="nav-item-text">Future-Cast</span>
+                </a>
+                <a href="#" class="nav-item" id="nav-trends">
+                    <i class="fas fa-history"></i> <span class="nav-item-text">Historical Trends</span>
+                </a>
+                <a href="#" class="nav-item" id="nav-habitat">
+                    <i class="fas fa-map-marked-alt"></i> <span class="nav-item-text">Habitat Metrics</span>
                 </a>
 
                 <div style="margin-top:20px; font-size:10px; color:var(--text-muted); font-weight:800; padding:0 18px; text-transform:uppercase; letter-spacing:0.1em;">Ecological Layers</div>
@@ -209,25 +212,6 @@
                             <button id="btn-run-simulation" class="btn-primary" style="width:100%; font-size: 12px;">Generate Forecast</button>
                         </div>
 
-                        <div class="analytics-card" style="margin-top: 15px;">
-                            <h3>Model Reliability</h3>
-                            <div id="chart-auc-kappa" style="height: 180px;"></div>
-                        </div>
-
-                        <div class="analytics-card" style="margin-top: 15px;">
-                            <h3>Variable Influence Matrix (VIF Cleansed)</h3>
-                            <div id="chart-importance" style="height: 450px;"></div>
-                        </div>
-
-                        <div class="analytics-card wide" style="margin-top: 15px;">
-                            <h3>Site Suitability Report</h3>
-                            <div id="prediction-report-empty" class="empty-state">
-                                <p style="font-size: 11px;">Click map for prediction.</p>
-                            </div>
-                            <div id="prediction-report-active" class="hidden">
-                                <div id="prediction-results" class="mini-grid"></div>
-                            </div>
-                        </div>
                     </div>
 
                     <!-- PANEL: Climate Future-Cast -->
@@ -254,6 +238,42 @@
                         <div id="vulnerability-insight-banner" class="insight-card hidden">
                             <div class="insight-header">Vulnerability Insight</div>
                             <div id="vulnerability-text" class="insight-body">Analyzing climate shifts...</div>
+                        </div>
+
+                    </div>
+
+                    <!-- PANEL: Habitat Metrics (Integrated into Dock) -->
+                    <div id="panel-habitat" class="content-panel hidden">
+                        <div class="analytics-card">
+                            <h3><span style="font-size:16px;">🌿</span> Habitat Suitability Metrics</h3>
+                            <p class="card-subtitle">Identifying optimal ecological niches</p>
+                            
+                            <div style="margin-top: 20px; display: flex; flex-direction: column; gap: 12px;">
+                                <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Reference Layer</label>
+                                <select id="panel-sdm-species-select" class="header-select" style="width: 100%;">
+                                    <option value="species_suitability_grid">All Species Composite</option>
+                                    <option value="Acacia_Galpinii_suitability">Acacia Galpinii</option>
+                                    <option value="Acacia_Polycantha_suitability">Acacia Polycantha</option>
+                                    <option value="Acacia_Siebriana_suitability">Acacia Siebriana</option>
+                                    <option value="Fidebhia_Abida_suitability">Faidebhia Albida</option>
+                                    <option value="Kigelia_Africana_suitability">Kigelia Africana</option>
+                                    <option value="Munyii_Bechemia_discolor_suitability">Munyii / Bechemia discolor</option>
+                                    <option value="Pilostigma_Thonigilii_Monkey_Bread_suitability">Pilostigma Thonigilii</option>
+                                    <option value="Red_Mahogany_suitability">Red Mahogany</option>
+                                    <option value="Trichilia_Emetica_suitability">Trichilia Emetica</option>
+                                    <option value="Waterberry_suitability">Waterberry</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="analytics-card report-container" style="margin-top: 15px;">
+                            <h3>Spatial Suitability Inspector</h3>
+                            <div class="prediction-report-empty empty-state">
+                                <p style="font-size: 11px;">Click map for prediction.</p>
+                            </div>
+                            <div class="prediction-report-active hidden">
+                                <div class="prediction-results mini-grid"></div>
+                            </div>
                         </div>
                     </div>
 
@@ -445,7 +465,7 @@
             </div>
 
             <!-- View: Habitat Health (SDM) -->
-            <div id="view-habitat" class="view-section" style="display: none; padding: 24px;">
+            <div id="view-habitat" class="view-section" style="display: none;">
                 <div class="glass-card">
                     <h2 style="margin-bottom: 12px; color: var(--accent);">Habitat Suitability Analysis</h2>
                     <p style="color: var(--text-secondary); margin-bottom: 24px;">
@@ -475,19 +495,45 @@
                                     <option value="Trichilia_Emetica_suitability">Trichilia Emetica</option>
                                     <option value="Waterberry_suitability">Waterberry</option>
                                 </select>
-                                <button id="btn-download-sdm" class="btn-primary" style="width: 100%; padding: 10px;">
+                                <button id="btn-download-sdm" class="btn-primary" style="width: 100%; padding: 12px; margin-top: 10px; font-weight: 600;">
                                     📥 Export Research Raster
                                 </button>
                             </div>
 
-                            <h3>Ecological Insights</h3>
-                            <div id="sdm-insights-content">
-                                <div class="empty-state">
-                                    <p>Select a species to view detailed ecological drivers and strategic forecasts.</p>
+                            <div style="margin-top: 25px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
+                                <h3 style="margin-bottom: 15px; color: var(--premium-green); font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Ecological Insights</h3>
+                                <div id="sdm-insights-content">
+                                    <div class="insight-block">
+                                        <h4>📈 Model Reliability</h4>
+                                        <p id="sdm-reliability-stats" style="font-size: 13px; font-weight: 600; color: var(--text-primary);">AUC: 0.945 | Kappa: 0.860</p>
+                                    </div>
+                                    <div class="insight-block" style="margin-top: 15px;">
+                                        <h4>🌿 Ecological Discussion</h4>
+                                        <p id="sdm-discussion-text" style="font-size: 12px; color: var(--text-muted); line-height: 1.6;">Unified ecosystem model capturing core habitat envelopes for general indigenous reintroduction. Identifies primary zones where multiple species overlap and provides a strategic high-level map for catchment-wide forest resilience.</p>
+                                    </div>
+                                    <div class="insight-block" style="margin-top: 15px;">
+                                        <h4>⚡ Strategic Outlook</h4>
+                                        <p id="sdm-outlook-text" style="font-size: 12px; color: var(--text-muted); line-height: 1.6;">Focus on central corridors and major drainage basins for the highest success rate in mixed-species woodland restoration. Strategic planting in these hotspots will maximize biodiversity connectivity.</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
+
+                    <div style="margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
+                        <h3 style="margin-bottom: 15px; color: var(--premium-green);">Model Performance & Validation</h3>
+                        <div class="performance-grid" style="display: grid; grid-template-columns: 1fr 2fr; gap: 20px;">
+                            <div class="glass-card" style="background: rgba(255,255,255,0.03); padding: 20px;">
+                                <h4 style="font-size: 12px; margin-bottom: 12px; color: var(--text-muted); text-transform: uppercase;">Reliability Metrics</h4>
+                                <div id="sdm-report-auc-kappa" style="height: 250px;"></div>
+                            </div>
+                            <div class="glass-card" style="background: rgba(255,255,255,0.03); padding: 20px;">
+                                <h4 style="font-size: 12px; margin-bottom: 12px; color: var(--text-muted); text-transform: uppercase;">Variable Influence Matrix</h4>
+                                <div id="sdm-report-importance" style="height: 250px;"></div>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
 

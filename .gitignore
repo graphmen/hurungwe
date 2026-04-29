@@ -4,3 +4,8 @@ node_modules/
 gee_key.json
 __pycache__/
 *.pyc
+scratch/
+.vercel/
+*.png
+*.jpg
+!data/models/*.png

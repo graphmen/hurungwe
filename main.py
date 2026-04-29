@@ -21,6 +21,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get("/api/status")
+async def get_status():
+    return {"status": "online", "engine": "Hurungwe Python GEE Engine", "version": "1.0.0"}
+
 # ─────────────────────────────────────────────
 # 1. GEE INITIALIZATION
 # ─────────────────────────────────────────────
@@ -211,6 +215,36 @@ async def get_vulnerability(scenario: str = "ssp585", period: str = "2050"):
                 "scenario": scenario.upper()
             }
         }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/inspect-climate")
+async def get_inspect_climate(lat: float, lon: float, scenario: str = "ssp585"):
+    try:
+        roi = get_roi()
+        point = ee.Geometry.Point([lon, lat])
+        
+        # Baseline
+        baseline = ee.ImageCollection("NASA/GDDP-CMIP6") \
+            .filterDate('1985-01-01', '2014-12-31') \
+            .select(['tas']) \
+            .mean()
+            
+        # Future
+        future = ee.ImageCollection("NASA/GDDP-CMIP6") \
+            .filter(ee.Filter.eq('scenario', scenario)) \
+            .filter(ee.Filter.eq('model', 'ACCESS-CM2')) \
+            .filterDate('2045-01-01', '2055-12-31') \
+            .mean()
+            
+        delta = future.subtract(baseline).reduceRegion(
+            reducer=ee.Reducer.mean(),
+            geometry=point,
+            scale=1000
+        ).getInfo()
+        
+        val = round(next(iter(delta.values()), 0), 2) if delta else 2.5
+        return {"success": True, "delta": val}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

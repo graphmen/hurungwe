@@ -391,8 +391,8 @@ function switchView(viewId) {
     console.log("Navigating to view:", viewId);
     const dashboardView = document.getElementById('view-dashboard');
     const dashboardResidentIds = [
-        'nav-dashboard', 'nav-gis', 'nav-predictive', 'nav-terrain', 'nav-policy', 
-        'nav-ndvi', 'nav-carbon', 'nav-vulnerability', 'nav-landcover', 'nav-heat', 'nav-data'
+        'nav-dashboard', 'nav-gis', 'nav-terrain', 'nav-policy', 
+        'nav-ndvi', 'nav-carbon', 'nav-vulnerability', 'nav-landcover', 'nav-heat', 'nav-data', 'nav-habitat'
     ];
 
     if (dashboardResidentIds.includes(viewId)) {
@@ -414,11 +414,22 @@ function switchView(viewId) {
 
         let targetPanel = 'panel-dashboard';
         if (viewId === 'nav-predictive') targetPanel = 'panel-predictive';
+        if (viewId === 'nav-vulnerability') targetPanel = 'panel-vulnerability';
+        if (viewId === 'nav-habitat') targetPanel = 'panel-habitat';
+        if (viewId === 'nav-ndvi') targetPanel = 'panel-ndvi';
+        if (viewId === 'nav-carbon') targetPanel = 'panel-carbon';
+        if (viewId === 'nav-landcover') targetPanel = 'panel-landcover';
         if (viewId === 'nav-policy') targetPanel = 'panel-policy';
         if (viewId === 'nav-data') targetPanel = 'panel-data';
         
         switchPanel(targetPanel);
         if (viewId === 'nav-policy') populatePolicyPanel();
+
+        // Ensure predictive mode is enabled for analytical panels
+        if (['panel-predictive', 'panel-vulnerability', 'panel-habitat'].includes(targetPanel)) {
+            window.GisAppState.isPredictiveMode = true;
+            if (map) map.getContainer().style.cursor = 'crosshair';
+        }
 
         // Restore markers for Dashboard/GIS views
         if (map && markerCluster) {
@@ -453,9 +464,12 @@ function switchView(viewId) {
     if (viewId === 'nav-export') {
         const exportView = document.getElementById('view-export');
         if (exportView) exportView.style.display = 'block';
-    } else if (viewId === 'nav-habitat') {
+    } else if (viewId === 'nav-predictive') {
         const habitatView = document.getElementById('view-habitat');
         if (habitatView) habitatView.style.display = 'block';
+        window.GisAppState.isPredictiveMode = false;
+        if (map) map.getContainer().style.cursor = '';
+        setTimeout(() => initSDMCharts(), 100);
     } else if (viewId === 'nav-trends') {
         const trendsView = document.getElementById('view-trends');
         if (trendsView) trendsView.style.display = 'block';
@@ -523,7 +537,7 @@ function switchPanel(panelId) {
     const debugBox = document.getElementById('gis-debug-state');
     if (debugBox) debugBox.style.display = 'block';
 
-    const allPanels = ['panel-dashboard', 'panel-predictive', 'panel-ndvi', 'panel-carbon', 'panel-landcover', 'panel-vulnerability', 'panel-policy', 'panel-data'];
+    const allPanels = ['panel-dashboard', 'panel-predictive', 'panel-ndvi', 'panel-carbon', 'panel-landcover', 'panel-vulnerability', 'panel-policy', 'panel-data', 'panel-habitat'];
     allPanels.forEach(id => {
         const el = document.getElementById(id);
         if (el) {
@@ -574,6 +588,20 @@ function switchPanel(panelId) {
         if (debugVal) debugVal.innerText = 'LULC QUERY';
         window.GisAppState.isPredictiveMode = false;
         clearMapLegend();
+    } else if (panelId === 'panel-vulnerability') {
+        if (viewTitle) viewTitle.innerText = '🌎 Climate Future-Cast Analysis';
+        if (debugVal) debugVal.innerText = 'FUTURE-CAST';
+        window.GisAppState.isPredictiveMode = false;
+        window.GisAppState.isIdentifyMode = false;
+        clearMapLegend(); 
+        if (map) map.getContainer().style.cursor = '';
+    } else if (panelId === 'panel-habitat') {
+        if (viewTitle) viewTitle.innerText = '🌿 Habitat Suitability Metrics';
+        if (debugVal) debugVal.innerText = 'HABITAT';
+        window.GisAppState.isPredictiveMode = true;
+        window.GisAppState.isIdentifyMode = false;
+        clearMapLegend(); 
+        if (map) map.getContainer().style.cursor = 'crosshair';
     } else if (panelId === 'panel-data') {
         if (viewTitle) viewTitle.innerText = '📊 Live Field Data Integrator';
         if (debugVal) debugVal.innerText = 'LIVE DATA';
@@ -642,12 +670,16 @@ function initMap() {
     map.addLayer(markerCluster);
 
     map.on('click', (e) => {
+        // 1. Suitability Inspection (Predictive Mode)
         if (window.GisAppState.isPredictiveMode) {
             const selectIcon = L.divIcon({ html: '🎯', className: 'select-icon', iconSize: [24, 24], iconAnchor: [12, 12] });
             const selMarker = L.marker(e.latlng, { icon: selectIcon }).addTo(map);
             setTimeout(() => { if (map) map.removeLayer(selMarker); }, 3000);
             predictAtLocation(e.latlng.lat, e.latlng.lng);
-        } else if (window.GisAppState.isClimateMode) {
+        }
+        
+        // 2. Climate Inspection (Climate Mode)
+        if (window.GisAppState.isClimateMode) {
             const selectIcon = L.divIcon({ html: '🔍', className: 'select-icon', iconSize: [24, 24], iconAnchor: [12, 12] });
             const selMarker = L.marker(e.latlng, { icon: selectIcon }).addTo(map);
             setTimeout(() => { if (map) map.removeLayer(selMarker); }, 3000);
@@ -785,34 +817,48 @@ function initTerrainChart() {
 }
 
 function updateCharts() {
-    if (donutChart) {
+    if (!filteredData || filteredData.length === 0) return;
+
+    // 1. Species Donut
+    if (!donutChart) {
+        initCharts();
+        // initCharts calls initTerrainChart internally.
+        // We return here because initCharts does a full render.
+        return;
+    } else {
         const sc = countBy(filteredData, 'species');
         const srt = Object.entries(sc).sort((a, b) => b[1] - a[1]).slice(0, 6);
-        donutChart.updateOptions({ series: srt.map(s => s[1]), labels: srt.map(s => shortenLabel(s[0])) });
+        donutChart.updateOptions({ 
+            series: srt.map(s => s[1]), 
+            labels: srt.map(s => shortenLabel(s[0])) 
+        });
     }
 
-    if (terrainChart) {
-        const tc = countBy(filteredData.filter(d => d.terrain), 'terrain');
+    // 2. Terrain Linkage
+    if (!terrainChart) {
+        initTerrainChart();
+    } else {
+        const tc = countBy(filteredData.filter(d => d.terrain && d.terrain !== 'None'), 'terrain');
         const terrains = Object.entries(tc).sort((a, b) => b[1] - a[1]).slice(0, 5).map(s => s[0]);
         
-        const sc = countBy(filteredData, 'species');
-        const topSpecies = Object.entries(sc).sort((a, b) => b[1] - a[1]).slice(0, 5).map(s => s[0]);
+        if (terrains.length > 0) {
+            const sc = countBy(filteredData, 'species');
+            const topSpecies = Object.entries(sc).sort((a, b) => b[1] - a[1]).slice(0, 5).map(s => s[0]);
 
-        const series = topSpecies.map(sp => {
-            return {
+            const series = topSpecies.map(sp => ({
                 name: shortenLabel(sp),
                 data: terrains.map(t => filteredData.filter(d => d.terrain === t && d.species === sp).length)
-            };
-        });
-        series.push({
-            name: 'Other Species',
-            data: terrains.map(t => filteredData.filter(d => d.terrain === t && !topSpecies.includes(d.species)).length)
-        });
+            }));
+            series.push({
+                name: 'Other Species',
+                data: terrains.map(t => filteredData.filter(d => d.terrain === t && !topSpecies.includes(d.species)).length)
+            });
 
-        terrainChart.updateOptions({
-            series: series,
-            xaxis: { categories: terrains }
-        });
+            terrainChart.updateOptions({ 
+                series: series, 
+                xaxis: { categories: terrains } 
+            });
+        }
     }
 }
 
@@ -873,89 +919,75 @@ function initSDMCharts() {
     const r = window.GisAppState.researchResults;
     if (!r) return;
 
-    // 1. Reliability (AUC & Kappa)
-    const aucEl = document.querySelector("#chart-auc-kappa");
-    if (aucEl) {
+    // 1. Reliability (AUC & Kappa) - Support both Dashboard and Report IDs
+    const aucContainers = document.querySelectorAll("#chart-auc-kappa, #sdm-report-auc-kappa");
+    aucContainers.forEach(container => {
         const sNames = Object.keys(r.species_metrics);
         const aVals = sNames.map(s => r.species_metrics[s].auc);
         const kVals = sNames.map(s => r.species_metrics[s].kappa);
 
-        if (window.GisAppState.sdmCharts.auc) window.GisAppState.sdmCharts.auc.destroy();
-        window.GisAppState.sdmCharts.auc = new ApexCharts(aucEl, {
+        const chart = new ApexCharts(container, {
             series: [
                 { name: 'AUC (Reliability)', data: aVals },
                 { name: 'Kappa (Agreement)', data: kVals }
             ],
-            chart: { height: 220, type: 'bar', toolbar: { show: false }, foreColor: '#1A1A1A' },
-            colors: ['#006D4E', '#3498DB'],
+            chart: { height: container.id.includes('report') ? 250 : 220, type: 'bar', toolbar: { show: false }, foreColor: 'inherit' },
+            colors: ['#10B981', '#3B82F6'],
             plotOptions: { bar: { horizontal: false, columnWidth: '55%', borderRadius: 4 } },
             legend: { position: 'top', fontWeight: 600 },
             xaxis: { categories: sNames.map(s => s.split(' ')[0]) },
             yaxis: { max: 1.0 },
             dataLabels: { enabled: false }
         });
-        window.GisAppState.sdmCharts.auc.render();
-    }
+        chart.render();
+    });
 
-    // 2. Variable Influence Heatmap (Premium Visualization)
-    const impEl = document.querySelector("#chart-importance");
+    // 2. Variable Influence Heatmap - Support both Dashboard and Report IDs
+    const impContainers = document.querySelectorAll("#chart-importance, #sdm-report-importance");
     const vImp = window.GisAppState.variableImportance;
-    if (impEl && vImp) {
-        // Transform grid data for ApexCharts Heatmap
-        // Series should be an array of { name: species, data: [{ x: var, y: value }, ...] }
-        const series = vImp.species.map(sp => {
-            return {
-                name: sp,
-                data: vImp.variables.map(v => {
-                    const match = vImp.grid.find(g => g.species === sp && g.variable === v);
-                    return {
-                        x: v,
-                        y: match ? match.importance : 0
-                    };
-                })
-            };
-        });
+    if (vImp) {
+        const series = vImp.species.map(sp => ({
+            name: sp,
+            data: vImp.variables.map(v => {
+                const match = vImp.grid.find(g => g.species === sp && g.variable === v);
+                return { x: v, y: match ? match.importance : 0 };
+            })
+        }));
 
-        if (window.GisAppState.sdmCharts.importance) window.GisAppState.sdmCharts.importance.destroy();
-        window.GisAppState.sdmCharts.importance = new ApexCharts(impEl, {
-            series: series,
-            chart: {
-                height: 450,
-                type: 'heatmap',
-                toolbar: { show: false },
-                animations: { enabled: true }
-            },
-            dataLabels: { enabled: false },
-            colors: ["#2d6a4f"], // Base color for the scale
-            plotOptions: {
-                heatmap: {
-                    shadeIntensity: 0.5,
-                    radius: 2,
-                    useFillColorAsStroke: true,
-                    colorScale: {
-                        ranges: [
-                            { from: 0, to: 5, name: 'Low', color: '#f7fbff' },
-                            { from: 5, to: 10, name: 'Moderate', color: '#c6dbef' },
-                            { from: 10, to: 15, name: 'High', color: '#6baed6' },
-                            { from: 15, to: 25, name: 'Very High', color: '#2171b5' },
-                            { from: 25, to: 100, name: 'Critical Driver', color: '#08306b' }
-                        ]
+        impContainers.forEach(container => {
+            const chart = new ApexCharts(container, {
+                series: series,
+                chart: {
+                    height: container.id.includes('report') ? 250 : 450,
+                    type: 'heatmap',
+                    toolbar: { show: false },
+                    animations: { enabled: true }
+                },
+                dataLabels: { enabled: false },
+                colors: ["#10B981"],
+                plotOptions: {
+                    heatmap: {
+                        shadeIntensity: 0.8,
+                        radius: 4,
+                        useFillColorAsStroke: false,
+                        colorScale: {
+                            ranges: [
+                                { from: 0, to: 2, name: 'Baseline', color: '#F0F9FF' },
+                                { from: 2, to: 5, name: 'Low', color: '#BAE6FD' },
+                                { from: 5, to: 10, name: 'Moderate', color: '#7DD3FC' },
+                                { from: 10, to: 15, name: 'High', color: '#38BDF8' },
+                                { from: 15, to: 25, name: 'Significant', color: '#0EA5E9' },
+                                { from: 25, to: 100, name: 'Primary Driver', color: '#0369A1' }
+                            ]
+                        }
                     }
-                }
-            },
-            xaxis: {
-                type: 'category',
-                labels: { rotate: -45, offsetHeight: 10, style: { fontSize: '10px', fontWeight: 600 } }
-            },
-            yaxis: {
-                labels: { style: { fontSize: '10px', fontWeight: 600 } }
-            },
-            tooltip: {
-                theme: 'dark',
-                y: { formatter: (val) => `${val}% Contribution` }
-            }
+                },
+                xaxis: { type: 'category', labels: { show: true, style: { fontSize: '10px', fontWeight: 600 } } },
+                yaxis: { labels: { show: true, style: { fontSize: '10px', fontWeight: 600 } } },
+                tooltip: { theme: 'dark', y: { formatter: (val) => `${val}% Contribution` } }
+            });
+            chart.render();
         });
-        window.GisAppState.sdmCharts.importance.render();
     }
 }
 
@@ -969,32 +1001,78 @@ function predictAtLocation(lat, lon) {
 }
 
 function renderPredictionResults(results) {
-    const grid = document.getElementById('prediction-results');
-    const active = document.getElementById('prediction-report-active');
-    const empty = document.getElementById('prediction-report-empty');
-    if (empty) empty.classList.add('hidden');
-    if (active) active.classList.remove('hidden');
+    const grids = document.querySelectorAll('.prediction-results');
+    const actives = document.querySelectorAll('.prediction-report-active');
+    const empties = document.querySelectorAll('.prediction-report-empty');
+    
+    empties.forEach(el => el.classList.add('hidden'));
+    actives.forEach(el => el.classList.remove('hidden'));
 
+    // Sort by score descending
     results.sort((a, b) => b.score - a.score);
-    if (grid) {
-        grid.innerHTML = results.map(r => {
-            let color = '#C0392B'; // Default Red
-            if (r.score >= 0.75) color = '#2D6A4F'; // Deep Green
-            else if (r.score >= 0.5) color = '#3498DB'; // Azure Blue
-            else if (r.score >= 0.25) color = '#F39C12'; // Vibrant Orange
+    
+    const vImp = window.GisAppState.variableImportance;
 
-            const pct = (r.score * 100).toFixed(1);
-            return `
-                <div class="prediction-item">
-                    <h4>${r.species}</h4>
-                    <div class="suitability-bar-container">
-                        <div class="suitability-bar-fill" style="width: ${pct}%; background: ${color}"></div>
+    const html = results.map(r => {
+        let status = 'Unsuitable';
+        let color = '#E74C3C'; // Red
+        
+        if (r.score >= 0.75) {
+            status = 'Optimal Match';
+            color = '#2D6A4F'; // Deep Green
+        } else if (r.score >= 0.5) {
+            status = 'Favorable';
+            color = '#52B788'; // Sage Green
+        } else if (r.score >= 0.25) {
+            status = 'Marginal';
+            color = '#F39C12'; // Orange
+        }
+
+        const pct = (r.score * 100).toFixed(1);
+        let driversHtml = '';
+        
+        if (vImp && vImp.grid) {
+            const speciesDrivers = vImp.grid
+                .filter(g => g.species === r.species)
+                .sort((a, b) => b.importance - a.importance)
+                .slice(0, 3);
+            
+            if (speciesDrivers.length > 0) {
+                driversHtml = `
+                    <div class="drivers-container">
+                        <span class="drivers-label">Primary Ecological Drivers:</span>
+                        <div class="drivers-list">
+                            ${speciesDrivers.map(d => `<span class="driver-tag" title="${d.importance.toFixed(1)}% influence">${d.variable}</span>`).join('')}
+                        </div>
                     </div>
-                    <small style="color:${color}; font-weight:600;">${pct}% Match</small>
+                `;
+            }
+        }
+
+        return `
+            <div class="prediction-item premium-card animate-premium">
+                <div class="prediction-header">
+                    <div class="species-info">
+                        <h4>${r.species}</h4>
+                        <span class="suitability-status" style="color: ${color}">${status}</span>
+                    </div>
+                    <div class="score-pill" style="background: ${color}15; color: ${color}; border: 1px solid ${color}30">
+                        ${pct}%
+                    </div>
                 </div>
-            `;
-        }).join('');
-    }
+                <div class="suitability-bar-container">
+                    <div class="suitability-bar-fill" style="width: ${pct}%; background: linear-gradient(90deg, ${color}, ${color}CC)"></div>
+                </div>
+                ${driversHtml}
+            </div>
+        `;
+    }).join('');
+
+    grids.forEach(el => {
+        el.innerHTML = html;
+        // Trigger reflow for animations
+        el.offsetHeight; 
+    });
 }
 
 
@@ -1156,6 +1234,17 @@ async function runNdviQuery() {
 
         // Fetch Tile URL from Vercel Serverless Backend
         const response = await fetch(`/api/ndvi?start=${startStr}&end=${endStr}`);
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            try {
+                const errorJson = JSON.parse(errorText);
+                throw new Error(errorJson.detail || errorJson.error || "Server Error");
+            } catch(e) {
+                throw new Error(`Server returned HTML instead of JSON. Ensure the Python backend is running.`);
+            }
+        }
+
         const data = await response.json();
         
         // Discard payload if the user has navigated away or requested a different layer
@@ -1250,6 +1339,17 @@ async function runCarbonQuery() {
         }
 
         const response = await fetch(`/api/carbon?start=${startStr}&end=${endStr}`);
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            try {
+                const errorJson = JSON.parse(errorText);
+                throw new Error(errorJson.detail || errorJson.error || "Server Error");
+            } catch(e) {
+                throw new Error(`Server returned HTML instead of JSON. Ensure the Python backend is running.`);
+            }
+        }
+
         const data = await response.json();
         
         // Discard if user actively clicked another analysis layer
@@ -1350,6 +1450,17 @@ async function runLandCoverQuery() {
         if (metaLeg) metaLeg.innerHTML = `Source: ESA WorldCover<br>Baseline: ${startStr} to ${endStr}`;
 
         const response = await fetch(`/api/landcover?start=${startStr}&end=${endStr}`);
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            try {
+                const errorJson = JSON.parse(errorText);
+                throw new Error(errorJson.detail || errorJson.error || "Server Error");
+            } catch(e) {
+                throw new Error(`Server returned HTML instead of JSON. Ensure the Python backend is running.`);
+            }
+        }
+
         const data = await response.json();
 
         if (window.GisAppState.activeLayerToken !== currentToken) return;
@@ -1447,22 +1558,6 @@ function bindEventListeners() {
                 } else if (id === 'nav-heat') {
                     clearAllModes(true);
                     toggleHeatmap();
-                } else if (id === 'nav-ndvi') {
-                    clearAllModes();
-                    switchView('nav-dashboard');
-                    switchPanel('panel-ndvi');
-                } else if (id === 'nav-carbon') {
-                    clearAllModes();
-                    switchView('nav-dashboard');
-                    switchPanel('panel-carbon');
-                } else if (id === 'nav-vulnerability') {
-                    clearAllModes();
-                    switchView('nav-dashboard');
-                    switchPanel('panel-vulnerability');
-                } else if (id === 'nav-landcover') {
-                    clearAllModes();
-                    switchView('nav-dashboard');
-                    switchPanel('panel-landcover');
                 } else {
                     clearAllModes();
                     switchView(id);
@@ -1609,27 +1704,19 @@ const SPECIES_INSIGHTS = {
 
 function updateSdmInsights(speciesId) {
     const data = SPECIES_INSIGHTS[speciesId];
-    const container = document.getElementById('sdm-insights-content');
-    if (!data || !container) return;
+    if (!data) return;
 
-    container.innerHTML = `
-        <div class="insight-block">
-            <h4 style="margin-top: 5px;">📈 Model Reliability</h4>
-            <p>AUC: <strong>${data.auc}</strong> | Kappa: <strong>${data.kappa}</strong></p>
-        </div>
-        <div class="insight-block">
-            <h4>🌿 Ecological Discussion</h4>
-            <div style="line-height: 1.6; color: var(--text-primary); font-size: 0.95rem;">
-                ${data.interpretation}
-            </div>
-        </div>
-        <div class="insight-block">
-            <h4>⚡ Strategic Outlook</h4>
-            <p style="background: var(--accent-soft); padding: 12px; border-left: 4px solid var(--accent); border-radius: 4px; font-weight: 500;">
-                ${data.forecast}
-            </p>
-        </div>
-    `;
+    // Update reliability stats
+    const reliabilityEl = document.getElementById('sdm-reliability-stats');
+    if (reliabilityEl) reliabilityEl.innerHTML = `AUC: <strong>${data.auc}</strong> | Kappa: <strong>${data.kappa}</strong>`;
+
+    // Update discussion
+    const discussionEl = document.getElementById('sdm-discussion-text');
+    if (discussionEl) discussionEl.innerHTML = data.interpretation;
+
+    // Update outlook
+    const outlookEl = document.getElementById('sdm-outlook-text');
+    if (outlookEl) outlookEl.innerHTML = data.forecast;
 }
 
 // BINDING
@@ -1795,8 +1882,14 @@ async function runVulnerabilityQuery() {
         console.log(`FETCHING Climate Forecast for scenario: ${scenario}, period: ${period}`);
         const response = await fetch(`/api/vulnerability?scenario=${scenario}&period=${period}`);
         if (!response.ok) {
-            const errJson = await response.json();
-            throw new Error(errJson.error || 'Server error');
+            const errorText = await response.text();
+            console.error("DEBUG: Server Response Start:", errorText.substring(0, 200));
+            try {
+                const errorJson = JSON.parse(errorText);
+                throw new Error(errorJson.detail || errorJson.error || "Server Error");
+            } catch(e) {
+                throw new Error(`Backend Error: Expected JSON but got HTML. Please visit http://localhost:3005/api/status to verify the Python engine is active.`);
+            }
         }
         const data = await response.json();
         

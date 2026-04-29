@@ -593,9 +593,20 @@ body.dark-mode .nav-item:hover {
     flex-direction: column;
     padding: 24px;
     gap: 24px;
-    overflow: hidden; /* Fix: Prevent outer scroll to stabilize internal map heights */
+    overflow-y: auto; /* Changed from hidden to allow vertical flow */
     min-width: 0;
     height: 100vh;
+    scroll-behavior: smooth;
+}
+
+.view-section {
+    width: 100%;
+    min-height: calc(100vh - 120px);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 24px;
+    padding-bottom: 120px; /* Increased to avoid clipping */
 }
 
 .user-profile { display: none; }
@@ -864,9 +875,8 @@ body.dark-mode .nav-item:hover {
     grid-template-columns: 1fr 450px; /* Map on Left, Controls on Right */
     gap: 30px;
     margin-top: 20px;
-    height: calc(100vh - 200px); /* Slightly shorter for better fit */
-    min-height: 500px;
-    padding-bottom: 40px; /* Fixed bottom-cutting breathing room */
+    height: auto;
+    min-height: auto;
 }
 
 .suitability-map-side {
@@ -879,6 +889,7 @@ body.dark-mode .nav-item:hover {
     align-items: center;
     justify-content: center;
     overflow: hidden;
+    height: fit-content;
 }
 
 .suitability-info-side {
@@ -889,9 +900,7 @@ body.dark-mode .nav-item:hover {
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-soft);
     border: 1px solid var(--glass-border);
-    overflow-y: auto;
-    max-height: 100%;
-    padding-bottom: 50px; /* Ensure content is never cut off */
+    height: auto;
 }
 
 .suitability-info-side h3 {
@@ -932,12 +941,28 @@ body.dark-mode .nav-item:hover {
     margin: 2px;
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 1100px) {
     .suitability-layout {
-        flex-direction: column;
+        grid-template-columns: 1fr; /* Stack map and info */
     }
-    .suitability-map-side, .suitability-info-side {
-        width: 100%;
+    .suitability-info-side {
+        grid-column: 1;
+        grid-row: 2;
+    }
+    .performance-grid {
+        grid-template-columns: 1fr !important; /* Stack performance charts */
+    }
+}
+
+@media (max-width: 768px) {
+    .suitability-map-side img {
+        max-height: 40vh; /* Shorter map on mobile */
+    }
+    .suitability-info-side {
+        padding: 15px;
+    }
+    .suitability-info-side h3 {
+        font-size: 1rem;
     }
 }
 .glass-card {
@@ -1085,37 +1110,120 @@ body.dark-mode .nav-item:hover {
 }
 
 .prediction-item {
-    background: #F8F9F3;
-    padding: 12px;
+    background: var(--bg-card);
+    padding: 18px;
     border-radius: var(--radius-md);
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--glass-border);
+    margin-bottom: 16px;
+    transition: var(--transition-premium);
+    position: relative;
+    overflow: hidden;
+}
+
+.prediction-item:hover {
+    box-shadow: 0 12px 24px rgba(0,0,0,0.08);
+    border-color: var(--premium-green);
+    transform: translateX(4px);
+}
+
+.prediction-item::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: var(--premium-green);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.prediction-item:hover::before {
+    opacity: 1;
+}
+
+.prediction-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
 }
 
 .prediction-item h4 {
-    font-size: 11px;
+    margin: 0;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.suitability-status {
+    font-size: 10px;
+    font-weight: 800;
     text-transform: uppercase;
-    color: var(--text-secondary);
-    margin-bottom: 8px;
+    letter-spacing: 0.5px;
+    margin-top: 2px;
+    display: block;
+}
+
+.score-pill {
+    padding: 4px 10px;
+    border-radius: 100px;
+    font-size: 11px;
+    font-weight: 800;
+    font-family: 'Outfit', sans-serif;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 }
 
 .suitability-bar-container {
     background: #E2E8F0;
-    height: 6px;
-    border-radius: 3px;
+    height: 8px;
+    border-radius: 4px;
     overflow: hidden;
+    margin-bottom: 15px;
 }
 
 .suitability-bar-fill {
     height: 100%;
-    border-radius: 3px;
+    border-radius: 4px;
     transition: width 1s ease-in-out;
 }
 
-.suitability-score {
+.drivers-container {
+    padding-top: 12px;
+    border-top: 1px dashed var(--glass-border);
+}
+
+.drivers-label {
+    display: block;
     font-size: 10px;
+    font-weight: 800;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+}
+
+.drivers-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.driver-tag {
+    font-size: 9px;
     font-weight: 700;
-    text-align: right;
-    margin-top: 4px;
+    color: var(--text-primary);
+    background: rgba(45, 106, 79, 0.06);
+    padding: 4px 10px;
+    border-radius: 6px;
+    border: 1px solid rgba(45, 106, 79, 0.1);
+    transition: all 0.2s ease;
+    cursor: help;
+}
+
+.driver-tag:hover {
+    background: rgba(45, 106, 79, 0.12);
+    border-color: var(--premium-green);
+    transform: translateY(-1px);
 }
 
 .panel {

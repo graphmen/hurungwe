@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Premium GIS Dashboard for Tree Species in Hurungwe District",
   "scripts": {
-    "start": "npx serve -l 3005 ."
+    "start": "uvicorn main:app --host 0.0.0.0 --port 3005"
   },
   "dependencies": {
     "@google/earthengine": "^1.7.22",
