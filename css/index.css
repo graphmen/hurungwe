@@ -616,7 +616,7 @@ body.dark-mode .nav-item:hover {
 .content-grid {
     flex: 1;
     display: grid;
-    grid-template-columns: 1fr 380px; /* Map on Left, Dock on Right */
+    grid-template-columns: 1fr 480px; /* Map on Left, Dock on Right - Widened */
     gap: 0;
     overflow: hidden;
     background: #f8f9fa;
@@ -1317,6 +1317,10 @@ body.dark-mode .nav-item:hover {
     border-color: var(--border-strong);
     box-shadow: 0 8px 30px rgba(45, 106, 79, 0.1);
     transform: translateY(-2px);
+}
+
+#panel-trends .analytics-card {
+    padding: 16px; /* Reduced from 24px to widen graph */
 }
 
 .accent-card {
@@ -2187,4 +2191,207 @@ body.dark-mode .nav-item:hover {
     .map-filter-group {
         min-width: 80px;
     }
+}
+
+/* ─────────────────────────────────────────────
+   ECOLOGICAL PROFILER LAYOUT
+   ───────────────────────────────────────────── */
+.profiler-layout {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 20px;
+    margin-top: 10px;
+}
+
+.profiler-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.profiler-main {
+    min-height: 400px;
+}
+
+.chart-wrapper {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--glass-border);
+    border-radius: 12px;
+    padding: 15px;
+}
+
+.status-pill {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.status-pill.idle { color: var(--text-muted); }
+.status-pill.active { color: var(--premium-green); background: rgba(45, 106, 79, 0.2); }
+.status-pill.loading { color: var(--accent); background: rgba(243, 156, 18, 0.2); }
+
+.pulse {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: currentColor;
+    box-shadow: 0 0 0 rgba(0,0,0,0.2);
+    animation: pulse-animation 2s infinite;
+}
+
+@keyframes pulse-animation {
+    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4); }
+    70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(255, 255, 255, 0); }
+    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
+}
+
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 13px;
+    border: 1px dashed var(--glass-border);
+    border-radius: 12px;
+}
+
+@media (max-width: 1100px) {
+    .profiler-layout {
+        grid-template-columns: 1fr;
+    }
+    .profiler-main {
+        min-height: 300px;
+    }
+}
+
+
+/* ============================================================
+   Spatial Suitability Inspector (Premium UI)
+   ============================================================ */
+.prediction-results {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 15px;
+}
+
+.prediction-item {
+    background: var(--bg-card);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    transition: var(--transition-premium);
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--shadow-soft);
+}
+
+.prediction-item:hover {
+    transform: translateY(-4px);
+    border-color: var(--premium-green);
+    box-shadow: 0 8px 24px rgba(45, 106, 79, 0.1);
+}
+
+.prediction-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+.species-info h4 {
+    font-size: 14px;
+    color: var(--text-primary);
+    margin-bottom: 2px;
+}
+
+.suitability-status {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.score-pill {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 800;
+    font-family: 'Outfit', sans-serif;
+}
+
+.suitability-bar-container {
+    height: 6px;
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 12px;
+}
+
+body.dark-mode .suitability-bar-container {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.suitability-bar-fill {
+    height: 100%;
+    border-radius: 10px;
+    transition: width 1s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.drivers-container {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--glass-border);
+}
+
+.drivers-label {
+    font-size: 10px;
+    font-weight: 800;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: block;
+    margin-bottom: 6px;
+}
+
+.drivers-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.driver-tag {
+    font-size: 10px;
+    font-weight: 600;
+    background: rgba(45, 106, 79, 0.08);
+    color: var(--premium-green);
+    padding: 3px 8px;
+    border-radius: 6px;
+    border: 1px solid rgba(45, 106, 79, 0.15);
+    cursor: help;
+}
+
+body.dark-mode .driver-tag {
+    background: rgba(82, 183, 136, 0.1);
+    color: #52B788;
+    border-color: rgba(82, 183, 136, 0.2);
+}
+
+/* Prediction Report States */
+.prediction-report-active.hidden {
+    display: none;
+}
+
+.prediction-report-empty {
+    padding: 30px 20px;
+    text-align: center;
+    color: var(--text-muted);
 }

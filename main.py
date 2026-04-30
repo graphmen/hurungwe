@@ -252,6 +252,82 @@ async def get_inspect_climate(lat: float, lon: float, scenario: str = "ssp585"):
 async def get_connectivity():
     return {"message": "Ecological Corridor Intelligence - Coming Soon"}
 
+@app.get("/api/point-profile")
+async def get_point_profile(lat: float, lon: float):
+    try:
+        point = ee.Geometry.Point([lon, lat])
+        
+        # 1. LAND COVER (Point Extraction)
+        lc_image = ee.ImageCollection('ESA/WorldCover/v200').first()
+        lc_value = lc_image.reduceRegion(
+            reducer=ee.Reducer.first(),
+            geometry=point,
+            scale=10
+        ).getInfo().get('Map')
+        
+        class_map = {
+            10: 'Forest', 20: 'Shrubland', 30: 'Herbaceous wetland', 
+            40: 'Cropland', 50: 'Built-up', 60: 'Bare / Sparse vegetation', 
+            80: 'Open water', 90: 'Snow and Ice', 100: 'Moss and Lichen'
+        }
+        lc_name = class_map.get(lc_value, "Unknown")
+
+        # 2. TIME SERIES (NDVI & Carbon) - Last 12 Months
+        # Using a reliable date range for consistency
+        end_date = ee.Date('2023-12-31')
+        start_date = end_date.advance(-11, 'month')
+        
+        def get_monthly_stats(date):
+            date = ee.Date(date)
+            m_start = date.update(day=1)
+            m_end = m_start.advance(1, 'month')
+            
+            s2 = ee.ImageCollection('COPERNICUS/S2_SR_HARMONIZED') \
+                .filterDate(m_start, m_end) \
+                .filterBounds(point) \
+                .filter(ee.Filter.lt('CLOUDY_PIXEL_PERCENTAGE', 60)) \
+                .median()
+            
+            # Extract NDVI
+            stats = ee.Algorithms.If(
+                s2.bandNames().size().gt(0),
+                s2.normalizedDifference(['B8', 'B4']).rename('ndvi').reduceRegion(
+                    reducer=ee.Reducer.mean(),
+                    geometry=point,
+                    scale=10
+                ),
+                {'ndvi': 0}
+            )
+            
+            res_dict = ee.Dictionary(stats)
+            ndvi_val = ee.Number(res_dict.get('ndvi', 0))
+            
+            # Ensure value is valid
+            ndvi_val = ee.Algorithms.If(ndvi_val, ndvi_val, 0)
+            carbon_val = ee.Number(ndvi_val).multiply(45)
+            
+            return ee.Feature(None, {
+                'month': m_start.format('MMM YYYY'),
+                'ndvi': ndvi_val,
+                'carbon': carbon_val,
+                'timestamp': m_start.millis()
+            })
+
+        months = ee.List.sequence(0, 11).map(lambda n: start_date.advance(ee.Number(n), 'month'))
+        series = ee.FeatureCollection(months.map(get_monthly_stats)).sort('timestamp').getInfo()
+        
+        formatted_series = [f['properties'] for f in series['features']]
+
+        return {
+            "success": True,
+            "location": {"lat": lat, "lon": lon},
+            "landCover": lc_name,
+            "series": formatted_series
+        }
+    except Exception as e:
+        print(f"POINT_PROFILE_ERROR: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 # ─────────────────────────────────────────────
 # 5. STATIC FRONTEND SERVING
 # ─────────────────────────────────────────────

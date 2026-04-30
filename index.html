@@ -1,29 +1,36 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hurungwe Species Watch | GIS Research Dashboard</title>
-    
 
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌿</text></svg>">
-    <meta name="description" content="Interactive GIS dashboard for monitoring tree species distribution across the Hurungwe district, Zimbabwe.">
+
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌿</text></svg>">
+    <meta name="description"
+        content="Interactive GIS dashboard for monitoring tree species distribution across the Hurungwe district, Zimbabwe.">
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Outfit:wght@300;500;700;900&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Outfit:wght@300;500;700;900&display=swap"
+        rel="stylesheet">
     <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     <!-- Leaflet MarkerCluster -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="css/index.css?v=premium_wow_v14">
+    <link rel="stylesheet" href="css/index.css?v=premium_wow_v15">
 </head>
+
 <body>
     <div id="sidebar-overlay" class="sidebar-overlay"></div>
-    
+
     <header class="mobile-header">
         <button id="mobile-menu-trigger" class="btn-menu">
             <span></span>
@@ -58,9 +65,11 @@
                 <a href="#" class="nav-item active" id="nav-dashboard">
                     <i class="fas fa-chart-line"></i> <span class="nav-item-text">Dashboard</span>
                 </a>
-                
-                <div style="margin-top:20px; font-size:10px; color:var(--text-muted); font-weight:800; padding:0 18px; text-transform:uppercase; letter-spacing:0.1em;">Spatiotemporal Analysis</div>
-                
+
+                <div
+                    style="margin-top:20px; font-size:10px; color:var(--text-muted); font-weight:800; padding:0 18px; text-transform:uppercase; letter-spacing:0.1em;">
+                    Spatiotemporal Analysis</div>
+
                 <a href="#" class="nav-item" id="nav-predictive">
                     <i class="fas fa-microscope"></i> <span class="nav-item-text">Suitability Analysis</span>
                 </a>
@@ -74,7 +83,9 @@
                     <i class="fas fa-map-marked-alt"></i> <span class="nav-item-text">Habitat Metrics</span>
                 </a>
 
-                <div style="margin-top:20px; font-size:10px; color:var(--text-muted); font-weight:800; padding:0 18px; text-transform:uppercase; letter-spacing:0.1em;">Ecological Layers</div>
+                <div
+                    style="margin-top:20px; font-size:10px; color:var(--text-muted); font-weight:800; padding:0 18px; text-transform:uppercase; letter-spacing:0.1em;">
+                    Ecological Layers</div>
 
                 <a href="#" class="nav-item" id="nav-ndvi">
                     <i class="fas fa-leaf"></i> <span class="nav-item-text">NDVI Density</span>
@@ -86,7 +97,9 @@
                     <i class="fas fa-layer-group"></i> <span class="nav-item-text">Land Cover Mapping</span>
                 </a>
 
-                <div style="margin-top:20px; font-size:10px; color:var(--text-muted); font-weight:800; padding:0 18px; text-transform:uppercase; letter-spacing:0.1em;">Governance</div>
+                <div
+                    style="margin-top:20px; font-size:10px; color:var(--text-muted); font-weight:800; padding:0 18px; text-transform:uppercase; letter-spacing:0.1em;">
+                    Governance</div>
 
                 <a href="#nav-policy" id="nav-policy" class="nav-item">
                     <i class="fas fa-file-contract"></i>
@@ -107,7 +120,8 @@
                 </a>
             </nav>
 
-            <div style="padding: 24px; border-top: 1px solid var(--glass-border); font-size: 10px; color: var(--text-muted);">
+            <div
+                style="padding: 24px; border-top: 1px solid var(--glass-border); font-size: 10px; color: var(--text-muted);">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                     <span style="font-weight:700;">PRO EDITION</span>
                     <span style="color:var(--premium-green);">● Stable</span>
@@ -120,7 +134,8 @@
         <main class="main-content">
             <header class="header">
                 <div class="search-container">
-                    <input type="text" class="search-box" id="search-input" placeholder="🔍 Search analytical data, species, or policy directives...">
+                    <input type="text" class="search-box" id="search-input"
+                        placeholder="🔍 Search analytical data, species, or policy directives...">
                 </div>
 
                 <div style="display:flex; align-items:center; gap:20px;">
@@ -167,7 +182,7 @@
 
                 <!-- RIGHT SIDEBAR: Toggling Panels -->
                 <aside class="analysis-dock">
-                    
+
                     <!-- PANEL: Dashboard Stats -->
                     <div id="panel-dashboard" class="content-panel active-dock">
                         <div class="glass-card chart-card">
@@ -202,16 +217,17 @@
                             <div class="simulator-controls">
                                 <div class="slider-group" style="margin-bottom: 12px;">
                                     <label style="font-size: 11px;">Thermal Sieve (Bio_6)</label>
-                                    <input type="range" min="0" max="100" value="70" class="sim-slider" id="sim-thermal">
+                                    <input type="range" min="0" max="100" value="70" class="sim-slider"
+                                        id="sim-thermal">
                                 </div>
                                 <div class="slider-group" style="margin-bottom: 12px;">
                                     <label style="font-size: 11px;">Water Proximity</label>
                                     <input type="range" min="0" max="100" value="85" class="sim-slider" id="sim-water">
                                 </div>
                             </div>
-                            <button id="btn-run-simulation" class="btn-primary" style="width:100%; font-size: 12px;">Generate Forecast</button>
+                            <button id="btn-run-simulation" class="btn-primary"
+                                style="width:100%; font-size: 12px;">Generate Forecast</button>
                         </div>
-
                     </div>
 
                     <!-- PANEL: Climate Future-Cast -->
@@ -219,7 +235,7 @@
                         <div class="analytics-card">
                             <h3><span style="font-size:16px;">🌎</span> Climate Future-Cast</h3>
                             <p class="card-subtitle">Forecasting habitat shifts for 2050 (CMIP6 SSP5-8.5)</p>
-                            
+
                             <div class="simulator-controls" style="margin-top: 15px;">
                                 <div class="filter-group" style="margin-bottom: 12px;">
                                     <label class="filter-label">Forecast Period</label>
@@ -230,16 +246,21 @@
                                 </div>
                             </div>
 
-                            <button id="btn-run-vulnerability" class="btn-primary" style="width:100%; font-size: 12px; margin-top:10px;">
+                            <button id="btn-run-vulnerability" class="btn-primary"
+                                style="width:100%; font-size: 12px; margin-top:10px;">
                                 <span class="btn-icon">⚡</span> Run Future-Cast Engine
                             </button>
                         </div>
 
-                        <div id="vulnerability-insight-banner" class="insight-card hidden">
-                            <div class="insight-header">Vulnerability Insight</div>
-                            <div id="vulnerability-text" class="insight-body">Analyzing climate shifts...</div>
+                        <div class="analytics-card report-container" style="margin-top: 15px;">
+                            <h3>Spatial Suitability Inspector</h3>
+                            <div class="prediction-report-empty empty-state">
+                                <p style="font-size: 11px;">Click map for prediction.</p>
+                            </div>
+                            <div class="prediction-report-active hidden">
+                                <div class="prediction-results mini-grid"></div>
+                            </div>
                         </div>
-
                     </div>
 
                     <!-- PANEL: Habitat Metrics (Integrated into Dock) -->
@@ -247,9 +268,11 @@
                         <div class="analytics-card">
                             <h3><span style="font-size:16px;">🌿</span> Habitat Suitability Metrics</h3>
                             <p class="card-subtitle">Identifying optimal ecological niches</p>
-                            
+
                             <div style="margin-top: 20px; display: flex; flex-direction: column; gap: 12px;">
-                                <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Reference Layer</label>
+                                <label
+                                    style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Reference
+                                    Layer</label>
                                 <select id="panel-sdm-species-select" class="header-select" style="width: 100%;">
                                     <option value="species_suitability_grid">All Species Composite</option>
                                     <option value="Acacia_Galpinii_suitability">Acacia Galpinii</option>
@@ -257,8 +280,10 @@
                                     <option value="Acacia_Siebriana_suitability">Acacia Siebriana</option>
                                     <option value="Fidebhia_Abida_suitability">Faidebhia Albida</option>
                                     <option value="Kigelia_Africana_suitability">Kigelia Africana</option>
-                                    <option value="Munyii_Bechemia_discolor_suitability">Munyii / Bechemia discolor</option>
-                                    <option value="Pilostigma_Thonigilii_Monkey_Bread_suitability">Pilostigma Thonigilii</option>
+                                    <option value="Munyii_Bechemia_discolor_suitability">Munyii / Bechemia discolor
+                                    </option>
+                                    <option value="Pilostigma_Thonigilii_Monkey_Bread_suitability">Pilostigma Thonigilii
+                                    </option>
                                     <option value="Red_Mahogany_suitability">Red Mahogany</option>
                                     <option value="Trichilia_Emetica_suitability">Trichilia Emetica</option>
                                     <option value="Waterberry_suitability">Waterberry</option>
@@ -282,7 +307,7 @@
                         <div class="analytics-card accent-card">
                             <h3>📜 Policy Connectivity Matrix</h3>
                             <p class="card-subtitle">Translating spatial data into strategic governance</p>
-                            
+
                             <div id="policy-content" class="policy-list" style="margin-top: 20px;">
                                 <div class="empty-state">
                                     <p>Select analytical layers to generate policy directives.</p>
@@ -308,30 +333,50 @@
                     <!-- PANEL: Field Data Viewer -->
                     <div id="panel-data" class="content-panel hidden">
                         <div class="analytics-card">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <div
+                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                                 <div>
                                     <h3><span style="font-size:16px;">📊</span> Field Collection Data</h3>
                                     <p class="card-subtitle">Live sync from Surveyor Mobile App</p>
                                 </div>
-                                <button id="btn-download-csv" class="btn-primary" style="font-size: 11px; padding: 6px 12px; background: var(--premium-green); display: flex; align-items: center; gap: 5px;">
+                                <button id="btn-download-csv" class="btn-primary"
+                                    style="font-size: 11px; padding: 6px 12px; background: var(--premium-green); display: flex; align-items: center; gap: 5px;">
                                     <i class="fas fa-download" style="margin-right:0;"></i> Export CSV
                                 </button>
                             </div>
-                            
-                            <div style="max-height: 500px; overflow-y: auto; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 8px;">
-                                <table id="field-data-table" style="width: 100%; border-collapse: collapse; text-align: left; font-size: 11px;">
+
+                            <div
+                                style="max-height: 500px; overflow-y: auto; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 8px;">
+                                <table id="field-data-table"
+                                    style="width: 100%; border-collapse: collapse; text-align: left; font-size: 11px;">
                                     <thead style="background: rgba(0,0,0,0.4); position: sticky; top: 0; z-index: 5;">
                                         <tr>
-                                            <th style="padding: 10px; border-bottom: 1px solid var(--glass-border); text-align:center;">Date</th>
-                                            <th style="padding: 10px; border-bottom: 1px solid var(--glass-border); text-align:center;">Species</th>
-                                            <th style="padding: 10px; border-bottom: 1px solid var(--glass-border); text-align:center;">Habitat</th>
-                                            <th style="padding: 10px; border-bottom: 1px solid var(--glass-border); text-align:center;">Recorder</th>
-                                            <th style="padding: 10px; border-bottom: 1px solid var(--glass-border); text-align:center;">Lat</th>
-                                            <th style="padding: 10px; border-bottom: 1px solid var(--glass-border); text-align:center;">Lng</th>
+                                            <th
+                                                style="padding: 10px; border-bottom: 1px solid var(--glass-border); text-align:center;">
+                                                Date</th>
+                                            <th
+                                                style="padding: 10px; border-bottom: 1px solid var(--glass-border); text-align:center;">
+                                                Species</th>
+                                            <th
+                                                style="padding: 10px; border-bottom: 1px solid var(--glass-border); text-align:center;">
+                                                Habitat</th>
+                                            <th
+                                                style="padding: 10px; border-bottom: 1px solid var(--glass-border); text-align:center;">
+                                                Recorder</th>
+                                            <th
+                                                style="padding: 10px; border-bottom: 1px solid var(--glass-border); text-align:center;">
+                                                Lat</th>
+                                            <th
+                                                style="padding: 10px; border-bottom: 1px solid var(--glass-border); text-align:center;">
+                                                Lng</th>
                                         </tr>
                                     </thead>
                                     <tbody id="field-data-body">
-                                        <tr><td colspan="6" style="padding: 15px; text-align: center; color: var(--text-muted);">Fetching live data from Firebase...</td></tr>
+                                        <tr>
+                                            <td colspan="6"
+                                                style="padding: 15px; text-align: center; color: var(--text-muted);">
+                                                Fetching live data from Firebase...</td>
+                                        </tr>
                                     </tbody>
                                 </table>
                             </div>
@@ -344,28 +389,32 @@
                         <div class="analytics-card">
                             <h3><span style="font-size:16px;">🌿</span> Live NDVI Query</h3>
                             <p class="card-subtitle">Streams real-time vegetative analytics</p>
-                            
+
                             <div class="simulator-controls" style="margin-top: 15px;">
                                 <div class="filter-group" style="margin-bottom: 12px;">
                                     <label class="filter-label">Start Date</label>
-                                    <input type="date" id="ndvi-start-date" class="filter-select" style="width:100%" value="2023-07-01">
+                                    <input type="date" id="ndvi-start-date" class="filter-select" style="width:100%"
+                                        value="2023-07-01">
                                 </div>
                                 <div class="filter-group" style="margin-bottom: 12px;">
                                     <label class="filter-label">End Date</label>
-                                    <input type="date" id="ndvi-end-date" class="filter-select" style="width:100%" value="2023-07-28">
+                                    <input type="date" id="ndvi-end-date" class="filter-select" style="width:100%"
+                                        value="2023-07-28">
                                 </div>
                             </div>
 
-                            <button id="btn-run-ndvi" class="btn-primary" style="width:100%; font-size: 12px; margin-top:10px;">
+                            <button id="btn-run-ndvi" class="btn-primary"
+                                style="width:100%; font-size: 12px; margin-top:10px;">
                                 <span class="btn-icon">⚡</span> Generate High-Res Layer
                             </button>
                         </div>
-                        
+
                         <div class="glass-card stat-card" style="margin-top: 15px; padding: 12px;">
                             <div style="font-size: 10px; color: var(--text-secondary); line-height: 1.4;">
-                                <strong>System Notice:</strong> 
-                                This tool sends a live compute request to analyze dense satellite imagery. 
-                                Depending on the length of the timeframe you select, rendering map tiles may take 5-15 seconds.
+                                <strong>System Notice:</strong>
+                                This tool sends a live compute request to analyze dense satellite imagery.
+                                Depending on the length of the timeframe you select, rendering map tiles may take 5-15
+                                seconds.
                             </div>
                         </div>
                     </div>
@@ -375,15 +424,17 @@
                         <div class="analytics-card">
                             <h3><span style="font-size:16px;">🌳</span> Carbon Stock Mapping</h3>
                             <p class="card-subtitle">IPCC Tier 1: AGB (Mg/ha) via Regional NDVI Model</p>
-                            
+
                             <div class="simulator-controls" style="margin-top: 15px;">
                                 <div class="filter-group" style="margin-bottom: 12px;">
                                     <label class="filter-label">Baseline Start</label>
-                                    <input type="date" id="carbon-start-date" class="filter-select" style="width:100%" value="2020-02-01">
+                                    <input type="date" id="carbon-start-date" class="filter-select" style="width:100%"
+                                        value="2020-02-01">
                                 </div>
                                 <div class="filter-group">
                                     <label class="filter-label">Baseline End</label>
-                                    <input type="date" id="carbon-end-date" class="filter-select" style="width:100%" value="2020-02-28">
+                                    <input type="date" id="carbon-end-date" class="filter-select" style="width:100%"
+                                        value="2020-02-28">
                                 </div>
                             </div>
                             <button id="btn-run-carbon" class="btn-primary" style="width:100%; margin-top: 10px;">
@@ -396,8 +447,10 @@
                                 <h3>Total Carbon Estimate</h3>
                                 <span class="badge" style="background:#52b788;" id="carbon-total-badge">Pending</span>
                             </div>
-                            <div style="font-size: 10px; color: var(--text-secondary); line-height: 1.4; padding: 10px;">
-                                Total Metric Tonnes (Mg C) across the district is calculated dynamically based on above-ground biomass estimates.
+                            <div
+                                style="font-size: 10px; color: var(--text-secondary); line-height: 1.4; padding: 10px;">
+                                Total Metric Tonnes (Mg C) across the district is calculated dynamically based on
+                                above-ground biomass estimates.
                             </div>
                         </div>
                     </div>
@@ -411,17 +464,21 @@
                             <div class="simulator-controls" style="margin-top: 15px;">
                                 <div class="filter-group" style="margin-bottom: 12px;">
                                     <label class="filter-label">Baseline Start</label>
-                                    <input type="date" id="landcover-start-date" class="filter-select" style="width:100%" value="2021-01-01">
+                                    <input type="date" id="landcover-start-date" class="filter-select"
+                                        style="width:100%" value="2021-01-01">
                                 </div>
                                 <div class="filter-group">
                                     <label class="filter-label">Baseline End</label>
-                                    <input type="date" id="landcover-end-date" class="filter-select" style="width:100%" value="2021-12-31">
+                                    <input type="date" id="landcover-end-date" class="filter-select" style="width:100%"
+                                        value="2021-12-31">
                                 </div>
                             </div>
 
-                            <div class="glass-card stat-card" style="margin-top:14px; padding:12px; background: linear-gradient(135deg, rgba(26,150,65,0.08), rgba(44,127,184,0.08)); border-left: 3px solid #1a9641;">
+                            <div class="glass-card stat-card"
+                                style="margin-top:14px; padding:12px; background: linear-gradient(135deg, rgba(26,150,65,0.08), rgba(44,127,184,0.08)); border-left: 3px solid #1a9641;">
                                 <div style="font-size: 10px; color: var(--text-secondary); line-height: 1.5;">
-                                    <strong>Source Sync:</strong> System automatically switches between ESA v100 (2020) and v200 (2021) based on your selected baseline year.
+                                    <strong>Source Sync:</strong> System automatically switches between ESA v100 (2020)
+                                    and v200 (2021) based on your selected baseline year.
                                 </div>
                             </div>
 
@@ -433,10 +490,50 @@
                         <div class="glass-card log-card" style="margin-top: 15px;">
                             <div class="card-header">
                                 <h3>Area Statistics (ha)</h3>
-                                <span class="badge" style="background:#1a9641;" id="landcover-status-badge">Pending</span>
+                                <span class="badge" style="background:#1a9641;"
+                                    id="landcover-status-badge">Pending</span>
                             </div>
-                            <div id="landcover-area-stats" style="padding: 10px; font-size: 11px; color: var(--text-secondary); line-height: 1.6;">
+                            <div id="landcover-area-stats"
+                                style="padding: 10px; font-size: 11px; color: var(--text-secondary); line-height: 1.6;">
                                 Run the analysis to view per-class area estimates.
+                            </div>
+                        </div>
+                    </div>
+                    <!-- PANEL: Ecological Spatio-Temporal Profiler -->
+                    <div id="panel-trends" class="content-panel hidden">
+                        <div class="analytics-card">
+                            <h3><span style="font-size:16px;">📈</span> Spatio-Temporal Profiler</h3>
+                            <p class="card-subtitle">Multi-parameter satellite time-series at 10m resolution</p>
+                            
+                            <div class="insight-card premium-card" style="margin-top: 15px;">
+                                <div class="insight-header"><i class="fas fa-mouse-pointer"></i> Instructions</div>
+                                <p style="font-size: 11px; line-height: 1.5; color: var(--text-secondary);">
+                                    Click anywhere on the map to extract a 12-month temporal profile for that specific coordinate.
+                                </p>
+                            </div>
+                            
+                            <button class="btn-primary" onclick="showTrendsModal()" style="width: 100%; margin-top: 15px; background: var(--premium-green); border: none; padding: 12px; border-radius: 8px; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                                <i class="fas fa-chart-bar"></i> View District-Wide Recruitment Insights
+                            </button>
+                            
+                            <div id="profiler-data-card" class="glass-card hidden animate-premium" style="margin-top: 15px; padding: 12px; display: flex; justify-content: space-between; gap: 10px;">
+                                <div class="mini-stat" style="flex: 1; border-right: 1px solid var(--glass-border); padding-right: 10px;">
+                                    <span class="label" style="font-size: 9px;">Current Land Cover</span>
+                                    <span class="value" id="profiler-lc-value" style="color: var(--premium-green); font-size: 13px;">-</span>
+                                </div>
+                                <div class="mini-stat" style="flex: 1; padding-left: 10px;">
+                                    <span class="label" style="font-size: 9px;">Coordinate</span>
+                                    <span class="value" id="profiler-coord-value" style="font-size: 11px; white-space: nowrap;">-</span>
+                                </div>
+                            </div>
+
+                            <div class="empty-state" id="profiler-empty-state" style="margin-top: 15px;">
+                                <i class="fas fa-chart-line" style="font-size: 32px; opacity: 0.3; margin-bottom: 15px;"></i>
+                                <p style="font-size: 11px;">Select a point on the map to begin analysis.</p>
+                            </div>
+                            
+                            <div id="profiler-chart-container" class="chart-wrapper hidden" style="margin-top: 15px; padding: 5px;">
+                                <div id="profiler-time-series-chart"></div>
                             </div>
                         </div>
                     </div>
@@ -444,44 +541,28 @@
             </div>
             <!-- View: Data Export (Migrated to Header) -->
 
-            <!-- View: Growth Trends -->
-            <div id="view-trends" class="view-section" style="display: none; padding: 24px;">
-                <div class="glass-card">
-                    <h2 style="margin-bottom: 20px; color: var(--accent);">Model Performance & Variable Importance</h2>
-                    <p style="color: var(--text-secondary); margin-bottom: 24px;">
-                        Evaluating the Species Distribution Models (Random Forest, CTA, SVM, ANN) across the study area.
-                    </p>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
-                        <div style="text-align:center;">
-                            <h3 style="margin-bottom:10px; font-size:14px;">Evaluation Metrics</h3>
-                            <img src="data/models/metrics_line.png" alt="Metrics" style="width:100%; border-radius: 8px; border: 1px solid var(--border-color);">
-                        </div>
-                        <div style="text-align:center;">
-                            <h3 style="margin-bottom:10px; font-size:14px;">Variable Importance</h3>
-                            <img src="data/models/importance_heatmap.png" alt="Importance" style="width:100%; border-radius: 8px; border: 1px solid var(--border-color);">
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             <!-- View: Habitat Health (SDM) -->
             <div id="view-habitat" class="view-section" style="display: none;">
                 <div class="glass-card">
                     <h2 style="margin-bottom: 12px; color: var(--accent);">Habitat Suitability Analysis</h2>
                     <p style="color: var(--text-secondary); margin-bottom: 24px;">
-                        Interactive spatial modeling identifying high-probability habitat zones and their primary ecological drivers.
+                        Interactive spatial modeling identifying high-probability habitat zones and their primary
+                        ecological drivers.
                     </p>
-                    
+
                     <div class="suitability-layout">
                         <!-- Left Side: Spatial Forecast Map (Now on the Left) -->
                         <div class="suitability-map-side">
-                            <img id="sdm-map-image" src="data/models/species_suitability_grid.png" alt="SDM Map Image" style="max-width: 100%; max-height: 70vh; border-radius: 12px; box-shadow: var(--shadow-soft); border: 1px solid var(--glass-border);">
+                            <img id="sdm-map-image" src="data/models/species_suitability_grid.png" alt="SDM Map Image"
+                                style="max-width: 100%; max-height: 70vh; border-radius: 12px; box-shadow: var(--shadow-soft); border: 1px solid var(--glass-border);">
                         </div>
 
                         <!-- Right Side: Ecological Insights & Controls (Now on the Right) -->
                         <div class="suitability-info-side" id="sdm-insights-panel">
                             <div style="margin-bottom: 20px; display: flex; flex-direction: column; gap: 12px;">
-                                <label style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Select Target Species</label>
+                                <label
+                                    style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Select
+                                    Target Species</label>
                                 <select id="sdm-species-select" class="header-select" style="width: 100%;">
                                     <option value="species_suitability_grid">All Species Composite</option>
                                     <option value="Acacia_Galpinii_suitability">Acacia Galpinii</option>
@@ -489,31 +570,48 @@
                                     <option value="Acacia_Siebriana_suitability">Acacia Siebriana</option>
                                     <option value="Fidebhia_Abida_suitability">Faidebhia Albida</option>
                                     <option value="Kigelia_Africana_suitability">Kigelia Africana</option>
-                                    <option value="Munyii_Bechemia_discolor_suitability">Munyii / Bechemia discolor</option>
-                                    <option value="Pilostigma_Thonigilii_Monkey_Bread_suitability">Pilostigma Thonigilii</option>
+                                    <option value="Munyii_Bechemia_discolor_suitability">Munyii / Bechemia discolor
+                                    </option>
+                                    <option value="Pilostigma_Thonigilii_Monkey_Bread_suitability">Pilostigma Thonigilii
+                                    </option>
                                     <option value="Red_Mahogany_suitability">Red Mahogany</option>
                                     <option value="Trichilia_Emetica_suitability">Trichilia Emetica</option>
                                     <option value="Waterberry_suitability">Waterberry</option>
                                 </select>
-                                <button id="btn-download-sdm" class="btn-primary" style="width: 100%; padding: 12px; margin-top: 10px; font-weight: 600;">
+                                <button id="btn-download-sdm" class="btn-primary"
+                                    style="width: 100%; padding: 12px; margin-top: 10px; font-weight: 600;">
                                     📥 Export Research Raster
                                 </button>
                             </div>
 
-                            <div style="margin-top: 25px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
-                                <h3 style="margin-bottom: 15px; color: var(--premium-green); font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Ecological Insights</h3>
+                            <div
+                                style="margin-top: 25px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
+                                <h3
+                                    style="margin-bottom: 15px; color: var(--premium-green); font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">
+                                    Ecological Insights</h3>
                                 <div id="sdm-insights-content">
                                     <div class="insight-block">
                                         <h4>📈 Model Reliability</h4>
-                                        <p id="sdm-reliability-stats" style="font-size: 13px; font-weight: 600; color: var(--text-primary);">AUC: 0.945 | Kappa: 0.860</p>
+                                        <p id="sdm-reliability-stats"
+                                            style="font-size: 13px; font-weight: 600; color: var(--text-primary);">AUC:
+                                            0.945 | Kappa: 0.860</p>
                                     </div>
                                     <div class="insight-block" style="margin-top: 15px;">
                                         <h4>🌿 Ecological Discussion</h4>
-                                        <p id="sdm-discussion-text" style="font-size: 12px; color: var(--text-muted); line-height: 1.6;">Unified ecosystem model capturing core habitat envelopes for general indigenous reintroduction. Identifies primary zones where multiple species overlap and provides a strategic high-level map for catchment-wide forest resilience.</p>
+                                        <p id="sdm-discussion-text"
+                                            style="font-size: 12px; color: var(--text-muted); line-height: 1.6;">Unified
+                                            ecosystem model capturing core habitat envelopes for general indigenous
+                                            reintroduction. Identifies primary zones where multiple species overlap and
+                                            provides a strategic high-level map for catchment-wide forest resilience.
+                                        </p>
                                     </div>
                                     <div class="insight-block" style="margin-top: 15px;">
                                         <h4>⚡ Strategic Outlook</h4>
-                                        <p id="sdm-outlook-text" style="font-size: 12px; color: var(--text-muted); line-height: 1.6;">Focus on central corridors and major drainage basins for the highest success rate in mixed-species woodland restoration. Strategic planting in these hotspots will maximize biodiversity connectivity.</p>
+                                        <p id="sdm-outlook-text"
+                                            style="font-size: 12px; color: var(--text-muted); line-height: 1.6;">Focus
+                                            on central corridors and major drainage basins for the highest success rate
+                                            in mixed-species woodland restoration. Strategic planting in these hotspots
+                                            will maximize biodiversity connectivity.</p>
                                     </div>
                                 </div>
                             </div>
@@ -521,14 +619,19 @@
                     </div>
 
                     <div style="margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
-                        <h3 style="margin-bottom: 15px; color: var(--premium-green);">Model Performance & Validation</h3>
+                        <h3 style="margin-bottom: 15px; color: var(--premium-green);">Model Performance & Validation
+                        </h3>
                         <div class="performance-grid" style="display: grid; grid-template-columns: 1fr 2fr; gap: 20px;">
                             <div class="glass-card" style="background: rgba(255,255,255,0.03); padding: 20px;">
-                                <h4 style="font-size: 12px; margin-bottom: 12px; color: var(--text-muted); text-transform: uppercase;">Reliability Metrics</h4>
+                                <h4
+                                    style="font-size: 12px; margin-bottom: 12px; color: var(--text-muted); text-transform: uppercase;">
+                                    Reliability Metrics</h4>
                                 <div id="sdm-report-auc-kappa" style="height: 250px;"></div>
                             </div>
                             <div class="glass-card" style="background: rgba(255,255,255,0.03); padding: 20px;">
-                                <h4 style="font-size: 12px; margin-bottom: 12px; color: var(--text-muted); text-transform: uppercase;">Variable Influence Matrix</h4>
+                                <h4
+                                    style="font-size: 12px; margin-bottom: 12px; color: var(--text-muted); text-transform: uppercase;">
+                                    Variable Influence Matrix</h4>
                                 <div id="sdm-report-importance" style="height: 250px;"></div>
                             </div>
                         </div>
@@ -571,7 +674,9 @@
     <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
     <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-    <script src="https://cdn.jsdelivr.net/gh/digidem/leaflet-side-by-side@2.0.0/layout/leaflet-side-by-side.min.js"></script>
-    <script src="js/app.js?v=premium_wow_v14"></script>
+    <script
+        src="https://cdn.jsdelivr.net/gh/digidem/leaflet-side-by-side@2.0.0/layout/leaflet-side-by-side.min.js"></script>
+    <script src="js/app.js?v=premium_wow_v23"></script>
 </body>
+
 </html>
